@@ -1,0 +1,103 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+  namespace: healthlife
+  labels:
+    app: analytics-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: analytics-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: analytics-service
+    spec:
+      terminationGracePeriodSeconds: 45
+      containers:
+        - name: analytics-service
+          image: ghcr.io/maru3022/app/analytics-service:latest
+          ports:
+            - containerPort: 8089
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "production"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: jwt-secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8089
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8089
+            initialDelaySeconds: 40
+            periodSeconds: 15
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 10"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics-service
+  namespace: healthlife
+spec:
+  selector:
+    app: analytics-service
+  ports:
+    - port: 80
+      targetPort: 8089
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: analytics-service-hpa
+  namespace: healthlife
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: analytics-service
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: analytics-service-pdb
+  namespace: healthlife
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: analytics-service

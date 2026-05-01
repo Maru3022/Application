@@ -1,0 +1,72 @@
+﻿server:
+  port: 8089
+  shutdown: graceful
+  tomcat:
+    max-threads: 200
+    min-spare-threads: 10
+    max-connections: 10000
+    accept-count: 100
+    connection-timeout: 5000
+
+spring:
+  application:
+    name: analytics-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+
+jwt:
+  secret: ${JWT_SECRET:HealthLifeSuperSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025}
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60000
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      analytics:
+        base-config: default
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 1000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
