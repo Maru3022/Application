@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  postgres-auth:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: healthlife_auth
+      POSTGRES_USER: healthlife
+      POSTGRES_PASSWORD: healthlife_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthlife"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-user:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: healthlife_user
+      POSTGRES_USER: healthlife
+      POSTGRES_PASSWORD: healthlife_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_user_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthlife"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-health:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: healthlife_health
+      POSTGRES_USER: healthlife
+      POSTGRES_PASSWORD: healthlife_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_health_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthlife"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-mental:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: healthlife_mental
+      POSTGRES_USER: healthlife
+      POSTGRES_PASSWORD: healthlife_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - pg_mental_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthlife"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-nutrition:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: healthlife_nutrition
+      POSTGRES_USER: healthlife
+      POSTGRES_PASSWORD: healthlife_pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - pg_nutrition_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthlife"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-aicoach:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: healthlife_aicoach
+      POSTGRES_USER: healthlife
+      POSTGRES_PASSWORD: healthlife_pass
+    ports:
+      - "5437:5432"
+    volumes:
+      - pg_aicoach_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthlife"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-social:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: healthlife_social
+      POSTGRES_USER: healthlife
+      POSTGRES_PASSWORD: healthlife_pass
+    ports:
+      - "5438:5432"
+    volumes:
+      - pg_social_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthlife"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+volumes:
+  pg_auth_data:
+  pg_user_data:
+  pg_health_data:
+  pg_mental_data:
+  pg_nutrition_data:
+  pg_aicoach_data:
+  pg_social_data:
+  redis_data:
