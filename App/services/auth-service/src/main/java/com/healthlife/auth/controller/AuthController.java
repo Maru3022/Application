@@ -3,6 +3,7 @@ package com.healthlife.auth.controller;
 import com.healthlife.auth.service.AuthService;
 import com.healthlife.common.dto.auth.*;
 import com.healthlife.common.security.SecurityUtils;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,16 +19,19 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
+    @RateLimiter(name = "login")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 
     @PostMapping("/login")
+    @RateLimiter(name = "login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
     @PostMapping("/refresh")
+    @RateLimiter(name = "login")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         return ResponseEntity.ok(authService.refreshToken(request));
     }
