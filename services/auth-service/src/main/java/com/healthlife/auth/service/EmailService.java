@@ -16,7 +16,8 @@ public class EmailService {
     public void sendPasswordResetEmail(String to, String resetToken) {
         String subject = "Password Reset Request";
         String resetUrl = "https://healthlife.com/reset-password?token=" + resetToken;
-        String text = "Click the link to reset your password: " + resetUrl + "\n\nIf you didn't request this, please ignore this email.";
+        String text = "Click the link to reset your password: " + resetUrl
+                + "\n\nIf you didn't request this, please ignore this email.";
 
         sendEmail(to, subject, text);
     }

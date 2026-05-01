@@ -12,9 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BreathingSessionRequest {
-    @NotNull
-    private String technique;
+    @NotNull private String technique;
+
     @NotNull @Min(1)
     private Integer durationMin;
+
     private java.time.OffsetDateTime recordedAt;
 }

@@ -1,15 +1,18 @@
 package com.healthlife.healthdata.entity;
 
 import jakarta.persistence.*;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
 @Entity
 @Table(name = "sleep_entries")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class SleepEntry {
 
     @Id
@@ -45,7 +48,8 @@ public class SleepEntry {
     @PreUpdate
     public void calculateDuration() {
         if (sleepStart != null && sleepEnd != null) {
-            this.durationMin = (int) java.time.Duration.between(sleepStart, sleepEnd).toMinutes();
+            this.durationMin =
+                    (int) java.time.Duration.between(sleepStart, sleepEnd).toMinutes();
         }
     }
 }

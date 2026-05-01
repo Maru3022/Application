@@ -14,6 +14,6 @@ import lombok.NoArgsConstructor;
 public class WaterRequest {
     @NotNull @Min(1)
     private Integer amountMl;
-    @NotNull
-    private java.time.OffsetDateTime recordedAt;
+
+    @NotNull private java.time.OffsetDateTime recordedAt;
 }

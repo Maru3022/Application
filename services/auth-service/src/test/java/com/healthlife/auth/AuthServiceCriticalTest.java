@@ -1,7 +1,12 @@
 package com.healthlife.auth;
 
-import com.healthlife.auth.controller.AuthController;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.healthlife.auth.entity.User;
+import com.healthlife.auth.repository.EmailVerificationTokenRepository;
+import com.healthlife.auth.repository.PasswordResetTokenRepository;
 import com.healthlife.auth.repository.RefreshTokenRepository;
 import com.healthlife.auth.repository.UserRepository;
 import com.healthlife.auth.service.AuthService;
@@ -10,37 +15,58 @@ import com.healthlife.common.dto.auth.RegisterRequest;
 import com.healthlife.common.exception.DuplicateResourceException;
 import com.healthlife.common.exception.UnauthorizedException;
 import com.healthlife.common.security.JwtTokenProvider;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-@SpringBootTest(classes = AuthServiceApplication.class)
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(AuthTestConfig.class)
 class AuthServiceCriticalTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private AuthService authService;
-    @Autowired private UserRepository userRepository;
-    @Autowired private RefreshTokenRepository refreshTokenRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private AuthService authService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private EmailVerificationTokenRepository emailVerificationTokenRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private JavaMailSender javaMailSender;
 
     @BeforeEach
     void cleanup() {
         refreshTokenRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
+        passwordResetTokenRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -66,8 +92,7 @@ class AuthServiceCriticalTest {
                 .build();
         authService.register(req);
 
-        assertThatThrownBy(() -> authService.register(req))
-                .isInstanceOf(DuplicateResourceException.class);
+        assertThatThrownBy(() -> authService.register(req)).isInstanceOf(DuplicateResourceException.class);
     }
 
     @Test
@@ -111,8 +136,7 @@ class AuthServiceCriticalTest {
                 .password("WrongPassword!")
                 .build();
 
-        assertThatThrownBy(() -> authService.login(login))
-                .isInstanceOf(UnauthorizedException.class);
+        assertThatThrownBy(() -> authService.login(login)).isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
@@ -122,8 +146,7 @@ class AuthServiceCriticalTest {
                 .password("Whatever123!")
                 .build();
 
-        assertThatThrownBy(() -> authService.login(login))
-                .isInstanceOf(UnauthorizedException.class);
+        assertThatThrownBy(() -> authService.login(login)).isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
@@ -188,8 +211,7 @@ class AuthServiceCriticalTest {
                 .password("StrongPass123!")
                 .build();
 
-        assertThatThrownBy(() -> authService.login(login))
-                .isInstanceOf(UnauthorizedException.class);
+        assertThatThrownBy(() -> authService.login(login)).isInstanceOf(UnauthorizedException.class);
     }
 
     @Test

@@ -11,8 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginRequest {
-    @NotBlank @jakarta.validation.constraints.Email
+    @NotBlank
+    @jakarta.validation.constraints.Email
     private String email;
+
     @NotBlank
     private String password;
 }

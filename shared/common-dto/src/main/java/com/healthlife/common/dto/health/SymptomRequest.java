@@ -16,9 +16,12 @@ import lombok.NoArgsConstructor;
 public class SymptomRequest {
     @NotBlank
     private String symptom;
-    @Min(1) @Max(10)
+
+    @Min(1)
+    @Max(10)
     private Integer intensity;
-    @NotNull
-    private java.time.OffsetDateTime recordedAt;
+
+    @NotNull private java.time.OffsetDateTime recordedAt;
+
     private String notes;
 }

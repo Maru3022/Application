@@ -84,6 +84,13 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+    diskspace:
+      enabled: true
+      threshold: 1GB
+    db:
+      enabled: true
+    redis:
+      enabled: true
   metrics:
     tags:
       application: ${spring.application.name}

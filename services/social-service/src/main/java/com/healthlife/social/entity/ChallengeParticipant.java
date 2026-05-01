@@ -1,18 +1,22 @@
 package com.healthlife.social.entity;
 
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.*;
 
-import java.util.UUID;
-
 @Entity
-@Table(name = "challenge_participants", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"challenge_id", "user_id"})
-})
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Table(
+        name = "challenge_participants",
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"challenge_id", "user_id"})})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ChallengeParticipant {
 
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false)

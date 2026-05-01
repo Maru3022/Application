@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PasswordResetRequest {
-    @NotBlank @jakarta.validation.constraints.Email
+    @NotBlank
+    @jakarta.validation.constraints.Email
     private String email;
 }

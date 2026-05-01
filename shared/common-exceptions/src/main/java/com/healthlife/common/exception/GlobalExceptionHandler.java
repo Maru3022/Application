@@ -1,5 +1,7 @@
 package com.healthlife.common.exception;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
@@ -7,9 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -62,9 +61,9 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, List<String> details) {
-        return ResponseEntity.status(status).body(
-                new ErrorResponse(LocalDateTime.now(), status.value(), status.getReasonPhrase(), message, details)
-        );
+        return ResponseEntity.status(status)
+                .body(new ErrorResponse(
+                        LocalDateTime.now(), status.value(), status.getReasonPhrase(), message, details));
     }
 
     @Data

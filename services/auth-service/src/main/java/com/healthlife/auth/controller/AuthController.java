@@ -5,11 +5,10 @@ import com.healthlife.common.dto.auth.*;
 import com.healthlife.common.security.SecurityUtils;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -49,8 +48,8 @@ public class AuthController {
     }
 
     @PostMapping("/mfa/verify")
-    public ResponseEntity<AuthResponse> verifyMfa(@Valid @RequestBody MfaVerifyRequest request,
-                                                   @RequestHeader("X-User-Email") String email) {
+    public ResponseEntity<AuthResponse> verifyMfa(
+            @Valid @RequestBody MfaVerifyRequest request, @RequestHeader("X-User-Email") String email) {
         return ResponseEntity.ok(authService.verifyMfaAndLogin(email, request.getCode()));
     }
 

@@ -7,13 +7,12 @@ import com.healthlife.user.entity.UserGoal;
 import com.healthlife.user.entity.UserProfile;
 import com.healthlife.user.repository.UserGoalRepository;
 import com.healthlife.user.repository.UserProfileRepository;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +24,8 @@ public class UserService {
 
     public UserProfileResponse getProfile() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        UserProfile profile = userProfileRepository.findByUserId(userId)
+        UserProfile profile = userProfileRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile", "userId", userId));
         return mapToResponse(profile);
     }
@@ -33,7 +33,8 @@ public class UserService {
     @Transactional
     public UserProfileResponse updateProfile(UpdateProfileRequest request) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        UserProfile profile = userProfileRepository.findByUserId(userId)
+        UserProfile profile = userProfileRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile", "userId", userId));
 
         if (request.getDisplayName() != null) profile.setDisplayName(request.getDisplayName());
@@ -48,7 +49,8 @@ public class UserService {
     @Transactional
     public void deleteAccount() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        UserProfile profile = userProfileRepository.findByUserId(userId)
+        UserProfile profile = userProfileRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile", "userId", userId));
         profile.setDeletedAt(OffsetDateTime.now());
         userProfileRepository.save(profile);
@@ -56,7 +58,8 @@ public class UserService {
 
     public UserGoalsDto getGoals() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        UserGoal goal = userGoalRepository.findByUserId(userId)
+        UserGoal goal = userGoalRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Goals", "userId", userId));
         return UserGoalsDto.builder()
                 .dailySteps(goal.getDailySteps())
@@ -69,7 +72,8 @@ public class UserService {
     @Transactional
     public UserGoalsDto updateGoals(UserGoalsDto request) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        UserGoal goal = userGoalRepository.findByUserId(userId)
+        UserGoal goal = userGoalRepository
+                .findByUserId(userId)
                 .orElseGet(() -> UserGoal.builder().userId(userId).build());
 
         if (request.getDailySteps() != null) goal.setDailySteps(request.getDailySteps());
@@ -83,7 +87,8 @@ public class UserService {
 
     public SubscriptionDto getSubscription() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        UserProfile profile = userProfileRepository.findByUserId(userId)
+        UserProfile profile = userProfileRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile", "userId", userId));
         return SubscriptionDto.builder()
                 .plan(profile.getSubscriptionPlan())
@@ -94,7 +99,8 @@ public class UserService {
     @Transactional
     public SubscriptionDto updateSubscription(String plan) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        UserProfile profile = userProfileRepository.findByUserId(userId)
+        UserProfile profile = userProfileRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile", "userId", userId));
         profile.setSubscriptionPlan(plan);
         userProfileRepository.save(profile);

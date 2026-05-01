@@ -3,12 +3,11 @@ package com.healthlife.nutrition.controller;
 import com.healthlife.common.dto.nutrition.*;
 import com.healthlife.nutrition.service.NutritionService;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/nutrition")

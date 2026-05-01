@@ -13,9 +13,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StressRequest {
-    @NotNull @Min(1) @Max(10)
+    @NotNull @Min(1)
+    @Max(10)
     private Integer level;
-    @NotNull
-    private java.time.OffsetDateTime recordedAt;
+
+    @NotNull private java.time.OffsetDateTime recordedAt;
+
     private String notes;
 }

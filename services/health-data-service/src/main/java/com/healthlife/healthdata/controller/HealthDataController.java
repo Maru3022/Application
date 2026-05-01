@@ -3,13 +3,12 @@ package com.healthlife.healthdata.controller;
 import com.healthlife.common.dto.health.*;
 import com.healthlife.healthdata.service.HealthDataService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/health")
@@ -25,8 +24,7 @@ public class HealthDataController {
 
     @GetMapping("/sleep")
     public ResponseEntity<List<SleepResponse>> getSleepEntries(
-            @RequestParam(required = false) OffsetDateTime from,
-            @RequestParam(required = false) OffsetDateTime to) {
+            @RequestParam(required = false) OffsetDateTime from, @RequestParam(required = false) OffsetDateTime to) {
         return ResponseEntity.ok(healthDataService.getSleepEntries(from, to));
     }
 

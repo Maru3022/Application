@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 public class PasswordResetConfirmRequest {
     @NotBlank
     private String token;
-    @NotBlank @Size(min = 8, max = 128)
+
+    @NotBlank
+    @Size(min = 8, max = 128)
     private String newPassword;
 }

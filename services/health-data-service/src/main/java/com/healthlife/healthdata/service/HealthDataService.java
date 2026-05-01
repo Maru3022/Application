@@ -5,14 +5,13 @@ import com.healthlife.common.exception.ResourceNotFoundException;
 import com.healthlife.common.security.SecurityUtils;
 import com.healthlife.healthdata.entity.*;
 import com.healthlife.healthdata.repository.*;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +53,8 @@ public class HealthDataService {
     @Transactional
     public void deleteSleep(UUID id) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        SleepEntry entry = sleepEntryRepository.findById(id)
+        SleepEntry entry = sleepEntryRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("SleepEntry", "id", id));
         if (!entry.getUserId().equals(userId)) {
             throw new com.healthlife.common.exception.ForbiddenException("Not your entry");
@@ -85,8 +85,12 @@ public class HealthDataService {
         UUID userId = SecurityUtils.getCurrentUserId();
         return weightEntryRepository.findByUserIdOrderByRecordedAtDesc(userId).stream()
                 .map(e -> WeightResponse.builder()
-                        .id(e.getId()).weightKg(e.getWeightKg()).bodyFatPct(e.getBodyFatPct())
-                        .recordedAt(e.getRecordedAt()).createdAt(e.getCreatedAt()).build())
+                        .id(e.getId())
+                        .weightKg(e.getWeightKg())
+                        .bodyFatPct(e.getBodyFatPct())
+                        .recordedAt(e.getRecordedAt())
+                        .createdAt(e.getCreatedAt())
+                        .build())
                 .toList();
     }
 
@@ -99,15 +103,21 @@ public class HealthDataService {
                 .recordedAt(request.getRecordedAt())
                 .build();
         entry = waterEntryRepository.save(entry);
-        return WaterResponse.builder().id(entry.getId()).amountMl(entry.getAmountMl()).recordedAt(entry.getRecordedAt()).build();
+        return WaterResponse.builder()
+                .id(entry.getId())
+                .amountMl(entry.getAmountMl())
+                .recordedAt(entry.getRecordedAt())
+                .build();
     }
 
     public Integer getWaterToday() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        OffsetDateTime start = LocalDate.now().atStartOfDay().atOffset(OffsetDateTime.now().getOffset());
+        OffsetDateTime start =
+                LocalDate.now().atStartOfDay().atOffset(OffsetDateTime.now().getOffset());
         OffsetDateTime end = start.plusDays(1);
         return waterEntryRepository.findByUserIdAndRecordedAtBetween(userId, start, end).stream()
-                .mapToInt(WaterEntry::getAmountMl).sum();
+                .mapToInt(WaterEntry::getAmountMl)
+                .sum();
     }
 
     @Transactional
@@ -122,8 +132,12 @@ public class HealthDataService {
                 .build();
         entry = symptomEntryRepository.save(entry);
         return SymptomResponse.builder()
-                .id(entry.getId()).symptom(entry.getSymptom()).intensity(entry.getIntensity())
-                .recordedAt(entry.getRecordedAt()).notes(entry.getNotes()).build();
+                .id(entry.getId())
+                .symptom(entry.getSymptom())
+                .intensity(entry.getIntensity())
+                .recordedAt(entry.getRecordedAt())
+                .notes(entry.getNotes())
+                .build();
     }
 
     @Transactional
@@ -139,9 +153,13 @@ public class HealthDataService {
                 .build();
         entry = cycleEntryRepository.save(entry);
         return CycleResponse.builder()
-                .id(entry.getId()).periodStart(entry.getPeriodStart()).periodEnd(entry.getPeriodEnd())
-                .cycleLength(entry.getCycleLength()).flowIntensity(entry.getFlowIntensity())
-                .notes(entry.getNotes()).build();
+                .id(entry.getId())
+                .periodStart(entry.getPeriodStart())
+                .periodEnd(entry.getPeriodEnd())
+                .cycleLength(entry.getCycleLength())
+                .flowIntensity(entry.getFlowIntensity())
+                .notes(entry.getNotes())
+                .build();
     }
 
     public CycleResponse getCyclePrediction() {
@@ -151,8 +169,11 @@ public class HealthDataService {
             throw new ResourceNotFoundException("Cycle data", "userId", userId);
         }
         CycleEntry last = entries.get(0);
-        int avgCycle = (int) entries.stream().filter(e -> e.getCycleLength() != null)
-                .mapToInt(CycleEntry::getCycleLength).average().orElse(28);
+        int avgCycle = (int) entries.stream()
+                .filter(e -> e.getCycleLength() != null)
+                .mapToInt(CycleEntry::getCycleLength)
+                .average()
+                .orElse(28);
         LocalDate nextStart = last.getPeriodStart().plusDays(avgCycle);
         return CycleResponse.builder()
                 .periodStart(nextStart)
@@ -162,16 +183,24 @@ public class HealthDataService {
 
     public ActivityEntryDto getActivityToday() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        ActivityEntry entry = activityEntryRepository.findByUserIdAndDate(userId, LocalDate.now())
-                .orElse(ActivityEntry.builder().userId(userId).date(LocalDate.now()).build());
+        ActivityEntry entry = activityEntryRepository
+                .findByUserIdAndDate(userId, LocalDate.now())
+                .orElse(ActivityEntry.builder()
+                        .userId(userId)
+                        .date(LocalDate.now())
+                        .build());
         return mapActivityDto(entry);
     }
 
     @Transactional
     public ActivityEntryDto syncActivity(ActivityEntryDto dto) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        ActivityEntry entry = activityEntryRepository.findByUserIdAndDate(userId, dto.getDate())
-                .orElse(ActivityEntry.builder().userId(userId).date(dto.getDate()).build());
+        ActivityEntry entry = activityEntryRepository
+                .findByUserIdAndDate(userId, dto.getDate())
+                .orElse(ActivityEntry.builder()
+                        .userId(userId)
+                        .date(dto.getDate())
+                        .build());
         if (dto.getSteps() != null) entry.setSteps(dto.getSteps());
         if (dto.getCaloriesBurned() != null) entry.setCaloriesBurned(dto.getCaloriesBurned());
         if (dto.getActiveMinutes() != null) entry.setActiveMinutes(dto.getActiveMinutes());
@@ -183,15 +212,26 @@ public class HealthDataService {
 
     private SleepResponse mapSleepResponse(SleepEntry e) {
         return SleepResponse.builder()
-                .id(e.getId()).sleepStart(e.getSleepStart()).sleepEnd(e.getSleepEnd())
-                .durationMin(e.getDurationMin()).quality(e.getQuality())
-                .notes(e.getNotes()).source(e.getSource()).createdAt(e.getCreatedAt()).build();
+                .id(e.getId())
+                .sleepStart(e.getSleepStart())
+                .sleepEnd(e.getSleepEnd())
+                .durationMin(e.getDurationMin())
+                .quality(e.getQuality())
+                .notes(e.getNotes())
+                .source(e.getSource())
+                .createdAt(e.getCreatedAt())
+                .build();
     }
 
     private ActivityEntryDto mapActivityDto(ActivityEntry e) {
         return ActivityEntryDto.builder()
-                .id(e.getId()).date(e.getDate()).steps(e.getSteps())
-                .caloriesBurned(e.getCaloriesBurned()).activeMinutes(e.getActiveMinutes())
-                .distanceM(e.getDistanceM()).source(e.getSource()).build();
+                .id(e.getId())
+                .date(e.getDate())
+                .steps(e.getSteps())
+                .caloriesBurned(e.getCaloriesBurned())
+                .activeMinutes(e.getActiveMinutes())
+                .distanceM(e.getDistanceM())
+                .source(e.getSource())
+                .build();
     }
 }

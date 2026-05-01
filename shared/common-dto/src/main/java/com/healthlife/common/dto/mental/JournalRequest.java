@@ -14,7 +14,8 @@ import lombok.NoArgsConstructor;
 public class JournalRequest {
     @NotBlank
     private String content;
-    @NotNull
-    private java.time.OffsetDateTime recordedAt;
+
+    @NotNull private java.time.OffsetDateTime recordedAt;
+
     private java.util.List<String> tags;
 }

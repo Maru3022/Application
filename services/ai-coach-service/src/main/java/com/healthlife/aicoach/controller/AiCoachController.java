@@ -1,7 +1,7 @@
 package com.healthlife.aicoach.controller;
 
-import com.healthlife.common.dto.aicoach.*;
 import com.healthlife.aicoach.service.AiCoachService;
+import com.healthlife.common.dto.aicoach.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

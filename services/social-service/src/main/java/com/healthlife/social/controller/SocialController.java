@@ -5,12 +5,11 @@ import com.healthlife.social.entity.ChallengeParticipant;
 import com.healthlife.social.entity.Friendship;
 import com.healthlife.social.service.SocialService;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/social")

@@ -1,9 +1,8 @@
 package com.healthlife.common.security;
 
+import java.util.UUID;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.UUID;
 
 public final class SecurityUtils {
 

@@ -11,14 +11,16 @@ import com.healthlife.auth.repository.UserRepository;
 import com.healthlife.common.dto.auth.*;
 import com.healthlife.common.exception.*;
 import com.healthlife.common.security.JwtTokenProvider;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -32,12 +34,21 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
+    private final MeterRegistry meterRegistry;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         log.info("Attempting to register user with email: {}", request.getEmail());
+        Counter.builder("auth.register.attempts")
+                .tag("service", "auth-service")
+                .register(meterRegistry)
+                .increment();
         if (userRepository.existsByEmail(request.getEmail())) {
             log.warn("Registration failed: Email already registered: {}", request.getEmail());
+            Counter.builder("auth.register.failures")
+                    .tag("reason", "duplicate_email")
+                    .register(meterRegistry)
+                    .increment();
             throw new DuplicateResourceException("Email already registered: " + request.getEmail());
         }
 
@@ -64,18 +75,18 @@ public class AuthService {
         emailService.sendEmailVerificationEmail(user.getEmail(), verificationToken);
 
         log.info("User registered successfully with ID: {}", user.getId());
-
+        Counter.builder("auth.register.success").register(meterRegistry).increment();
         return generateAuthResponse(user);
     }
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
         log.info("Attempting login for email: {}", request.getEmail());
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> {
-                    log.warn("Login failed: Invalid email: {}", request.getEmail());
-                    return new UnauthorizedException("Invalid email or password");
-                });
+        Timer.Sample sample = Timer.start(meterRegistry);
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> {
+            log.warn("Login failed: Invalid email: {}", request.getEmail());
+            return new UnauthorizedException("Invalid email or password");
+        });
 
         if (user.getDeletedAt() != null) {
             log.warn("Login failed: Account deleted for email: {}", request.getEmail());
@@ -98,6 +109,8 @@ public class AuthService {
         }
 
         log.info("Login successful for user: {}", user.getId());
+        sample.stop(
+                Timer.builder("auth.login.duration").tag("outcome", "success").register(meterRegistry));
         return generateAuthResponse(user);
     }
 
@@ -111,7 +124,8 @@ public class AuthService {
             throw new TokenRefreshException(refreshTokenStr, "Invalid refresh token");
         }
 
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
+        RefreshToken refreshToken = refreshTokenRepository
+                .findByToken(refreshTokenStr)
                 .orElseThrow(() -> {
                     log.warn("Refresh token not found: {}", refreshTokenStr);
                     return new TokenRefreshException(refreshTokenStr, "Token not found");
@@ -131,18 +145,17 @@ public class AuthService {
     @Transactional
     public void logout(String refreshToken) {
         log.info("Logging out with refresh token: {}", refreshToken);
-        refreshTokenRepository.findByToken(refreshToken)
-                .ifPresent(rt -> {
-                    refreshTokenRepository.delete(rt);
-                    log.info("Refresh token deleted for logout");
-                });
+        refreshTokenRepository.findByToken(refreshToken).ifPresent(rt -> {
+            refreshTokenRepository.delete(rt);
+            log.info("Refresh token deleted for logout");
+        });
     }
 
     @Transactional
     public MfaSetupResponse setupMfa(UUID userId) {
         log.info("Setting up MFA for user: {}", userId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        User user =
+                userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         if (user.getMfaEnabled()) {
             log.warn("MFA already enabled for user: {}", userId);
@@ -158,21 +171,16 @@ public class AuthService {
         userRepository.save(user);
         log.info("MFA setup completed for user: {}", userId);
 
-        String qrCodeUri = String.format(
-                "otpauth://totp/HealthLife:%s?secret=%s&issuer=HealthLife",
-                user.getEmail(), secret
-        );
+        String qrCodeUri =
+                String.format("otpauth://totp/HealthLife:%s?secret=%s&issuer=HealthLife", user.getEmail(), secret);
 
-        return MfaSetupResponse.builder()
-                .secret(secret)
-                .qrCodeUri(qrCodeUri)
-                .build();
+        return MfaSetupResponse.builder().secret(secret).qrCodeUri(qrCodeUri).build();
     }
 
     public boolean verifyMfa(UUID userId, String code) {
         log.debug("Verifying MFA for user: {}", userId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        User user =
+                userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         if (!user.getMfaEnabled() || user.getMfaSecret() == null) {
             log.warn("MFA not enabled for user: {}", userId);
@@ -188,11 +196,10 @@ public class AuthService {
     @Transactional
     public AuthResponse verifyMfaAndLogin(String email, String code) {
         log.info("Verifying MFA and logging in for email: {}", email);
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    log.warn("MFA login failed: Invalid email: {}", email);
-                    return new UnauthorizedException("Invalid credentials");
-                });
+        User user = userRepository.findByEmail(email).orElseThrow(() -> {
+            log.warn("MFA login failed: Invalid email: {}", email);
+            return new UnauthorizedException("Invalid credentials");
+        });
 
         if (!user.getMfaEnabled() || user.getMfaSecret() == null) {
             log.warn("MFA not enabled for email: {}", email);
@@ -212,7 +219,8 @@ public class AuthService {
     @Transactional
     public void requestPasswordReset(String email) {
         log.info("Requesting password reset for email: {}", email);
-        User user = userRepository.findByEmail(email)
+        User user = userRepository
+                .findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
         String token = UUID.randomUUID().toString();
@@ -230,7 +238,8 @@ public class AuthService {
     @Transactional
     public void confirmPasswordReset(String token, String newPassword) {
         log.info("Confirming password reset with token: {}", token);
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+        PasswordResetToken resetToken = passwordResetTokenRepository
+                .findByToken(token)
                 .orElseThrow(() -> new BadRequestException("Invalid or expired reset token"));
 
         if (resetToken.getUsed() || resetToken.getExpiryDate().isBefore(OffsetDateTime.now())) {
@@ -254,7 +263,8 @@ public class AuthService {
     @Transactional
     public void verifyEmail(String token) {
         log.info("Verifying email with token: {}", token);
-        EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByToken(token)
+        EmailVerificationToken verificationToken = emailVerificationTokenRepository
+                .findByToken(token)
                 .orElseThrow(() -> new BadRequestException("Invalid or expired verification token"));
 
         if (verificationToken.getUsed() || verificationToken.getExpiryDate().isBefore(OffsetDateTime.now())) {

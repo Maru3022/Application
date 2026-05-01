@@ -13,10 +13,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterRequest {
-    @NotBlank @Email
+    @NotBlank
+    @Email
     private String email;
-    @NotBlank @Size(min = 8, max = 128)
+
+    @NotBlank
+    @Size(min = 8, max = 128)
     private String password;
+
     @Size(max = 100)
     private String displayName;
 }

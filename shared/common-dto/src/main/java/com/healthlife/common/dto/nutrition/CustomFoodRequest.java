@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 public class CustomFoodRequest {
     @NotBlank
     private String name;
-    @Positive
-    private Double caloriesPer100g;
-    @Positive
-    private Double proteinPer100g;
-    @Positive
-    private Double carbsPer100g;
-    @Positive
-    private Double fatPer100g;
+
+    @Positive private Double caloriesPer100g;
+
+    @Positive private Double proteinPer100g;
+
+    @Positive private Double carbsPer100g;
+
+    @Positive private Double fatPer100g;
 }

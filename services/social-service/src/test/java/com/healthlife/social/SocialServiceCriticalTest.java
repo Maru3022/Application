@@ -1,10 +1,15 @@
 package com.healthlife.social;
 
+import static org.assertj.core.api.Assertions.*;
+
 import com.healthlife.common.dto.social.*;
 import com.healthlife.common.exception.BadRequestException;
 import com.healthlife.social.entity.*;
 import com.healthlife.social.repository.*;
 import com.healthlife.social.service.SocialService;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,22 +19,27 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.*;
-
 @SpringBootTest(classes = SocialServiceApplication.class)
 @ActiveProfiles("test")
 class SocialServiceCriticalTest {
 
-    @Autowired private SocialService socialService;
-    @Autowired private ChallengeRepository challengeRepository;
-    @Autowired private ChallengeParticipantRepository challengeParticipantRepository;
-    @Autowired private PostRepository postRepository;
-    @Autowired private PostLikeRepository postLikeRepository;
-    @Autowired private FriendshipRepository friendshipRepository;
+    @Autowired
+    private SocialService socialService;
+
+    @Autowired
+    private ChallengeRepository challengeRepository;
+
+    @Autowired
+    private ChallengeParticipantRepository challengeParticipantRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private PostLikeRepository postLikeRepository;
+
+    @Autowired
+    private FriendshipRepository friendshipRepository;
 
     private UUID userId;
 
@@ -49,9 +59,13 @@ class SocialServiceCriticalTest {
     @Test
     void createChallenge_shouldPersist() {
         ChallengeRequest req = ChallengeRequest.builder()
-                .title("10K Steps").description("Walk 10K steps daily")
-                .type("steps").startDate(LocalDate.now()).endDate(LocalDate.now().plusDays(30))
-                .targetValue(10000).build();
+                .title("10K Steps")
+                .description("Walk 10K steps daily")
+                .type("steps")
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(30))
+                .targetValue(10000)
+                .build();
         ChallengeResponse resp = socialService.createChallenge(req);
         assertThat(resp.getTitle()).isEqualTo("10K Steps");
         assertThat(resp.isJoined()).isFalse();
@@ -60,18 +74,27 @@ class SocialServiceCriticalTest {
     @Test
     void joinChallenge_shouldAddParticipant() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
-                .creatorId(userId).title("Test").type("steps")
-                .startDate(LocalDate.now()).endDate(LocalDate.now().plusDays(7)).build());
+                .creatorId(userId)
+                .title("Test")
+                .type("steps")
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(7))
+                .build());
 
         socialService.joinChallenge(challenge.getId());
-        assertThat(challengeParticipantRepository.existsByChallengeIdAndUserId(challenge.getId(), userId)).isTrue();
+        assertThat(challengeParticipantRepository.existsByChallengeIdAndUserId(challenge.getId(), userId))
+                .isTrue();
     }
 
     @Test
     void joinChallenge_alreadyJoined_shouldThrow() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
-                .creatorId(userId).title("Test").type("steps")
-                .startDate(LocalDate.now()).endDate(LocalDate.now().plusDays(7)).build());
+                .creatorId(userId)
+                .title("Test")
+                .type("steps")
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(7))
+                .build());
 
         socialService.joinChallenge(challenge.getId());
         assertThatThrownBy(() -> socialService.joinChallenge(challenge.getId()))
@@ -80,7 +103,10 @@ class SocialServiceCriticalTest {
 
     @Test
     void createPost_shouldPersist() {
-        PostRequest req = PostRequest.builder().content("Hit my step goal today!").type("achievement").build();
+        PostRequest req = PostRequest.builder()
+                .content("Hit my step goal today!")
+                .type("achievement")
+                .build();
         PostResponse resp = socialService.createPost(req);
         assertThat(resp.getContent()).isEqualTo("Hit my step goal today!");
         assertThat(resp.getLikesCount()).isEqualTo(0);
@@ -88,7 +114,8 @@ class SocialServiceCriticalTest {
 
     @Test
     void likePost_shouldToggleAndIncrement() {
-        Post post = postRepository.save(Post.builder().userId(userId).content("Test post").likesCount(0).build());
+        Post post = postRepository.save(
+                Post.builder().userId(userId).content("Test post").likesCount(0).build());
 
         socialService.likePost(post.getId());
         Post updated = postRepository.findById(post.getId()).orElseThrow();
@@ -109,8 +136,12 @@ class SocialServiceCriticalTest {
     @Test
     void getChallenges_shouldShowJoinedStatus() {
         Challenge c = challengeRepository.save(Challenge.builder()
-                .creatorId(UUID.randomUUID()).title("Public Challenge").type("water")
-                .startDate(LocalDate.now()).endDate(LocalDate.now().plusDays(7)).build());
+                .creatorId(UUID.randomUUID())
+                .title("Public Challenge")
+                .type("water")
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(7))
+                .build());
 
         List<ChallengeResponse> challenges = socialService.getChallenges();
         assertThat(challenges).hasSize(1);

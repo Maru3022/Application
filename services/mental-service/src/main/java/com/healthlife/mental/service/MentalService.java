@@ -5,13 +5,12 @@ import com.healthlife.common.exception.ResourceNotFoundException;
 import com.healthlife.common.security.SecurityUtils;
 import com.healthlife.mental.entity.*;
 import com.healthlife.mental.repository.*;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,18 +34,32 @@ public class MentalService {
                 .build();
         entry = moodEntryRepository.save(entry);
         return MoodResponse.builder()
-                .id(entry.getId()).moodScore(entry.getMoodScore())
-                .emotions(entry.getEmotions() != null ? Arrays.asList(entry.getEmotions().split(",")) : null)
-                .note(entry.getNote()).recordedAt(entry.getRecordedAt()).createdAt(entry.getCreatedAt()).build();
+                .id(entry.getId())
+                .moodScore(entry.getMoodScore())
+                .emotions(
+                        entry.getEmotions() != null
+                                ? Arrays.asList(entry.getEmotions().split(","))
+                                : null)
+                .note(entry.getNote())
+                .recordedAt(entry.getRecordedAt())
+                .createdAt(entry.getCreatedAt())
+                .build();
     }
 
     public List<MoodResponse> getMoodHistory() {
         UUID userId = SecurityUtils.getCurrentUserId();
         return moodEntryRepository.findByUserIdOrderByRecordedAtDesc(userId).stream()
                 .map(e -> MoodResponse.builder()
-                        .id(e.getId()).moodScore(e.getMoodScore())
-                        .emotions(e.getEmotions() != null ? Arrays.asList(e.getEmotions().split(",")) : null)
-                        .note(e.getNote()).recordedAt(e.getRecordedAt()).createdAt(e.getCreatedAt()).build())
+                        .id(e.getId())
+                        .moodScore(e.getMoodScore())
+                        .emotions(
+                                e.getEmotions() != null
+                                        ? Arrays.asList(e.getEmotions().split(","))
+                                        : null)
+                        .note(e.getNote())
+                        .recordedAt(e.getRecordedAt())
+                        .createdAt(e.getCreatedAt())
+                        .build())
                 .toList();
     }
 
@@ -61,18 +74,24 @@ public class MentalService {
                 .build();
         entry = journalEntryRepository.save(entry);
         return JournalResponse.builder()
-                .id(entry.getId()).content(entry.getContent())
+                .id(entry.getId())
+                .content(entry.getContent())
                 .tags(entry.getTags() != null ? Arrays.asList(entry.getTags().split(",")) : null)
-                .recordedAt(entry.getRecordedAt()).createdAt(entry.getCreatedAt()).build();
+                .recordedAt(entry.getRecordedAt())
+                .createdAt(entry.getCreatedAt())
+                .build();
     }
 
     public List<JournalResponse> getJournals() {
         UUID userId = SecurityUtils.getCurrentUserId();
         return journalEntryRepository.findByUserIdOrderByRecordedAtDesc(userId).stream()
                 .map(e -> JournalResponse.builder()
-                        .id(e.getId()).content(e.getContent())
+                        .id(e.getId())
+                        .content(e.getContent())
                         .tags(e.getTags() != null ? Arrays.asList(e.getTags().split(",")) : null)
-                        .recordedAt(e.getRecordedAt()).createdAt(e.getCreatedAt()).build())
+                        .recordedAt(e.getRecordedAt())
+                        .createdAt(e.getCreatedAt())
+                        .build())
                 .toList();
     }
 
@@ -87,16 +106,22 @@ public class MentalService {
                 .build();
         entry = stressEntryRepository.save(entry);
         return StressResponse.builder()
-                .id(entry.getId()).level(entry.getLevel())
-                .recordedAt(entry.getRecordedAt()).notes(entry.getNotes()).build();
+                .id(entry.getId())
+                .level(entry.getLevel())
+                .recordedAt(entry.getRecordedAt())
+                .notes(entry.getNotes())
+                .build();
     }
 
     public List<StressResponse> getStressStats() {
         UUID userId = SecurityUtils.getCurrentUserId();
         return stressEntryRepository.findByUserIdOrderByRecordedAtDesc(userId).stream()
                 .map(e -> StressResponse.builder()
-                        .id(e.getId()).level(e.getLevel())
-                        .recordedAt(e.getRecordedAt()).notes(e.getNotes()).build())
+                        .id(e.getId())
+                        .level(e.getLevel())
+                        .recordedAt(e.getRecordedAt())
+                        .notes(e.getNotes())
+                        .build())
                 .toList();
     }
 
@@ -109,8 +134,13 @@ public class MentalService {
         }
         return meditations.stream()
                 .map(m -> MeditationDto.builder()
-                        .id(m.getId()).title(m.getTitle()).description(m.getDescription())
-                        .durationMin(m.getDurationMin()).category(m.getCategory()).audioUrl(m.getAudioUrl()).build())
+                        .id(m.getId())
+                        .title(m.getTitle())
+                        .description(m.getDescription())
+                        .durationMin(m.getDurationMin())
+                        .category(m.getCategory())
+                        .audioUrl(m.getAudioUrl())
+                        .build())
                 .toList();
     }
 
@@ -125,8 +155,13 @@ public class MentalService {
         if (all.isEmpty()) throw new ResourceNotFoundException("Meditation", "any", "");
         Meditation m = all.get(0);
         return MeditationDto.builder()
-                .id(m.getId()).title(m.getTitle()).description(m.getDescription())
-                .durationMin(m.getDurationMin()).category(m.getCategory()).audioUrl(m.getAudioUrl()).build();
+                .id(m.getId())
+                .title(m.getTitle())
+                .description(m.getDescription())
+                .durationMin(m.getDurationMin())
+                .category(m.getCategory())
+                .audioUrl(m.getAudioUrl())
+                .build();
     }
 
     @Transactional

@@ -3,12 +3,11 @@ package com.healthlife.mental.controller;
 import com.healthlife.common.dto.mental.*;
 import com.healthlife.mental.service.MentalService;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/mental")

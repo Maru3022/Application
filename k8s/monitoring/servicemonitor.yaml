@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: healthlife-services
+  namespace: healthlife
+  labels:
+    app: healthlife
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - healthlife
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: healthlife
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+      scrapeTimeout: 10s
+      honorLabels: true
