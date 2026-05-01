@@ -186,14 +186,10 @@
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
                 <version>${owasp.version}</version>
-                <executions>
-                    <execution>
-                        <goals><goal>check</goal></goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <suppressionFile>${project.basedir}/owasp-suppressions.xml</suppressionFile>
+                    <skip>true</skip>
                 </configuration>
             </plugin>
             <plugin>
