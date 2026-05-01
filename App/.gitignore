@@ -22,3 +22,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Package lock (generated)
+package-lock.json

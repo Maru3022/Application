@@ -34,11 +34,13 @@ class AuthServiceCriticalTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private AuthService authService;
     @Autowired private UserRepository userRepository;
+    @Autowired private RefreshTokenRepository refreshTokenRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private JwtTokenProvider jwtTokenProvider;
 
     @BeforeEach
     void cleanup() {
+        refreshTokenRepository.deleteAll();
         userRepository.deleteAll();
     }
 

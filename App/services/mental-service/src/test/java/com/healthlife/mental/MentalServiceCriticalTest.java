@@ -42,6 +42,7 @@ class MentalServiceCriticalTest {
         journalEntryRepository.deleteAll();
         stressEntryRepository.deleteAll();
         breathingSessionRepository.deleteAll();
+        meditationRepository.deleteAll();
     }
 
     @Test

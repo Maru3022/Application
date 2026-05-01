@@ -182,6 +182,8 @@ public class AuthService {
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
+        refreshTokenRepository.deleteByUserId(user.getId());
+
         RefreshToken entity = RefreshToken.builder()
                 .token(refreshToken)
                 .user(user)
