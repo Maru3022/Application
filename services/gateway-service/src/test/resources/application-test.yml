@@ -1,0 +1,23 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+management:
+  health:
+    redis:
+      enabled: false
+
+server:
+  port: 0
+
+jwt:
+  secret: TestSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025TestTest
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000

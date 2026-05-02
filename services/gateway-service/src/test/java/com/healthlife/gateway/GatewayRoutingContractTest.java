@@ -9,7 +9,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Lightweight contract tests that verify the Gateway exposes the expected routes and returns
@@ -17,6 +20,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
  * configuration changes do not accidentally break the public API surface.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 class GatewayRoutingContractTest {
 
     @LocalServerPort
@@ -24,6 +28,9 @@ class GatewayRoutingContractTest {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private StringRedisTemplate stringRedisTemplate;
 
     private String validJwt;
 

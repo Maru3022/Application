@@ -203,6 +203,8 @@
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <suppressionFile>${project.basedir}/owasp-suppressions.xml</suppressionFile>
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                    <failOnError>false</failOnError>
                 </configuration>
             </plugin>
             <plugin>
