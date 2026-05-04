@@ -1,0 +1,19 @@
+server:
+  port: 8088
+
+spring:
+  mail:
+    host: localhost
+    port: 25
+
+management:
+  health:
+    mail:
+      enabled: false
+
+jwt:
+  secret: TestSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025TestTest
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000

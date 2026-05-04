@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: auth-service
-          image: ghcr.io/maru3022/app/auth-service:latest
+          image: ghcr.io/maru3022/application/auth-service:latest
           ports:
             - containerPort: 8081
           securityContext:
@@ -82,6 +82,12 @@ spec:
             preStop:
               exec:
                 command: ["sh", "-c", "sleep 10"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

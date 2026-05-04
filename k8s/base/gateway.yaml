@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: gateway-service
-          image: ghcr.io/maru3022/app/gateway-service:latest
+          image: ghcr.io/maru3022/application/gateway-service:latest
           ports:
             - containerPort: 8080
           securityContext:
@@ -72,6 +72,12 @@ spec:
             preStop:
               exec:
                 command: ["sh", "-c", "sleep 10"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

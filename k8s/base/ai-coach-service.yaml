@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: ai-coach-service
-          image: ghcr.io/maru3022/app/ai-coach-service:latest
+          image: ghcr.io/maru3022/application/ai-coach-service:latest
           ports:
             - containerPort: 8086
           securityContext:
@@ -81,6 +81,12 @@ spec:
             preStop:
               exec:
                 command: ["sh", "-c", "sleep 10"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

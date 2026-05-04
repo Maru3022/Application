@@ -36,7 +36,7 @@ services:
   postgres-health:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: healthlife_health
+      POSTGRES_DB: healthlife_healthdata
       POSTGRES_USER: healthlife
       POSTGRES_PASSWORD: healthlife_pass
     ports:

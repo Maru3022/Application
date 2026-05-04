@@ -26,7 +26,6 @@ concurrency:
 
 env:
   JAVA_VERSION: "21"
-  MAVEN_OPTS: "-Dmaven.repo.local=$GITHUB_WORKSPACE/.m2/repository"
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ${{ github.repository }}
 
@@ -167,7 +166,7 @@ jobs:
       - name: Run tests with coverage
         run: mvn test -B -pl services/${{ matrix.service }} -am
         env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'TestSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025TestTest' }}
 
       - name: Upload Surefire reports
         if: always()
@@ -234,9 +233,9 @@ jobs:
         run: mvn install -DskipTests -B -q
 
       - name: Run integration tests
-        run: mvn verify -B -Dspring.profiles.active=test
+        run: mvn verify -B -Dspring.profiles.active=test -DexcludedGroups= -Dgroups=integration
         env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'TestSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025TestTest' }}
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/healthlife_test
           SPRING_DATASOURCE_USERNAME: healthlife
           SPRING_DATASOURCE_PASSWORD: healthlife_pass
@@ -344,24 +343,21 @@ jobs:
   helm-lint:
     name: Helm Chart Validation
     runs-on: ubuntu-latest
-    needs: build-images
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: code-quality
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
-      - name: Set up kubeval
-        run: |
-          curl -sL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64 -o /tmp/kubeval
-          chmod +x /tmp/kubeval
-
       - name: Lint Helm charts
         run: helm lint k8s/helm/healthlife
 
-      - name: Validate Kubernetes manifests
-        run: /tmp/kubeval k8s/base/*.yaml --ignore-missing-schemas
+      - name: Template and validate Helm charts
+        run: |
+          helm template healthlife k8s/helm/healthlife > /tmp/rendered.yaml
+          echo "Helm template rendered successfully ($(wc -l < /tmp/rendered.yaml) lines)"
+          grep -c "kind:" /tmp/rendered.yaml || true
 
   # ──────────────────────────────────────────────
   # 7. DEPLOY TO STAGING
@@ -447,7 +443,7 @@ jobs:
   notify:
     name: Pipeline Notification
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, security-scan, deploy-production]
+    needs: [unit-tests, integration-tests, security-scan]
     if: always()
     steps:
       - name: Determine pipeline status

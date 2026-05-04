@@ -60,5 +60,11 @@ spec:
             preStop:
               exec:
                 command: ["sh", "-c", "sleep 10"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 {{- end }}

@@ -12,7 +12,8 @@ spring:
   application:
     name: ai-coach-service
   lifecycle:
-    timeout-per-shutdown-phase: 30s  datasource:
+    timeout-per-shutdown-phase: 30s
+  datasource:
     url: jdbc:postgresql://localhost:5432/healthlife_aicoach
     username: healthlife
     password: healthlife_pass

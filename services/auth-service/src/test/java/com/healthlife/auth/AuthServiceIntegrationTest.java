@@ -11,6 +11,7 @@ import com.healthlife.auth.repository.RefreshTokenRepository;
 import com.healthlife.auth.repository.UserRepository;
 import com.healthlife.common.dto.auth.RegisterRequest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +35,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 @ActiveProfiles("test")
 @Import(AuthTestConfig.class)
+@Tag("integration")
 class AuthServiceIntegrationTest {
 
     @Container

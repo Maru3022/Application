@@ -1,6 +1,9 @@
 package com.healthlife.gateway;
 
 import static io.restassured.RestAssured.given;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.healthlife.common.security.JwtTokenProvider;
 import io.restassured.RestAssured;
@@ -12,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
@@ -32,12 +36,19 @@ class GatewayRoutingContractTest {
     @MockBean
     private StringRedisTemplate stringRedisTemplate;
 
+    @SuppressWarnings("unchecked")
+    private ValueOperations<String, String> valueOps = mock(ValueOperations.class);
+
     private String validJwt;
 
     @BeforeEach
     void setUp() {
         RestAssured.port = port;
         validJwt = jwtTokenProvider.generateAccessToken(UUID.randomUUID(), "test@healthlife.com", "USER");
+
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get(anyString())).thenReturn("1");
+        when(valueOps.increment(anyString())).thenReturn(2L);
     }
 
     @Test
