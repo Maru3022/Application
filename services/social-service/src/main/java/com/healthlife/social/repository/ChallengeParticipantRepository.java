@@ -2,6 +2,7 @@ package com.healthlife.social.repository;
 
 import com.healthlife.social.entity.ChallengeParticipant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,4 +12,7 @@ public interface ChallengeParticipantRepository extends JpaRepository<ChallengeP
     boolean existsByChallengeIdAndUserId(UUID challengeId, UUID userId);
 
     long countByChallengeId(UUID challengeId);
+
+    // FIX: was missing — needed by updateProgress
+    Optional<ChallengeParticipant> findByChallengeIdAndUserId(UUID challengeId, UUID userId);
 }

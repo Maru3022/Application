@@ -54,30 +54,50 @@ spec:
                 secretKeyRef:
                   name: healthlife-secrets
                   key: jwt-secret
-            - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://postgres:5432/healthlife_auth"
-            - name: SPRING_DATASOURCE_USERNAME
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: healthlife-db-credentials
                   key: username
-            - name: SPRING_DATASOURCE_PASSWORD
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: healthlife-db-credentials
                   key: password
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-mail-credentials
+                  key: username
+                  optional: true
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-mail-credentials
+                  key: password
+                  optional: true
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8081
             initialDelaySeconds: 20
             periodSeconds: 10
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8081
             initialDelaySeconds: 40
             periodSeconds: 15
+            failureThreshold: 3
           lifecycle:
             preStop:
               exec:

@@ -15,14 +15,36 @@ spring:
     timeout-per-shutdown-phase: 30s
   data:
     redis:
-      host: localhost
-      port: 6379
+      # FIX: was hardcoded localhost — now reads from env var (K8s sets SPRING_DATA_REDIS_HOST=redis)
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
       timeout: 2000
       lettuce:
         pool:
           max-active: 16
           max-idle: 8
           min-idle: 4
+
+# FIX: service URLs configurable via env vars for K8s (defaults to K8s service names)
+services:
+  auth:
+    url: ${SERVICES_AUTH_URL:http://auth-service}
+  user:
+    url: ${SERVICES_USER_URL:http://user-service}
+  health:
+    url: ${SERVICES_HEALTH_URL:http://health-data-service}
+  mental:
+    url: ${SERVICES_MENTAL_URL:http://mental-service}
+  nutrition:
+    url: ${SERVICES_NUTRITION_URL:http://nutrition-service}
+  ai:
+    url: ${SERVICES_AI_URL:http://ai-coach-service}
+  social:
+    url: ${SERVICES_SOCIAL_URL:http://social-service}
+  notification:
+    url: ${SERVICES_NOTIFICATION_URL:http://notification-service}
+  analytics:
+    url: ${SERVICES_ANALYTICS_URL:http://analytics-service}
 
 jwt:
   secret: ${JWT_SECRET:HealthLifeSuperSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025}

@@ -53,14 +53,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: healthlife-secrets
-                  key: jwt-secret            - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://postgres:5432/healthlife_healthdata"
-            - name: SPRING_DATASOURCE_USERNAME
+                  key: jwt-secret
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: healthlife-db-credentials
                   key: username
-            - name: SPRING_DATASOURCE_PASSWORD
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: healthlife-db-credentials
@@ -71,12 +74,14 @@ spec:
               port: 8083
             initialDelaySeconds: 20
             periodSeconds: 10
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8083
             initialDelaySeconds: 40
             periodSeconds: 15
+            failureThreshold: 3
           lifecycle:
             preStop:
               exec:
@@ -112,7 +117,7 @@ spec:
     kind: Deployment
     name: health-data-service
   minReplicas: 2
-  maxReplicas: 8
+  maxReplicas: 6
   metrics:
     - type: Resource
       resource:

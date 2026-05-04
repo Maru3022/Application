@@ -54,18 +54,24 @@ spec:
                 secretKeyRef:
                   name: healthlife-secrets
                   key: jwt-secret
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8088
             initialDelaySeconds: 20
             periodSeconds: 10
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8088
             initialDelaySeconds: 40
             periodSeconds: 15
+            failureThreshold: 3
           lifecycle:
             preStop:
               exec:
@@ -101,7 +107,7 @@ spec:
     kind: Deployment
     name: notification-service
   minReplicas: 2
-  maxReplicas: 4
+  maxReplicas: 6
   metrics:
     - type: Resource
       resource:

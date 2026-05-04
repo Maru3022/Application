@@ -26,14 +26,23 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_USER
-              value: healthlife
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-db-credentials
+                  key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: healthlife-db-credentials
                   key: password
+            # FIX: POSTGRES_DB must be set (postgres image requires it, even when using init scripts)
+            - name: POSTGRES_DB
+              value: "healthlife"
             - name: POSTGRES_MULTIPLE_DATABASES
               value: "healthlife_auth,healthlife_user,healthlife_healthdata,healthlife_mental,healthlife_nutrition,healthlife_aicoach,healthlife_social"
+            # FIX: prevent data directory permission issues
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
@@ -41,21 +50,24 @@ spec:
               mountPath: /docker-entrypoint-initdb.d
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 500m
+              cpu: 250m
               memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "healthlife"]
+              # FIX: added -d flag to check against the base DB
+              command: ["pg_isready", "-U", "$(POSTGRES_USER)", "-d", "healthlife"]
             initialDelaySeconds: 10
             periodSeconds: 5
+            failureThreshold: 6
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "healthlife"]
+              command: ["pg_isready", "-U", "$(POSTGRES_USER)", "-d", "healthlife"]
             initialDelaySeconds: 30
             periodSeconds: 10
+            failureThreshold: 3
   volumeClaimTemplates:
     - metadata:
         name: postgres-data
@@ -63,7 +75,7 @@ spec:
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
-            storage: 1Gi
+            storage: 5Gi
 ---
 apiVersion: v1
 kind: Service

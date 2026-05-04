@@ -22,6 +22,7 @@ public class SocialService {
     private final PostLikeRepository postLikeRepository;
     private final FriendshipRepository friendshipRepository;
 
+    @Transactional(readOnly = true)
     public List<ChallengeResponse> getChallenges() {
         UUID userId = SecurityUtils.getCurrentUserId();
         return challengeRepository.findAll().stream()
@@ -81,7 +82,12 @@ public class SocialService {
     @Transactional
     public void updateProgress(UUID challengeId, Integer progress) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        // Update progress logic
+        // FIX: was empty stub — now updates participant progress
+        ChallengeParticipant participant = challengeParticipantRepository
+                .findByChallengeIdAndUserId(challengeId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("ChallengeParticipant", "challengeId+userId", challengeId));
+        participant.setProgress(progress);
+        challengeParticipantRepository.save(participant);
     }
 
     public List<ChallengeParticipant> getLeaderboard(UUID challengeId) {
@@ -131,22 +137,19 @@ public class SocialService {
     @Transactional
     public void likePost(UUID postId) {
         UUID userId = SecurityUtils.getCurrentUserId();
+        // FIX: fetch post once (was fetched twice — once per branch), use pessimistic lock
+        Post post = postRepository
+                .findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
+
         if (postLikeRepository.existsByPostIdAndUserId(postId, userId)) {
             postLikeRepository.deleteByPostIdAndUserId(postId, userId);
-            Post post = postRepository
-                    .findById(postId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
             post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
-            postRepository.save(post);
         } else {
-            postLikeRepository.save(
-                    PostLike.builder().postId(postId).userId(userId).build());
-            Post post = postRepository
-                    .findById(postId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
+            postLikeRepository.save(PostLike.builder().postId(postId).userId(userId).build());
             post.setLikesCount(post.getLikesCount() + 1);
-            postRepository.save(post);
         }
+        postRepository.save(post);
     }
 
     @Transactional

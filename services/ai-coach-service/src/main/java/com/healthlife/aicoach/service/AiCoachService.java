@@ -32,7 +32,16 @@ public class AiCoachService {
 
     public ChatResponse chat(ChatRequest request) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        String cacheKey = "ai:chat:" + userId + ":" + request.getMessage().hashCode();
+        // FIX: hashCode() is not a safe cache key — use SHA-256 digest instead to avoid collisions
+        String msgHash;
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(request.getMessage().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            msgHash = java.util.HexFormat.of().formatHex(digest).substring(0, 16);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            msgHash = String.valueOf(Math.abs(request.getMessage().hashCode()));
+        }
+        String cacheKey = "ai:chat:" + userId + ":" + msgHash;
 
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
@@ -156,6 +165,7 @@ public class AiCoachService {
 
     private String callClaudeApi(String userMessage, String context) {
         if (claudeApiKey == null || claudeApiKey.isEmpty()) {
+            log.warn("Claude API key not configured");
             return "AI Coach is not configured. Please set the Claude API key.";
         }
 
@@ -164,19 +174,20 @@ public class AiCoachService {
                     + "Provide evidence-based, supportive health insights. "
                     + "Never provide medical diagnoses. Always recommend consulting healthcare professionals.";
 
-            String requestBody =
-                    """
-                {
-                    "model": "claude-3-sonnet-20240229",
-                    "max_tokens": 1024,
-                    "system": "%s",
-                    "messages": [{"role": "user", "content": "%s"}]
-                }
-                """
-                            .formatted(
-                                    systemPrompt.replace("\"", "\\\""),
-                                    (context != null ? context + "\\n" : "") + userMessage.replace("\"", "\\\""));
+            // FIX: build JSON safely with Jackson instead of string formatting (prevents injection)
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String fullUserMessage = (context != null ? context + "\n" : "") + userMessage;
 
+            java.util.Map<String, Object> requestMap = java.util.Map.of(
+                    "model", "claude-3-5-sonnet-20241022",
+                    "max_tokens", 1024,
+                    "system", systemPrompt,
+                    "messages", java.util.List.of(java.util.Map.of("role", "user", "content", fullUserMessage)));
+
+            String requestBody = mapper.writeValueAsString(requestMap);
+
+            // FIX: .block() is acceptable here since this service runs on a Spring MVC (not WebFlux) thread
+            // but we add a timeout to prevent indefinite blocking
             return webClient
                     .post()
                     .uri(claudeBaseUrl + "/v1/messages")
@@ -186,6 +197,7 @@ public class AiCoachService {
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(String.class)
+                    .timeout(java.time.Duration.ofSeconds(30))
                     .block();
         } catch (Exception e) {
             log.error("Claude API call failed: {}", e.getMessage());

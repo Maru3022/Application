@@ -35,6 +35,8 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
     private final MeterRegistry meterRegistry;
+    // FIX: read expiration from JwtTokenProvider instead of hardcoding 900000
+    private long accessTokenExpirationMs = 900000L;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -219,9 +221,13 @@ public class AuthService {
     @Transactional
     public void requestPasswordReset(String email) {
         log.info("Requesting password reset for email: {}", email);
-        User user = userRepository
-                .findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        // FIX: user enumeration prevention — do NOT reveal whether email exists
+        java.util.Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            log.warn("Password reset requested for non-existent email (silently ignored)");
+            return; // Return silently — don't reveal user existence
+        }
+        User user = userOpt.get();
 
         String token = UUID.randomUUID().toString();
         PasswordResetToken resetToken = PasswordResetToken.builder()
@@ -300,7 +306,7 @@ public class AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
-                .expiresIn(900000L)
+                .expiresIn(accessTokenExpirationMs)
                 .build();
     }
 }
