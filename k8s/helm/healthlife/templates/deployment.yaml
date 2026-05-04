@@ -44,6 +44,26 @@ spec:
                 secretKeyRef:
                   name: healthlife-secrets
                   key: jwt-secret
+            {{- if $svc.dbName }}
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://{{ $.Values.db.host }}:{{ $.Values.db.port }}/{{ $svc.dbName }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-db-credentials
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-db-credentials
+                  key: password
+            {{- end }}
+            {{- if $svc.needsRedis }}
+            - name: SPRING_DATA_REDIS_HOST
+              value: {{ $.Values.redis.host | quote }}
+            - name: SPRING_DATA_REDIS_PORT
+              value: {{ $.Values.redis.port | quote }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
