@@ -64,6 +64,26 @@ spec:
             - name: SPRING_DATA_REDIS_PORT
               value: {{ $.Values.redis.port | quote }}
             {{- end }}
+            {{- if eq $name "gateway-service" }}
+            - name: GATEWAY_ROUTE_AUTH
+              value: "http://auth-service:8081"
+            - name: GATEWAY_ROUTE_USERS
+              value: "http://user-service:8082"
+            - name: GATEWAY_ROUTE_HEALTH
+              value: "http://health-data-service:8083"
+            - name: GATEWAY_ROUTE_MENTAL
+              value: "http://mental-service:8084"
+            - name: GATEWAY_ROUTE_NUTRITION
+              value: "http://nutrition-service:8085"
+            - name: GATEWAY_ROUTE_AI
+              value: "http://ai-coach-service:8086"
+            - name: GATEWAY_ROUTE_SOCIAL
+              value: "http://social-service:8087"
+            - name: GATEWAY_ROUTE_NOTIFICATIONS
+              value: "http://notification-service:8088"
+            - name: GATEWAY_ROUTE_ANALYTICS
+              value: "http://analytics-service:8089"
+            {{- end }}
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness

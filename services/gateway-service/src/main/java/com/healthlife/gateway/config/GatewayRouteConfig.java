@@ -6,6 +6,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +22,8 @@ import org.springframework.web.client.RestTemplate;
  * downstream call is protected by Resilience4j circuit breaker, retry, and rate limiter. Fallback
  * methods return RFC 7807 ProblemDetail responses when a service is unavailable.
  *
- * <p>FIX: Routes now use Kubernetes service names instead of localhost. FIX: RestTemplate
- * configured with connection/read timeouts to prevent hanging.
+ * <p>FIX: Routes configurable via env vars (default = localhost for local dev, overridden to K8s
+ * service names via Helm). FIX: RestTemplate configured with connection/read timeouts.
  */
 @Component
 @RestController
@@ -32,37 +33,35 @@ public class GatewayRouteConfig {
 
     private final RestTemplate restTemplate;
 
-    // FIX: Service URLs now read from env vars (default = K8s service names)
     private final Map<String, String> routes;
 
     public GatewayRouteConfig(
-            @Value("${services.auth.url:http://auth-service}") String authUrl,
-            @Value("${services.user.url:http://user-service}") String userUrl,
-            @Value("${services.health.url:http://health-data-service}") String healthUrl,
-            @Value("${services.mental.url:http://mental-service}") String mentalUrl,
-            @Value("${services.nutrition.url:http://nutrition-service}") String nutritionUrl,
-            @Value("${services.ai.url:http://ai-coach-service}") String aiUrl,
-            @Value("${services.social.url:http://social-service}") String socialUrl,
-            @Value("${services.notification.url:http://notification-service}") String notificationUrl,
-            @Value("${services.analytics.url:http://analytics-service}") String analyticsUrl,
+            @Value("${gateway.routes.auth:http://localhost:8081}") String authUrl,
+            @Value("${gateway.routes.users:http://localhost:8082}") String usersUrl,
+            @Value("${gateway.routes.health:http://localhost:8083}") String healthUrl,
+            @Value("${gateway.routes.mental:http://localhost:8084}") String mentalUrl,
+            @Value("${gateway.routes.nutrition:http://localhost:8085}") String nutritionUrl,
+            @Value("${gateway.routes.ai:http://localhost:8086}") String aiUrl,
+            @Value("${gateway.routes.social:http://localhost:8087}") String socialUrl,
+            @Value("${gateway.routes.notifications:http://localhost:8088}") String notificationsUrl,
+            @Value("${gateway.routes.analytics:http://localhost:8089}") String analyticsUrl,
             RestTemplateBuilder restTemplateBuilder) {
 
-        // FIX: timeout configured to prevent indefinite hangs
         this.restTemplate = restTemplateBuilder
                 .connectTimeout(Duration.ofSeconds(5))
                 .readTimeout(Duration.ofSeconds(30))
                 .build();
 
-        this.routes = Map.of(
-                "/api/v1/auth", authUrl,
-                "/api/v1/users", userUrl,
-                "/api/v1/health", healthUrl,
-                "/api/v1/mental", mentalUrl,
-                "/api/v1/nutrition", nutritionUrl,
-                "/api/v1/ai", aiUrl,
-                "/api/v1/social", socialUrl,
-                "/api/v1/notifications", notificationUrl,
-                "/api/v1/analytics", analyticsUrl);
+        this.routes = new LinkedHashMap<>();
+        this.routes.put("/api/v1/auth", authUrl);
+        this.routes.put("/api/v1/users", usersUrl);
+        this.routes.put("/api/v1/health", healthUrl);
+        this.routes.put("/api/v1/mental", mentalUrl);
+        this.routes.put("/api/v1/nutrition", nutritionUrl);
+        this.routes.put("/api/v1/ai", aiUrl);
+        this.routes.put("/api/v1/social", socialUrl);
+        this.routes.put("/api/v1/notifications", notificationsUrl);
+        this.routes.put("/api/v1/analytics", analyticsUrl);
     }
 
     @RequestMapping("/api/v1/{service}/**")

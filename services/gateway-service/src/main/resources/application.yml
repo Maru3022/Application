@@ -53,6 +53,18 @@ jwt:
   refresh-token:
     expiration: 604800000
 
+gateway:
+  routes:
+    auth: ${GATEWAY_ROUTE_AUTH:http://localhost:8081}
+    users: ${GATEWAY_ROUTE_USERS:http://localhost:8082}
+    health: ${GATEWAY_ROUTE_HEALTH:http://localhost:8083}
+    mental: ${GATEWAY_ROUTE_MENTAL:http://localhost:8084}
+    nutrition: ${GATEWAY_ROUTE_NUTRITION:http://localhost:8085}
+    ai: ${GATEWAY_ROUTE_AI:http://localhost:8086}
+    social: ${GATEWAY_ROUTE_SOCIAL:http://localhost:8087}
+    notifications: ${GATEWAY_ROUTE_NOTIFICATIONS:http://localhost:8088}
+    analytics: ${GATEWAY_ROUTE_ANALYTICS:http://localhost:8089}
+
 management:
   endpoints:
     web:
