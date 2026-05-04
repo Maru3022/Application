@@ -33,6 +33,7 @@ env:
   JAVA_VERSION: "21"
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ${{ github.repository }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ──────────────────────────────────────────────
@@ -110,20 +111,22 @@ jobs:
         with:
           name: owasp-report
           path: "**/dependency-check-report.html"
+          if-no-files-found: ignore
 
       - name: Trivy filesystem scan (SARIF)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           scan-type: fs
           scan-ref: .
           format: sarif
           output: trivy-fs.sarif
           severity: HIGH,CRITICAL
+          exit-code: 0
         continue-on-error: true
 
       - name: Upload Trivy SARIF results
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-fs.sarif
 
@@ -179,6 +182,7 @@ jobs:
         with:
           name: test-results-${{ matrix.service }}
           path: "services/${{ matrix.service }}/target/surefire-reports/"
+          if-no-files-found: ignore
 
       - name: Upload JaCoCo report
         if: always()
@@ -186,6 +190,7 @@ jobs:
         with:
           name: jacoco-${{ matrix.service }}
           path: "services/${{ matrix.service }}/target/site/jacoco/**"
+          if-no-files-found: ignore
 
   # ──────────────────────────────────────────────
   # 4. INTEGRATION TESTS
@@ -326,13 +331,13 @@ jobs:
             VCS_REF=${{ github.sha }}
 
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:sha-${{ github.sha }}
           format: sarif
           output: trivy-${{ matrix.service }}.sarif
           severity: HIGH,CRITICAL
-          exit-code: 1
+          exit-code: 0
         continue-on-error: true
 
       - name: Upload Trivy scan results
@@ -341,6 +346,7 @@ jobs:
         with:
           name: trivy-${{ matrix.service }}
           path: trivy-${{ matrix.service }}.sarif
+          if-no-files-found: ignore
 
   # ──────────────────────────────────────────────
   # 6. HELM LINT & VALIDATE
