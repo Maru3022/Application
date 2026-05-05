@@ -1,4 +1,4 @@
-﻿server:
+server:
   port: 8088
   shutdown: graceful
   tomcat:
@@ -13,7 +13,16 @@ spring:
     name: notification-service
   lifecycle:
     timeout-per-shutdown-phase: 30s
-
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 2000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 2
 
 jwt:
   secret: ${JWT_SECRET:HealthLifeSuperSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025}
@@ -49,7 +58,7 @@ management:
         http.server.requests: true
   tracing:
     sampling:
-      probability: 1.0
+      probability: 0.1
 
 resilience4j:
   circuitbreaker:
@@ -73,15 +82,3 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
-
-spring:
-  data:
-    redis:
-      host: ${SPRING_DATA_REDIS_HOST:redis}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
-      timeout: 2000
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 4
-          min-idle: 2

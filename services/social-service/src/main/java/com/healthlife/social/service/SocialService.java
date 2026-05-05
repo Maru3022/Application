@@ -154,15 +154,15 @@ public class SocialService {
     public void likePost(UUID postId) {
         UUID userId = SecurityUtils.getCurrentUserId();
         // FIX: fetch post once (was fetched twice — once per branch), use pessimistic lock
-        Post post = postRepository
-                .findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
+        Post post =
+                postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
         if (postLikeRepository.existsByPostIdAndUserId(postId, userId)) {
             postLikeRepository.deleteByPostIdAndUserId(postId, userId);
             post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
         } else {
-            postLikeRepository.save(PostLike.builder().postId(postId).userId(userId).build());
+            postLikeRepository.save(
+                    PostLike.builder().postId(postId).userId(userId).build());
             post.setLikesCount(post.getLikesCount() + 1);
         }
         postRepository.save(post);

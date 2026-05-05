@@ -18,8 +18,8 @@ spec:
           image: redis:7-alpine
           ports:
             - containerPort: 6379
-          # FIX: add --save for basic persistence, --loglevel for observability
-          command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+          # FIX: add --save for basic persistence, --appendonly for durability, --maxmemory for OOM protection
+          command: ["redis-server", "--save", "60", "1", "--appendonly", "yes", "--maxmemory", "200mb", "--maxmemory-policy", "allkeys-lru", "--loglevel", "warning"]
           resources:
             requests:
               cpu: 50m
@@ -44,7 +44,19 @@ spec:
               mountPath: /data
       volumes:
         - name: redis-data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: redis-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: healthlife
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: v1
 kind: Service

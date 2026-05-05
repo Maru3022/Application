@@ -107,6 +107,7 @@ services:
   notification-service:
     port: 8088
     replicaCount: 2
+    needsRedis: true
     resources:
       requests:
         cpu: 100m

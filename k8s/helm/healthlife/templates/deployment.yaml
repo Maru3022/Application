@@ -84,18 +84,26 @@ spec:
             - name: GATEWAY_ROUTE_ANALYTICS
               value: "http://analytics-service:8089"
             {{- end }}
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: {{ $svc.port }}
+            failureThreshold: 30
+            periodSeconds: 5
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: {{ $svc.port }}
-            initialDelaySeconds: 20
+            initialDelaySeconds: 10
             periodSeconds: 10
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: {{ $svc.port }}
-            initialDelaySeconds: 40
+            initialDelaySeconds: 60
             periodSeconds: 15
+            failureThreshold: 5
           lifecycle:
             preStop:
               exec:

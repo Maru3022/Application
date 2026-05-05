@@ -20,14 +20,12 @@ public interface ChallengeParticipantRepository extends JpaRepository<ChallengeP
     Optional<ChallengeParticipant> findByChallengeIdAndUserId(UUID challengeId, UUID userId);
 
     // FIX N+1: bulk count per challenge — replaces N individual countByChallengeId calls
-    @Query(
-            "SELECT cp.challengeId, COUNT(cp) FROM ChallengeParticipant cp"
-                    + " WHERE cp.challengeId IN :ids GROUP BY cp.challengeId")
+    @Query("SELECT cp.challengeId, COUNT(cp) FROM ChallengeParticipant cp"
+            + " WHERE cp.challengeId IN :ids GROUP BY cp.challengeId")
     List<Object[]> countByChallengeIdIn(@Param("ids") List<UUID> ids);
 
     // FIX N+1: bulk existence check — replaces N individual existsByChallengeIdAndUserId calls
-    @Query(
-            "SELECT cp.challengeId FROM ChallengeParticipant cp"
-                    + " WHERE cp.challengeId IN :ids AND cp.userId = :userId")
+    @Query("SELECT cp.challengeId FROM ChallengeParticipant cp"
+            + " WHERE cp.challengeId IN :ids AND cp.userId = :userId")
     Set<UUID> findJoinedChallengeIds(@Param("ids") List<UUID> ids, @Param("userId") UUID userId);
 }

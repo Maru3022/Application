@@ -31,7 +31,6 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        format_sql: true
         jdbc:
           batch_size: 50
         order_inserts: true
@@ -99,7 +98,7 @@ management:
         http.server.requests: true
   tracing:
     sampling:
-      probability: 1.0
+      probability: 0.1
 
 resilience4j:
   circuitbreaker:

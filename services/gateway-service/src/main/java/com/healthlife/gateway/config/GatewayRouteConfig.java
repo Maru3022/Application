@@ -48,8 +48,8 @@ public class GatewayRouteConfig {
             RestTemplateBuilder restTemplateBuilder) {
 
         this.restTemplate = restTemplateBuilder
-                .connectTimeout(Duration.ofSeconds(5))
-                .readTimeout(Duration.ofSeconds(30))
+                .setConnectTimeout(Duration.ofSeconds(5))
+                .setReadTimeout(Duration.ofSeconds(30))
                 .build();
 
         this.routes = new LinkedHashMap<>();
