@@ -5,26 +5,24 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
-
 /**
- * Simple reverse-proxy gateway that routes external requests to internal microservices.
- * Each downstream call is protected by Resilience4j circuit breaker, retry, and rate limiter.
- * Fallback methods return RFC 7807 ProblemDetail responses when a service is unavailable.
+ * Simple reverse-proxy gateway that routes external requests to internal microservices. Each
+ * downstream call is protected by Resilience4j circuit breaker, retry, and rate limiter. Fallback
+ * methods return RFC 7807 ProblemDetail responses when a service is unavailable.
  *
- * FIX: Routes now use Kubernetes service names instead of localhost.
- * FIX: RestTemplate configured with connection/read timeouts to prevent hanging.
+ * <p>FIX: Routes now use Kubernetes service names instead of localhost. FIX: RestTemplate
+ * configured with connection/read timeouts to prevent hanging.
  */
 @Component
 @RestController
@@ -56,15 +54,15 @@ public class GatewayRouteConfig {
                 .build();
 
         this.routes = Map.of(
-                "/api/v1/auth",          authUrl,
-                "/api/v1/users",         userUrl,
-                "/api/v1/health",        healthUrl,
-                "/api/v1/mental",        mentalUrl,
-                "/api/v1/nutrition",     nutritionUrl,
-                "/api/v1/ai",            aiUrl,
-                "/api/v1/social",        socialUrl,
+                "/api/v1/auth", authUrl,
+                "/api/v1/users", userUrl,
+                "/api/v1/health", healthUrl,
+                "/api/v1/mental", mentalUrl,
+                "/api/v1/nutrition", nutritionUrl,
+                "/api/v1/ai", aiUrl,
+                "/api/v1/social", socialUrl,
                 "/api/v1/notifications", notificationUrl,
-                "/api/v1/analytics",     analyticsUrl);
+                "/api/v1/analytics", analyticsUrl);
     }
 
     @RequestMapping("/api/v1/{service}/**")
@@ -118,9 +116,14 @@ public class GatewayRouteConfig {
             HttpHeaders headers,
             HttpMethod method,
             Throwable t) {
-        log.warn("Gateway fallback for service={} due to {}: {}", service, t.getClass().getSimpleName(), t.getMessage());
+        log.warn(
+                "Gateway fallback for service={} due to {}: {}",
+                service,
+                t.getClass().getSimpleName(),
+                t.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_GATEWAY, "Service " + service + " is currently unavailable. Please retry later.");
+                HttpStatus.BAD_GATEWAY,
+                "Service " + service + " is currently unavailable. Please retry later.");
         problem.setTitle("Service Unavailable");
         problem.setType(URI.create("https://healthlife.com/errors/service-unavailable"));
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(problem);
@@ -128,9 +131,11 @@ public class GatewayRouteConfig {
 
     public static class GatewayRouteException extends RuntimeException {
         private final ProblemDetail problemDetail;
+
         public GatewayRouteException(ProblemDetail problemDetail) {
             this.problemDetail = problemDetail;
         }
+
         public ProblemDetail getProblemDetail() {
             return problemDetail;
         }

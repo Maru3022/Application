@@ -15,6 +15,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -222,7 +223,7 @@ public class AuthService {
     public void requestPasswordReset(String email) {
         log.info("Requesting password reset for email: {}", email);
         // FIX: user enumeration prevention — do NOT reveal whether email exists
-        java.util.Optional<User> userOpt = userRepository.findByEmail(email);
+        Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             log.warn("Password reset requested for non-existent email (silently ignored)");
             return; // Return silently — don't reveal user existence

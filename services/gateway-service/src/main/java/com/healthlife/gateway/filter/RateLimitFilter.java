@@ -13,11 +13,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * FIX: Original code had a race condition — get→check→increment is not atomic.
- * Two concurrent requests could both read count=99, both pass the check, and both increment to 100.
+ * FIX: Original code had a race condition — get→check→increment is not atomic. Two concurrent
+ * requests could both read count=99, both pass the check, and both increment to 100.
  *
- * Fix: Use Redis INCR (atomic) first, then check. If this is the first request, set TTL.
- * This pattern is safe under concurrent load.
+ * <p>Fix: Use Redis INCR (atomic) first, then check. If this is the first request, set TTL. This
+ * pattern is safe under concurrent load.
  */
 @Component
 @RequiredArgsConstructor
@@ -28,7 +28,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final int WINDOW_SECONDS = 60;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         String clientId = request.getRemoteAddr();

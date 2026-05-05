@@ -1,10 +1,18 @@
 package com.healthlife.aicoach.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthlife.aicoach.entity.AiInsight;
 import com.healthlife.aicoach.repository.AiInsightRepository;
 import com.healthlife.common.dto.aicoach.*;
 import com.healthlife.common.security.SecurityUtils;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +43,10 @@ public class AiCoachService {
         // FIX: hashCode() is not a safe cache key — use SHA-256 digest instead to avoid collisions
         String msgHash;
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(request.getMessage().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            msgHash = java.util.HexFormat.of().formatHex(digest).substring(0, 16);
-        } catch (java.security.NoSuchAlgorithmException e) {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(request.getMessage().getBytes(StandardCharsets.UTF_8));
+            msgHash = HexFormat.of().formatHex(digest).substring(0, 16);
+        } catch (NoSuchAlgorithmException e) {
             msgHash = String.valueOf(Math.abs(request.getMessage().hashCode()));
         }
         String cacheKey = "ai:chat:" + userId + ":" + msgHash;
@@ -175,14 +183,14 @@ public class AiCoachService {
                     + "Never provide medical diagnoses. Always recommend consulting healthcare professionals.";
 
             // FIX: build JSON safely with Jackson instead of string formatting (prevents injection)
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            ObjectMapper mapper = new ObjectMapper();
             String fullUserMessage = (context != null ? context + "\n" : "") + userMessage;
 
-            java.util.Map<String, Object> requestMap = java.util.Map.of(
+            Map<String, Object> requestMap = Map.of(
                     "model", "claude-3-5-sonnet-20241022",
                     "max_tokens", 1024,
                     "system", systemPrompt,
-                    "messages", java.util.List.of(java.util.Map.of("role", "user", "content", fullUserMessage)));
+                    "messages", List.of(Map.of("role", "user", "content", fullUserMessage)));
 
             String requestBody = mapper.writeValueAsString(requestMap);
 
@@ -197,7 +205,7 @@ public class AiCoachService {
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(String.class)
-                    .timeout(java.time.Duration.ofSeconds(30))
+                    .timeout(Duration.ofSeconds(30))
                     .block();
         } catch (Exception e) {
             log.error("Claude API call failed: {}", e.getMessage());
