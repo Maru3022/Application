@@ -150,3 +150,10 @@ containerSecurityContext:
   capabilities:
     drop:
       - ALL
+
+ingress:
+  enabled: true
+  host: healthlife.local
+  tls:
+    enabled: false
+    issuer: letsencrypt-prod

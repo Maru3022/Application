@@ -7,11 +7,11 @@ import com.healthlife.common.security.SecurityUtils;
 import com.healthlife.social.entity.*;
 import com.healthlife.social.repository.*;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,8 +37,7 @@ public class SocialService {
 
         // FIX N+1: single bulk query instead of N count queries
         Map<UUID, Long> countMap = challengeParticipantRepository.countByChallengeIdIn(ids).stream()
-                .collect(Collectors.toMap(
-                        row -> (UUID) row[0], row -> (Long) row[1]));
+                .collect(Collectors.toMap(row -> (UUID) row[0], row -> (Long) row[1]));
 
         // FIX N+1: single bulk query instead of N exists queries
         Set<UUID> joinedIds = challengeParticipantRepository.findJoinedChallengeIds(ids, userId);
@@ -103,8 +102,7 @@ public class SocialService {
         // FIX: was empty stub — now updates participant progress
         ChallengeParticipant participant = challengeParticipantRepository
                 .findByChallengeIdAndUserId(challengeId, userId)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("ChallengeParticipant", "id", challengeId));
+                .orElseThrow(() -> new ResourceNotFoundException("ChallengeParticipant", "id", challengeId));
         participant.setProgress(progress);
         challengeParticipantRepository.save(participant);
     }
@@ -120,8 +118,7 @@ public class SocialService {
                 .toList();
         List<UUID> allIds = friendIds.isEmpty()
                 ? List.of(userId)
-                : Stream.concat(friendIds.stream(), Stream.of(userId))
-                        .toList();
+                : Stream.concat(friendIds.stream(), Stream.of(userId)).toList();
         return postRepository.findByUserIdInOrderByCreatedAtDesc(allIds).stream()
                 .map(p -> PostResponse.builder()
                         .id(p.getId())

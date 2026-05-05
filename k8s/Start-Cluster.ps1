@@ -90,13 +90,23 @@ Log "Deploying HealthLife services with Helm..."
 helm upgrade --install healthlife ./k8s/helm/healthlife `
     --namespace healthlife `
     --set image.tag=latest `
-    --wait --timeout 300s 2>$null
+    --timeout 300s
 if ($LASTEXITCODE -ne 0) {
-    Log "Helm install timed out, checking pod status..."
+    Log "Helm install may have timed out, checking pod status..."
     kubectl get pods -n healthlife
     Log "Some pods may still be pulling images. Run: kubectl get pods -n healthlife -w"
 } else {
     Ok "Helm release installed"
+}
+
+# ── Wait for pods to be ready ──────────────────
+Log "Waiting for all pods to become ready (this may take a few minutes)..."
+kubectl wait --for=condition=ready pod -l app -n healthlife --timeout=600s 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Log "Not all pods are ready yet. Check: kubectl get pods -n healthlife"
+    kubectl get pods -n healthlife
+} else {
+    Ok "All pods are ready"
 }
 
 # ── Apply NetworkPolicies ─────────────────────
@@ -119,6 +129,9 @@ Write-Host "    kubectl get pods -n healthlife"
 Write-Host "    kubectl get svc -n healthlife"
 Write-Host "    kubectl port-forward svc/gateway-service 8080:80 -n healthlife"
 Write-Host ""
-Write-Host "  Access gateway:  http://localhost:8080"
+Write-Host "  Access via port-forward:  http://localhost:8080"
+Write-Host "  Access via ingress:       http://healthlife.local"
+Write-Host "    (add '127.0.0.1 healthlife.local' to C:\Windows\System32\drivers\etc\hosts)"
+Write-Host ""
 Write-Host "  Delete cluster:  kind delete cluster --name healthlife"
 Write-Host ""
