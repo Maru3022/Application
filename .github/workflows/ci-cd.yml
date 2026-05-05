@@ -58,8 +58,16 @@ jobs:
           key: maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: maven-
 
-      - name: Check code formatting (Spotless)
-        run: mvn spotless:check -B
+      - name: Apply & verify code formatting (Spotless)
+        run: |
+          # FIX: apply formatting first so CI auto-fixes, then verify nothing is left dirty
+          mvn spotless:apply -B -q
+          if ! git diff --exit-code --quiet; then
+            echo "::error::Code formatting issues found. Run 'mvn spotless:apply' locally before pushing."
+            git diff --stat
+            exit 1
+          fi
+          echo "All files are correctly formatted."
 
       - name: Compile all modules
         run: mvn compile -B
