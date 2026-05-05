@@ -122,8 +122,7 @@ public class GatewayRouteConfig {
                 t.getClass().getSimpleName(),
                 t.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_GATEWAY,
-                "Service " + service + " is currently unavailable. Please retry later.");
+                HttpStatus.BAD_GATEWAY, "Service " + service + " is currently unavailable. Please retry later.");
         problem.setTitle("Service Unavailable");
         problem.setType(URI.create("https://healthlife.com/errors/service-unavailable"));
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(problem);

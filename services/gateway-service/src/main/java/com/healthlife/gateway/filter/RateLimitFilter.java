@@ -28,8 +28,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final int WINDOW_SECONDS = 60;
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         String clientId = request.getRemoteAddr();
