@@ -162,8 +162,10 @@ public class MentalService {
     }
 
     public MeditationDto getRecommendedMeditation() {
-        // AI-based recommendation placeholder
-        List<Meditation> all = meditationRepository.findAll();
+        // FIX: load only 1 meditation instead of all to prevent OOM
+        List<Meditation> all = meditationRepository
+                .findAll(org.springframework.data.domain.PageRequest.of(0, 1))
+                .getContent();
         if (all.isEmpty()) throw new ResourceNotFoundException("Meditation", "any", "");
         Meditation m = all.get(0);
         return MeditationDto.builder()

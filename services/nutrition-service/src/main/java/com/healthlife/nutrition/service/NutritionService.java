@@ -84,7 +84,11 @@ public class NutritionService {
     }
 
     public List<FoodDto> searchFoods(String query) {
-        return foodRepository.findByNameContainingIgnoreCase(query).stream()
+        // FIX: limit to 50 results to prevent OOM with broad searches
+        return foodRepository
+                .findByNameContainingIgnoreCase(query, org.springframework.data.domain.PageRequest.of(0, 50))
+                .getContent()
+                .stream()
                 .map(this::mapFoodDto)
                 .toList();
     }

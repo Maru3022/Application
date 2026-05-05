@@ -171,7 +171,9 @@ public class HealthDataService {
 
     public CycleResponse getCyclePrediction() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        List<CycleEntry> entries = cycleEntryRepository.findByUserIdOrderByPeriodStartDesc(userId);
+        List<CycleEntry> entries = cycleEntryRepository
+                .findByUserIdOrderByPeriodStartDesc(userId, org.springframework.data.domain.PageRequest.of(0, 12))
+                .getContent();
         if (entries.isEmpty()) {
             throw new ResourceNotFoundException("Cycle data", "userId", userId);
         }

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +14,8 @@ import org.springframework.data.repository.query.Param;
 public interface ChallengeParticipantRepository extends JpaRepository<ChallengeParticipant, UUID> {
 
     List<ChallengeParticipant> findByChallengeId(UUID challengeId);
+
+    Page<ChallengeParticipant> findByChallengeIdOrderByProgressDesc(UUID challengeId, Pageable pageable);
 
     boolean existsByChallengeIdAndUserId(UUID challengeId, UUID userId);
 

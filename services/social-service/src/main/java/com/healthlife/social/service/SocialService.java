@@ -32,7 +32,10 @@ public class SocialService {
     @Transactional(readOnly = true)
     public List<ChallengeResponse> getChallenges() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        List<Challenge> challenges = challengeRepository.findAll();
+        // FIX: limit to 50 most recent challenges to prevent OOM
+        List<Challenge> challenges = challengeRepository
+                .findAllByOrderByStartDateDesc(org.springframework.data.domain.PageRequest.of(0, 50))
+                .getContent();
         if (challenges.isEmpty()) {
             return List.of();
         }
@@ -111,7 +114,11 @@ public class SocialService {
     }
 
     public List<ChallengeParticipant> getLeaderboard(UUID challengeId) {
-        return challengeParticipantRepository.findByChallengeId(challengeId);
+        // FIX: limit to top 50 participants to prevent OOM
+        return challengeParticipantRepository
+                .findByChallengeIdOrderByProgressDesc(
+                        challengeId, org.springframework.data.domain.PageRequest.of(0, 50))
+                .getContent();
     }
 
     public List<PostResponse> getFeed() {
@@ -122,7 +129,11 @@ public class SocialService {
         List<UUID> allIds = friendIds.isEmpty()
                 ? List.of(userId)
                 : Stream.concat(friendIds.stream(), Stream.of(userId)).toList();
-        return postRepository.findByUserIdInOrderByCreatedAtDesc(allIds).stream()
+        // FIX: limit to 50 most recent posts to prevent OOM
+        return postRepository
+                .findByUserIdInOrderByCreatedAtDesc(allIds, org.springframework.data.domain.PageRequest.of(0, 50))
+                .getContent()
+                .stream()
                 .map(p -> PostResponse.builder()
                         .id(p.getId())
                         .userId(p.getUserId())
