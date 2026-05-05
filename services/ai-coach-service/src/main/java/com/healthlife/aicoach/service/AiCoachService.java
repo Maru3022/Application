@@ -31,6 +31,8 @@ public class AiCoachService {
     private final AiInsightRepository aiInsightRepository;
     private final StringRedisTemplate redisTemplate;
     private final WebClient webClient;
+    // FIX: inject shared ObjectMapper bean instead of creating new instance on every API call
+    private final ObjectMapper objectMapper;
 
     @Value("${ai.claude.api-key:}")
     private String claudeApiKey;
@@ -183,16 +185,19 @@ public class AiCoachService {
                     + "Never provide medical diagnoses. Always recommend consulting healthcare professionals.";
 
             // FIX: build JSON safely with Jackson instead of string formatting (prevents injection)
-            ObjectMapper mapper = new ObjectMapper();
             String fullUserMessage = (context != null ? context + "\n" : "") + userMessage;
 
             Map<String, Object> requestMap = Map.of(
-                    "model", "claude-3-5-sonnet-20241022",
-                    "max_tokens", 1024,
-                    "system", systemPrompt,
-                    "messages", List.of(Map.of("role", "user", "content", fullUserMessage)));
+                    "model",
+                    "claude-3-5-sonnet-20241022",
+                    "max_tokens",
+                    1024,
+                    "system",
+                    systemPrompt,
+                    "messages",
+                    List.of(Map.of("role", "user", "content", fullUserMessage)));
 
-            String requestBody = mapper.writeValueAsString(requestMap);
+            String requestBody = objectMapper.writeValueAsString(requestMap);
 
             // FIX: .block() is acceptable here since this service runs on a Spring MVC (not WebFlux) thread
             // but we add a timeout to prevent indefinite blocking

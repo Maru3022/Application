@@ -11,6 +11,8 @@ import com.healthlife.auth.repository.UserRepository;
 import com.healthlife.common.dto.auth.*;
 import com.healthlife.common.exception.*;
 import com.healthlife.common.security.JwtTokenProvider;
+import com.warrenstrange.googleauth.GoogleAuthenticator;
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -165,8 +167,8 @@ public class AuthService {
             throw new BadRequestException("MFA is already enabled");
         }
 
-        com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
-        com.warrenstrange.googleauth.GoogleAuthenticatorKey key = gAuth.createCredentials();
+        GoogleAuthenticator gAuth = new GoogleAuthenticator();
+        GoogleAuthenticatorKey key = gAuth.createCredentials();
         String secret = key.getKey();
 
         user.setMfaSecret(secret);
@@ -190,7 +192,7 @@ public class AuthService {
             throw new BadRequestException("MFA is not enabled for this user");
         }
 
-        com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
+        GoogleAuthenticator gAuth = new GoogleAuthenticator();
         boolean valid = gAuth.authorize(user.getMfaSecret(), Integer.parseInt(code));
         log.info("MFA verification {} for user: {}", valid ? "successful" : "failed", userId);
         return valid;
@@ -209,7 +211,7 @@ public class AuthService {
             throw new BadRequestException("MFA is not enabled");
         }
 
-        com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
+        GoogleAuthenticator gAuth = new GoogleAuthenticator();
         if (!gAuth.authorize(user.getMfaSecret(), Integer.parseInt(code))) {
             log.warn("Invalid MFA code for email: {}", email);
             throw new UnauthorizedException("Invalid MFA code");

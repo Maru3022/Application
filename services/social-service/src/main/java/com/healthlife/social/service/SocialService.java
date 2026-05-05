@@ -7,6 +7,10 @@ import com.healthlife.common.security.SecurityUtils;
 import com.healthlife.social.entity.*;
 import com.healthlife.social.repository.*;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +29,21 @@ public class SocialService {
     @Transactional(readOnly = true)
     public List<ChallengeResponse> getChallenges() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        return challengeRepository.findAll().stream()
+        List<Challenge> challenges = challengeRepository.findAll();
+        if (challenges.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> ids = challenges.stream().map(Challenge::getId).toList();
+
+        // FIX N+1: single bulk query instead of N count queries
+        Map<UUID, Long> countMap = challengeParticipantRepository.countByChallengeIdIn(ids).stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0], row -> (Long) row[1]));
+
+        // FIX N+1: single bulk query instead of N exists queries
+        Set<UUID> joinedIds = challengeParticipantRepository.findJoinedChallengeIds(ids, userId);
+
+        return challenges.stream()
                 .map(c -> ChallengeResponse.builder()
                         .id(c.getId())
                         .title(c.getTitle())
@@ -34,8 +52,8 @@ public class SocialService {
                         .startDate(c.getStartDate())
                         .endDate(c.getEndDate())
                         .targetValue(c.getTargetValue())
-                        .participantCount((int) challengeParticipantRepository.countByChallengeId(c.getId()))
-                        .joined(challengeParticipantRepository.existsByChallengeIdAndUserId(c.getId(), userId))
+                        .participantCount(countMap.getOrDefault(c.getId(), 0L).intValue())
+                        .joined(joinedIds.contains(c.getId()))
                         .build())
                 .toList();
     }
@@ -85,7 +103,8 @@ public class SocialService {
         // FIX: was empty stub — now updates participant progress
         ChallengeParticipant participant = challengeParticipantRepository
                 .findByChallengeIdAndUserId(challengeId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("ChallengeParticipant", "challengeId+userId", challengeId));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("ChallengeParticipant", "id", challengeId));
         participant.setProgress(progress);
         challengeParticipantRepository.save(participant);
     }
@@ -101,7 +120,7 @@ public class SocialService {
                 .toList();
         List<UUID> allIds = friendIds.isEmpty()
                 ? List.of(userId)
-                : java.util.stream.Stream.concat(friendIds.stream(), java.util.stream.Stream.of(userId))
+                : Stream.concat(friendIds.stream(), Stream.of(userId))
                         .toList();
         return postRepository.findByUserIdInOrderByCreatedAtDesc(allIds).stream()
                 .map(p -> PostResponse.builder()
