@@ -11,4 +11,7 @@ public interface FoodLogEntryRepository extends JpaRepository<FoodLogEntry, UUID
             UUID userId, OffsetDateTime start, OffsetDateTime end);
 
     List<FoodLogEntry> findByUserIdOrderByConsumedAtDesc(UUID userId);
+
+    org.springframework.data.domain.Page<FoodLogEntry> findByUserIdOrderByConsumedAtDesc(
+            UUID userId, org.springframework.data.domain.Pageable pageable);
 }

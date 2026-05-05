@@ -45,7 +45,10 @@ public class HealthDataService {
         if (from != null && to != null) {
             entries = sleepEntryRepository.findByUserIdAndSleepStartBetweenOrderBySleepStartDesc(userId, from, to);
         } else {
-            entries = sleepEntryRepository.findByUserIdOrderBySleepStartDesc(userId);
+            // FIX: limit to 100 most recent entries when no date range to prevent OOM
+            entries = sleepEntryRepository
+                    .findByUserIdOrderBySleepStartDesc(userId, org.springframework.data.domain.PageRequest.of(0, 100))
+                    .getContent();
         }
         return entries.stream().map(this::mapSleepResponse).toList();
     }
@@ -83,7 +86,11 @@ public class HealthDataService {
 
     public List<WeightResponse> getWeightHistory() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        return weightEntryRepository.findByUserIdOrderByRecordedAtDesc(userId).stream()
+        // FIX: limit to 100 most recent entries to prevent OOM with large datasets
+        return weightEntryRepository
+                .findByUserIdOrderByRecordedAtDesc(userId, org.springframework.data.domain.PageRequest.of(0, 100))
+                .getContent()
+                .stream()
                 .map(e -> WeightResponse.builder()
                         .id(e.getId())
                         .weightKg(e.getWeightKg())

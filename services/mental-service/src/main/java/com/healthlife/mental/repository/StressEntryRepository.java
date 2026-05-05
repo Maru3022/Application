@@ -7,4 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StressEntryRepository extends JpaRepository<StressEntry, UUID> {
     List<StressEntry> findByUserIdOrderByRecordedAtDesc(UUID userId);
+
+    org.springframework.data.domain.Page<StressEntry> findByUserIdOrderByRecordedAtDesc(
+            UUID userId, org.springframework.data.domain.Pageable pageable);
 }

@@ -9,4 +9,7 @@ public interface AiInsightRepository extends JpaRepository<AiInsight, UUID> {
     List<AiInsight> findByUserIdAndTypeOrderByCreatedAtDesc(UUID userId, String type);
 
     List<AiInsight> findByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    org.springframework.data.domain.Page<AiInsight> findByUserIdOrderByCreatedAtDesc(
+            UUID userId, org.springframework.data.domain.Pageable pageable);
 }

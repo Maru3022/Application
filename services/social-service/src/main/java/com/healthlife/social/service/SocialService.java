@@ -13,9 +13,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SocialService {
@@ -153,7 +156,6 @@ public class SocialService {
     @Transactional
     public void likePost(UUID postId) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        // FIX: fetch post once (was fetched twice — once per branch), use pessimistic lock
         Post post =
                 postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
@@ -161,9 +163,14 @@ public class SocialService {
             postLikeRepository.deleteByPostIdAndUserId(postId, userId);
             post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
         } else {
-            postLikeRepository.save(
-                    PostLike.builder().postId(postId).userId(userId).build());
-            post.setLikesCount(post.getLikesCount() + 1);
+            try {
+                postLikeRepository.save(
+                        PostLike.builder().postId(postId).userId(userId).build());
+                post.setLikesCount(post.getLikesCount() + 1);
+            } catch (DataIntegrityViolationException e) {
+                // Concurrent like already inserted — treat as idempotent success
+                log.debug("Duplicate like ignored for post={} user={}", postId, userId);
+            }
         }
         postRepository.save(post);
     }

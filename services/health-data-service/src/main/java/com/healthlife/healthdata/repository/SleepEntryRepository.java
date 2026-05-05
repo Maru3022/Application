@@ -13,4 +13,7 @@ public interface SleepEntryRepository extends JpaRepository<SleepEntry, UUID> {
             UUID userId, OffsetDateTime from, OffsetDateTime to);
 
     List<SleepEntry> findByUserIdOrderBySleepStartDesc(UUID userId);
+
+    org.springframework.data.domain.Page<SleepEntry> findByUserIdOrderBySleepStartDesc(
+            UUID userId, org.springframework.data.domain.Pageable pageable);
 }

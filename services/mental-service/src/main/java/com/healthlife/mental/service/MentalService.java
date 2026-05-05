@@ -48,7 +48,11 @@ public class MentalService {
 
     public List<MoodResponse> getMoodHistory() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        return moodEntryRepository.findByUserIdOrderByRecordedAtDesc(userId).stream()
+        // FIX: limit to 100 most recent entries to prevent OOM with large datasets
+        return moodEntryRepository
+                .findByUserIdOrderByRecordedAtDesc(userId, org.springframework.data.domain.PageRequest.of(0, 100))
+                .getContent()
+                .stream()
                 .map(e -> MoodResponse.builder()
                         .id(e.getId())
                         .moodScore(e.getMoodScore())
@@ -84,7 +88,11 @@ public class MentalService {
 
     public List<JournalResponse> getJournals() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        return journalEntryRepository.findByUserIdOrderByRecordedAtDesc(userId).stream()
+        // FIX: limit to 100 most recent entries to prevent OOM with large datasets
+        return journalEntryRepository
+                .findByUserIdOrderByRecordedAtDesc(userId, org.springframework.data.domain.PageRequest.of(0, 100))
+                .getContent()
+                .stream()
                 .map(e -> JournalResponse.builder()
                         .id(e.getId())
                         .content(e.getContent())
@@ -115,7 +123,11 @@ public class MentalService {
 
     public List<StressResponse> getStressStats() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        return stressEntryRepository.findByUserIdOrderByRecordedAtDesc(userId).stream()
+        // FIX: limit to 100 most recent entries to prevent OOM with large datasets
+        return stressEntryRepository
+                .findByUserIdOrderByRecordedAtDesc(userId, org.springframework.data.domain.PageRequest.of(0, 100))
+                .getContent()
+                .stream()
                 .map(e -> StressResponse.builder()
                         .id(e.getId())
                         .level(e.getLevel())

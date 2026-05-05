@@ -10,6 +10,7 @@ import com.healthlife.nutrition.repository.FoodRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -64,12 +65,22 @@ public class NutritionService {
 
     public List<FoodLogResponse> getFoodLogHistory() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        return buildFoodLogResponses(foodLogEntryRepository.findByUserIdOrderByConsumedAtDesc(userId));
+        // FIX: limit to 100 most recent entries to prevent OOM with large datasets
+        return buildFoodLogResponses(foodLogEntryRepository
+                .findByUserIdOrderByConsumedAtDesc(userId, org.springframework.data.domain.PageRequest.of(0, 100))
+                .getContent());
     }
 
     @Transactional
     public void deleteFoodLog(UUID id) {
-        foodLogEntryRepository.deleteById(id);
+        UUID userId = SecurityUtils.getCurrentUserId();
+        FoodLogEntry entry = foodLogEntryRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("FoodLogEntry", "id", id));
+        if (!entry.getUserId().equals(userId)) {
+            throw new com.healthlife.common.exception.ForbiddenException("Not your entry");
+        }
+        foodLogEntryRepository.delete(entry);
     }
 
     public List<FoodDto> searchFoods(String query) {
@@ -112,9 +123,15 @@ public class NutritionService {
     }
 
     private List<FoodLogResponse> buildFoodLogResponses(List<FoodLogEntry> entries) {
+        // FIX N+1: bulk-load all referenced foods in one query instead of N individual findById calls
+        List<UUID> foodIds =
+                entries.stream().map(FoodLogEntry::getFoodId).distinct().toList();
+        Map<UUID, Food> foodMap = foodRepository.findAllById(foodIds).stream()
+                .collect(java.util.stream.Collectors.toMap(Food::getId, f -> f));
+
         return entries.stream()
                 .map(entry -> {
-                    Food food = foodRepository.findById(entry.getFoodId()).orElse(null);
+                    Food food = foodMap.get(entry.getFoodId());
                     double multiplier = entry.getWeightGrams() / 100.0;
                     return FoodLogResponse.builder()
                             .id(entry.getId())
