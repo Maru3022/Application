@@ -236,14 +236,7 @@
                         <formatAnnotations/>
                     </java>
                 </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <phase>validate</phase>
-                    </execution>
-                </executions>
+                <!-- FIX: removed validate-phase binding — spotless runs explicitly in CI -->
             </plugin>
         </plugins>
     </build>
