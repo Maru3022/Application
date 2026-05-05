@@ -26,8 +26,7 @@ public class JwtTokenProvider {
             @Value("${jwt.refresh-token.expiration:604800000}") long refreshTokenExpirationMs) {
         // FIX: validate key length — HS256 requires at least 256 bits (32 bytes)
         if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
-            throw new IllegalArgumentException(
-                    "JWT secret must be at least 32 characters (256 bits) for HS256");
+            throw new IllegalArgumentException("JWT secret must be at least 32 characters (256 bits) for HS256");
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpirationMs = accessTokenExpirationMs;
@@ -105,10 +104,6 @@ public class JwtTokenProvider {
 
     // FIX: centralised parse so we don't repeat parser setup in every method
     private Claims parseClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
 }
