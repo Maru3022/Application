@@ -423,6 +423,37 @@ jobs:
         env:
           STAGING_HEALTH_URL: ${{ vars.STAGING_HEALTH_URL }}
 
+      - name: k6 smoke test
+        run: |
+          if [ -z "$STAGING_HEALTH_URL" ]; then
+            echo "::warning::STAGING_HEALTH_URL not set — skipping k6 smoke test."
+            exit 0
+          fi
+          # Install k6
+          curl -fsSL https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update -q && sudo apt-get install -q k6
+          # Run smoke test — fails the job if thresholds are not met
+          BASE_URL="${STAGING_HEALTH_URL}" \
+          TEST_USER_EMAIL="${TEST_USER_EMAIL}" \
+          TEST_USER_PASSWORD="${TEST_USER_PASSWORD}" \
+          k6 run load-tests/k6/scenarios/smoke.js \
+            --out json=k6-smoke-results.json \
+            --summary-trend-stats="min,avg,med,p(90),p(95),p(99),max"
+        env:
+          STAGING_HEALTH_URL: ${{ vars.STAGING_HEALTH_URL }}
+          TEST_USER_EMAIL: ${{ secrets.LOAD_TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.LOAD_TEST_USER_PASSWORD }}
+
+      - name: Upload k6 smoke results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-smoke-results
+          path: k6-smoke-results.json
+          if-no-files-found: ignore
+
   # ──────────────────────────────────────────────
   # 8. DEPLOY TO PRODUCTION
   # ──────────────────────────────────────────────

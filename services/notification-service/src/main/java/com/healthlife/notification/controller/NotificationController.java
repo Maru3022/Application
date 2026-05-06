@@ -1,5 +1,7 @@
 package com.healthlife.notification.controller;
 
+import com.healthlife.common.security.SecurityUtils;
+import com.healthlife.notification.service.DeviceTokenService;
 import com.healthlife.notification.service.NotificationService;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final DeviceTokenService deviceTokenService;
 
     @PostMapping("/email")
     @PreAuthorize("hasRole('ADMIN')")
@@ -42,5 +45,24 @@ public class NotificationController {
             @RequestBody @NotBlank String body) {
         notificationService.sendPushNotification(userId, title, body);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Registers an FCM device token for the currently authenticated user. Called by the mobile
+     * app on startup / token refresh.
+     */
+    @PostMapping("/device-token")
+    public ResponseEntity<Void> registerDeviceToken(@RequestParam @NotBlank String fcmToken) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        deviceTokenService.registerToken(userId, fcmToken);
+        return ResponseEntity.ok().build();
+    }
+
+    /** Removes an FCM device token (called on logout or app uninstall). */
+    @DeleteMapping("/device-token")
+    public ResponseEntity<Void> removeDeviceToken(@RequestParam @NotBlank String fcmToken) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        deviceTokenService.removeToken(userId, fcmToken);
+        return ResponseEntity.noContent().build();
     }
 }

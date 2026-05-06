@@ -69,14 +69,12 @@ public class NutritionController {
     }
 
     @GetMapping("/analysis")
-    public ResponseEntity<Void> getNutritionAnalysis() {
-        // Nutrition analysis aggregation is not yet implemented.
-        return ResponseEntity.ok().build();
+    public ResponseEntity<NutritionAnalysisDto> getNutritionAnalysis() {
+        return ResponseEntity.ok(nutritionService.getNutritionAnalysis());
     }
 
     @GetMapping("/goals")
-    public ResponseEntity<Void> getNutritionGoals() {
-        // Nutrition goals are not yet implemented.
-        return ResponseEntity.ok().build();
+    public ResponseEntity<NutritionGoalsDto> getNutritionGoals() {
+        return ResponseEntity.ok(nutritionService.getNutritionGoals(null));
     }
 }

@@ -1,0 +1,244 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healthlife-grafana-dashboards
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  healthlife-overview.json: |
+    {
+      "title": "HealthLife — Service Overview",
+      "uid": "healthlife-overview",
+      "tags": ["healthlife", "overview"],
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Request Rate (req/s)",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"healthlife\"}[1m])) by (application)",
+            "legendFormat": "{{application}}"
+          }],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Error Rate (%)",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",namespace=\"healthlife\"}[1m])) by (application) / sum(rate(http_server_requests_seconds_count{namespace=\"healthlife\"}[1m])) by (application) * 100",
+            "legendFormat": "{{application}}"
+          }],
+          "fieldConfig": {
+            "defaults": { "unit": "percent", "thresholds": {
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 1 },
+                { "color": "red", "value": 5 }
+              ]
+            }}
+          }
+        },
+        {
+          "id": 3,
+          "title": "P95 Latency (ms)",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"healthlife\"}[1m])) by (le, application)) * 1000",
+            "legendFormat": "p95 {{application}}"
+          }],
+          "fieldConfig": {
+            "defaults": { "unit": "ms", "thresholds": {
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 1000 },
+                { "color": "red", "value": 2000 }
+              ]
+            }}
+          }
+        },
+        {
+          "id": 4,
+          "title": "P99 Latency (ms)",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{namespace=\"healthlife\"}[1m])) by (le, application)) * 1000",
+            "legendFormat": "p99 {{application}}"
+          }],
+          "fieldConfig": { "defaults": { "unit": "ms" } }
+        },
+        {
+          "id": 5,
+          "title": "Pod Count by Service",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 16, "w": 24, "h": 6 },
+          "targets": [{
+            "expr": "kube_deployment_status_ready_replicas{namespace=\"healthlife\"}",
+            "legendFormat": "{{deployment}}"
+          }],
+          "fieldConfig": {
+            "defaults": { "unit": "short", "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 1 },
+                { "color": "green", "value": 2 }
+              ]
+            }}
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal" }
+        },
+        {
+          "id": 6,
+          "title": "JVM Heap Usage (%)",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 22, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "jvm_memory_used_bytes{area=\"heap\",namespace=\"healthlife\"} / jvm_memory_max_bytes{area=\"heap\",namespace=\"healthlife\"} * 100",
+            "legendFormat": "{{application}}"
+          }],
+          "fieldConfig": {
+            "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": {
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 70 },
+                { "color": "red", "value": 90 }
+              ]
+            }}
+          }
+        },
+        {
+          "id": 7,
+          "title": "HikariCP Active Connections",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 22, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "hikaricp_connections_active{namespace=\"healthlife\"}",
+              "legendFormat": "active {{application}}"
+            },
+            {
+              "expr": "hikaricp_connections_pending{namespace=\"healthlife\"}",
+              "legendFormat": "pending {{application}}"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } }
+        },
+        {
+          "id": 8,
+          "title": "HTTP Status Code Distribution",
+          "type": "piechart",
+          "gridPos": { "x": 0, "y": 30, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"healthlife\"}[1h])) by (status)",
+            "legendFormat": "HTTP {{status}}"
+          }],
+          "fieldConfig": { "defaults": { "unit": "short" } }
+        },
+        {
+          "id": 9,
+          "title": "Active Alerts",
+          "type": "alertlist",
+          "gridPos": { "x": 12, "y": 30, "w": 12, "h": 8 },
+          "options": {
+            "alertName": "",
+            "dashboardAlerts": false,
+            "groupMode": "default",
+            "maxItems": 20,
+            "sortOrder": 1,
+            "stateFilter": { "firing": true, "pending": true }
+          }
+        }
+      ]
+    }
+
+  healthlife-slo.json: |
+    {
+      "title": "HealthLife — SLO Dashboard",
+      "uid": "healthlife-slo",
+      "tags": ["healthlife", "slo"],
+      "timezone": "browser",
+      "refresh": "1m",
+      "time": { "from": "now-7d", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Availability SLO (target: 99.9%)",
+          "type": "gauge",
+          "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+          "targets": [{
+            "expr": "sum(rate(http_server_requests_seconds_count{status!~\"5..\",namespace=\"healthlife\"}[7d])) / sum(rate(http_server_requests_seconds_count{namespace=\"healthlife\"}[7d])) * 100",
+            "legendFormat": "Availability %"
+          }],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 99,
+              "max": 100,
+              "thresholds": {
+                "steps": [
+                  { "color": "red", "value": 99 },
+                  { "color": "yellow", "value": 99.5 },
+                  { "color": "green", "value": 99.9 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Latency SLO — % requests < 2s (target: 95%)",
+          "type": "gauge",
+          "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+          "targets": [{
+            "expr": "sum(rate(http_server_requests_seconds_bucket{le=\"2\",namespace=\"healthlife\"}[7d])) / sum(rate(http_server_requests_seconds_count{namespace=\"healthlife\"}[7d])) * 100",
+            "legendFormat": "% < 2s"
+          }],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 90,
+              "max": 100,
+              "thresholds": {
+                "steps": [
+                  { "color": "red", "value": 90 },
+                  { "color": "yellow", "value": 93 },
+                  { "color": "green", "value": 95 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Error Budget Remaining (30d)",
+          "type": "stat",
+          "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+          "targets": [{
+            "expr": "(1 - (sum(rate(http_server_requests_seconds_count{status=~\"5..\",namespace=\"healthlife\"}[30d])) / sum(rate(http_server_requests_seconds_count{namespace=\"healthlife\"}[30d])))) / (1 - 0.999) * 100",
+            "legendFormat": "Budget %"
+          }],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "thresholds": {
+                "steps": [
+                  { "color": "red", "value": 0 },
+                  { "color": "yellow", "value": 25 },
+                  { "color": "green", "value": 50 }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }

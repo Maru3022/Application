@@ -1,5 +1,7 @@
 package com.healthlife.user.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthlife.common.dto.user.*;
 import com.healthlife.common.exception.ResourceNotFoundException;
 import com.healthlife.common.security.SecurityUtils;
@@ -8,19 +10,22 @@ import com.healthlife.user.entity.UserProfile;
 import com.healthlife.user.repository.UserGoalRepository;
 import com.healthlife.user.repository.UserProfileRepository;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserProfileRepository userProfileRepository;
     private final UserGoalRepository userGoalRepository;
-    // PasswordEncoder is intentionally not injected here — password changes are
-    // handled by auth-service. Keeping the field would create an unused dependency.
+    private final ObjectMapper objectMapper;
 
     public UserProfileResponse getProfile() {
         UUID userId = SecurityUtils.getCurrentUserId();
@@ -54,6 +59,68 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Profile", "userId", userId));
         profile.setDeletedAt(OffsetDateTime.now());
         userProfileRepository.save(profile);
+    }
+
+    /**
+     * GDPR Article 20 — Right to data portability.
+     *
+     * <p>Assembles all personal data stored in user-service for the requesting user and returns it
+     * as a structured JSON export. Other services (health-data, mental, nutrition, etc.) should
+     * expose their own export endpoints; an orchestration layer can aggregate them.
+     */
+    public GdprExportDto exportData() {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        String email = SecurityUtils.getCurrentUserEmail();
+
+        UserProfile profile = userProfileRepository.findByUserId(userId).orElse(null);
+        UserGoal goal = userGoalRepository.findByUserId(userId).orElse(null);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("userId", userId.toString());
+        data.put("email", email);
+        data.put("exportedAt", OffsetDateTime.now().toString());
+
+        if (profile != null) {
+            Map<String, Object> profileMap = new LinkedHashMap<>();
+            profileMap.put("displayName", profile.getDisplayName());
+            profileMap.put("timezone", profile.getTimezone());
+            profileMap.put(
+                    "dateOfBirth",
+                    profile.getDateOfBirth() != null ? profile.getDateOfBirth().toString() : null);
+            profileMap.put("gender", profile.getGender());
+            profileMap.put("heightCm", profile.getHeightCm());
+            profileMap.put("avatarUrl", profile.getAvatarUrl());
+            profileMap.put("subscriptionPlan", profile.getSubscriptionPlan());
+            profileMap.put(
+                    "createdAt",
+                    profile.getCreatedAt() != null ? profile.getCreatedAt().toString() : null);
+            data.put("profile", profileMap);
+        }
+
+        if (goal != null) {
+            Map<String, Object> goalMap = new LinkedHashMap<>();
+            goalMap.put("dailySteps", goal.getDailySteps());
+            goalMap.put("sleepMinutes", goal.getSleepMinutes());
+            goalMap.put("waterMl", goal.getWaterMl());
+            goalMap.put("targetWeightKg", goal.getTargetWeightKg());
+            data.put("goals", goalMap);
+        }
+
+        String dataJson;
+        try {
+            dataJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(data);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialise GDPR export for user={}: {}", userId, e.getMessage());
+            dataJson = "{\"error\":\"Export serialisation failed\"}";
+        }
+
+        log.info("GDPR data export generated for user={}", userId);
+        return GdprExportDto.builder()
+                .userId(userId)
+                .email(email)
+                .exportedAt(OffsetDateTime.now())
+                .dataJson(dataJson)
+                .build();
     }
 
     public UserGoalsDto getGoals() {
@@ -110,8 +177,6 @@ public class UserService {
     private UserProfileResponse mapToResponse(UserProfile p) {
         return UserProfileResponse.builder()
                 .id(p.getUserId())
-                // Email is not stored in user-service DB; read it from the JWT claims
-                // so the client always receives the correct email address.
                 .email(SecurityUtils.getCurrentUserEmail())
                 .displayName(p.getDisplayName())
                 .timezone(p.getTimezone())

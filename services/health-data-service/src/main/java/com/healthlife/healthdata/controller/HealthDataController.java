@@ -29,10 +29,8 @@ public class HealthDataController {
     }
 
     @GetMapping("/sleep/stats")
-    public ResponseEntity<Void> getSleepStats() {
-        // Sleep stats aggregation is not yet implemented.
-        // Returns 200 with empty body to avoid breaking clients.
-        return ResponseEntity.ok().build();
+    public ResponseEntity<SleepStatsDto> getSleepStats() {
+        return ResponseEntity.ok(healthDataService.getSleepStats());
     }
 
     @DeleteMapping("/sleep/{id}")

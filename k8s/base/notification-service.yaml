@@ -60,6 +60,12 @@ spec:
               value: "redis"
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
+            - name: FIREBASE_SERVICE_ACCOUNT_JSON
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: firebase-service-account-json
+                  optional: true
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness

@@ -86,3 +86,14 @@ springdoc:
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8081}
 
+firebase:
+  # Set FIREBASE_SERVICE_ACCOUNT_JSON to the full JSON content of your Firebase service account key.
+  # Store this in Vault / Kubernetes Secret — never commit the actual value.
+  service-account-json: ${FIREBASE_SERVICE_ACCOUNT_JSON:}
+
+spring:
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+

@@ -126,6 +126,53 @@ public class NutritionService {
                 .toList();
     }
 
+    /**
+     * Returns aggregated macro totals for today's food log entries.
+     */
+    public NutritionAnalysisDto getNutritionAnalysis() {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        OffsetDateTime start =
+                LocalDate.now().atStartOfDay().atOffset(OffsetDateTime.now().getOffset());
+        OffsetDateTime end = start.plusDays(1);
+        List<FoodLogEntry> entries =
+                foodLogEntryRepository.findByUserIdAndConsumedAtBetweenOrderByConsumedAtDesc(userId, start, end);
+
+        List<UUID> foodIds =
+                entries.stream().map(FoodLogEntry::getFoodId).distinct().toList();
+        Map<UUID, Food> foodMap = foodRepository.findAllById(foodIds).stream()
+                .collect(java.util.stream.Collectors.toMap(Food::getId, f -> f));
+
+        double calories = 0, protein = 0, carbs = 0, fat = 0;
+        for (FoodLogEntry e : entries) {
+            Food food = foodMap.get(e.getFoodId());
+            if (food == null) continue;
+            double m = e.getWeightGrams() / 100.0;
+            calories += food.getCaloriesPer100g() * m;
+            protein += food.getProteinPer100g() * m;
+            carbs += food.getCarbsPer100g() * m;
+            fat += food.getFatPer100g() * m;
+        }
+
+        return NutritionAnalysisDto.builder()
+                .totalCalories(Math.round(calories * 10.0) / 10.0)
+                .totalProteinG(Math.round(protein * 10.0) / 10.0)
+                .totalCarbsG(Math.round(carbs * 10.0) / 10.0)
+                .totalFatG(Math.round(fat * 10.0) / 10.0)
+                .entryCount(entries.size())
+                .build();
+    }
+
+    public NutritionGoalsDto getNutritionGoals(UUID userId) {
+        // Goals are stored in user-service; return sensible defaults here.
+        // A future iteration can call user-service via Feign/RestTemplate.
+        return NutritionGoalsDto.builder()
+                .dailyCalories(2000.0)
+                .dailyProteinG(150.0)
+                .dailyCarbsG(250.0)
+                .dailyFatG(65.0)
+                .build();
+    }
+
     private List<FoodLogResponse> buildFoodLogResponses(List<FoodLogEntry> entries) {
         // FIX N+1: bulk-load all referenced foods in one query instead of N individual findById calls
         List<UUID> foodIds =

@@ -31,9 +31,8 @@ public class UserController {
     }
 
     @GetMapping("/me/data-export")
-    public ResponseEntity<Void> exportData() {
-        // GDPR data export - returns all user data
-        return ResponseEntity.ok().build();
+    public ResponseEntity<GdprExportDto> exportData() {
+        return ResponseEntity.ok(userService.exportData());
     }
 
     @GetMapping("/me/goals")

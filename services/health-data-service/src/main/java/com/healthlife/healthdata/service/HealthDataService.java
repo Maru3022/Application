@@ -8,6 +8,7 @@ import com.healthlife.healthdata.repository.*;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -210,6 +211,53 @@ public class HealthDataService {
                 .stream()
                 .map(this::mapActivityDto)
                 .toList();
+    }
+
+    /**
+     * Returns aggregated sleep statistics for the most recent 30 entries.
+     * Entries without a computed duration are excluded from averages.
+     */
+    public SleepStatsDto getSleepStats() {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        List<SleepEntry> entries = sleepEntryRepository
+                .findByUserIdOrderBySleepStartDesc(userId, org.springframework.data.domain.PageRequest.of(0, 30))
+                .getContent();
+
+        if (entries.isEmpty()) {
+            return SleepStatsDto.builder()
+                    .entryCount(0)
+                    .avgDurationMin(0)
+                    .minDurationMin(0)
+                    .maxDurationMin(0)
+                    .goalAchievementPct(0)
+                    .build();
+        }
+
+        List<Integer> durations = entries.stream()
+                .map(SleepEntry::getDurationMin)
+                .filter(d -> d != null && d > 0)
+                .toList();
+
+        double avg = durations.stream().mapToInt(Integer::intValue).average().orElse(0);
+        int min = durations.stream().mapToInt(Integer::intValue).min().orElse(0);
+        int max = durations.stream().mapToInt(Integer::intValue).max().orElse(0);
+
+        long goalNights = durations.stream().filter(d -> d >= 420).count(); // 7 hours
+        double goalPct = durations.isEmpty() ? 0 : (goalNights * 100.0) / durations.size();
+
+        OptionalDouble avgQuality = entries.stream()
+                .filter(e -> e.getQuality() != null)
+                .mapToInt(SleepEntry::getQuality)
+                .average();
+
+        return SleepStatsDto.builder()
+                .entryCount(entries.size())
+                .avgDurationMin(Math.round(avg * 10.0) / 10.0)
+                .avgQuality(avgQuality.isPresent() ? Math.round(avgQuality.getAsDouble() * 10.0) / 10.0 : null)
+                .minDurationMin(min)
+                .maxDurationMin(max)
+                .goalAchievementPct(Math.round(goalPct * 10.0) / 10.0)
+                .build();
     }
 
     public DashboardDto getDashboard() {

@@ -1,0 +1,144 @@
+name: Load Tests
+
+on:
+  # Run load test manually from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: "k6 scenario to run"
+        type: choice
+        options:
+          - smoke
+          - load
+          - stress
+          - spike
+          - soak
+          - auth
+        default: load
+      target_url:
+        description: "Target URL (defaults to staging)"
+        type: string
+        default: ""
+      vus_override:
+        description: "Override VU count (leave empty to use scenario default)"
+        type: string
+        default: ""
+
+  # Run load test automatically every Sunday at 02:00 UTC
+  schedule:
+    - cron: "0 2 * * 0"
+
+permissions:
+  contents: read
+  actions: write   # for uploading artifacts
+
+env:
+  SCENARIO: ${{ inputs.scenario || 'load' }}
+
+jobs:
+  load-test:
+    name: k6 ${{ inputs.scenario || 'load' }} test
+    runs-on: ubuntu-latest
+    timeout-minutes: 180   # soak test can run 2h+
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          curl -fsSL https://dl.k6.io/key.gpg \
+            | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] \
+            https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update -q && sudo apt-get install -q k6
+          k6 version
+
+      - name: Resolve target URL
+        id: url
+        run: |
+          URL="${{ inputs.target_url }}"
+          if [ -z "$URL" ]; then
+            URL="${{ vars.STAGING_HEALTH_URL }}"
+          fi
+          if [ -z "$URL" ]; then
+            echo "::error::No target URL configured. Set STAGING_HEALTH_URL in GitHub environment variables."
+            exit 1
+          fi
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+          echo "Target URL: ${URL}"
+
+      - name: Run k6 ${{ env.SCENARIO }} test
+        run: |
+          SCENARIO_FILE="load-tests/k6/scenarios/${{ env.SCENARIO }}.js"
+          RESULTS_FILE="k6-results-${{ env.SCENARIO }}-$(date +%Y%m%d-%H%M%S).json"
+
+          echo "Running scenario: ${SCENARIO_FILE}"
+          echo "Results file: ${RESULTS_FILE}"
+
+          BASE_URL="${{ steps.url.outputs.url }}" \
+          TEST_USER_EMAIL="${{ secrets.LOAD_TEST_USER_EMAIL }}" \
+          TEST_USER_PASSWORD="${{ secrets.LOAD_TEST_USER_PASSWORD }}" \
+          k6 run "${SCENARIO_FILE}" \
+            --out "json=${RESULTS_FILE}" \
+            --summary-trend-stats="min,avg,med,p(90),p(95),p(99),max" \
+            --log-format=json \
+            2>&1 | tee k6-output.log
+
+          echo "results_file=${RESULTS_FILE}" >> "$GITHUB_OUTPUT"
+        id: k6
+
+      - name: Parse and summarise results
+        if: always()
+        run: |
+          echo "## k6 Load Test Results — ${{ env.SCENARIO }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Target:** ${{ steps.url.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Scenario:** ${{ env.SCENARIO }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Date:** $(date -u)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          # Extract key metrics from k6 output
+          if grep -q "http_req_duration" k6-output.log; then
+            echo "### Key Metrics" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            grep -E "http_req_duration|http_req_failed|checks|iterations" k6-output.log \
+              | tail -20 >> "$GITHUB_STEP_SUMMARY" || true
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # Check if thresholds passed
+          if grep -q "FAILED" k6-output.log; then
+            echo "❌ **Thresholds FAILED** — see logs for details" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "✅ **All thresholds passed**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-${{ env.SCENARIO }}-results-${{ github.run_id }}
+          path: |
+            k6-results-*.json
+            k6-output.log
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Notify Slack on failure
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"attachments\": [{
+                \"color\": \"danger\",
+                \"title\": \"❌ k6 ${{ env.SCENARIO }} test FAILED\",
+                \"fields\": [
+                  {\"title\": \"Target\", \"value\": \"${{ steps.url.outputs.url }}\", \"short\": true},
+                  {\"title\": \"Run\", \"value\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\", \"short\": false}
+                ]
+              }]
+            }" || true
