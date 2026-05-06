@@ -54,6 +54,7 @@ public class NutritionController {
 
     @PostMapping("/foods/photo")
     public ResponseEntity<Void> recognizeFoodByPhoto() {
+        // Food photo recognition is not yet implemented.
         return ResponseEntity.ok().build();
     }
 
@@ -69,11 +70,13 @@ public class NutritionController {
 
     @GetMapping("/analysis")
     public ResponseEntity<Void> getNutritionAnalysis() {
+        // Nutrition analysis aggregation is not yet implemented.
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/goals")
     public ResponseEntity<Void> getNutritionGoals() {
+        // Nutrition goals are not yet implemented.
         return ResponseEntity.ok().build();
     }
 }

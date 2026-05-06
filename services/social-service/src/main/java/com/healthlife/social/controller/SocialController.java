@@ -1,8 +1,6 @@
 package com.healthlife.social.controller;
 
 import com.healthlife.common.dto.social.*;
-import com.healthlife.social.entity.ChallengeParticipant;
-import com.healthlife.social.entity.Friendship;
 import com.healthlife.social.service.SocialService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -41,7 +39,7 @@ public class SocialController {
     }
 
     @GetMapping("/challenges/{id}/leaderboard")
-    public ResponseEntity<List<ChallengeParticipant>> getLeaderboard(@PathVariable UUID id) {
+    public ResponseEntity<List<LeaderboardEntryDto>> getLeaderboard(@PathVariable UUID id) {
         return ResponseEntity.ok(socialService.getLeaderboard(id));
     }
 
@@ -68,7 +66,7 @@ public class SocialController {
     }
 
     @GetMapping("/friends")
-    public ResponseEntity<List<Friendship>> getFriends() {
+    public ResponseEntity<List<FriendDto>> getFriends() {
         return ResponseEntity.ok(socialService.getFriends());
     }
 }

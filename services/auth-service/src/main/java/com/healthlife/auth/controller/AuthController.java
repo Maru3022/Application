@@ -48,8 +48,7 @@ public class AuthController {
     }
 
     @PostMapping("/mfa/verify")
-    public ResponseEntity<AuthResponse> verifyMfa(
-            @Valid @RequestBody MfaVerifyRequest request) {
+    public ResponseEntity<AuthResponse> verifyMfa(@Valid @RequestBody MfaVerifyRequest request) {
         // FIX: email must come from the request body, not a client-controlled header,
         // to prevent header injection / identity spoofing during MFA verification.
         return ResponseEntity.ok(authService.verifyMfaAndLogin(request.getEmail(), request.getCode()));

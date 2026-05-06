@@ -10,7 +10,6 @@ import com.healthlife.user.repository.UserProfileRepository;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +19,8 @@ public class UserService {
 
     private final UserProfileRepository userProfileRepository;
     private final UserGoalRepository userGoalRepository;
-    private final PasswordEncoder passwordEncoder;
+    // PasswordEncoder is intentionally not injected here — password changes are
+    // handled by auth-service. Keeping the field would create an unused dependency.
 
     public UserProfileResponse getProfile() {
         UUID userId = SecurityUtils.getCurrentUserId();

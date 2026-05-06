@@ -113,12 +113,20 @@ public class SocialService {
         challengeParticipantRepository.save(participant);
     }
 
-    public List<ChallengeParticipant> getLeaderboard(UUID challengeId) {
+    public List<LeaderboardEntryDto> getLeaderboard(UUID challengeId) {
         // FIX: limit to top 50 participants to prevent OOM
+        // FIX: return DTO instead of JPA entity to avoid lazy-loading issues and
+        //      accidental serialisation of internal fields.
         return challengeParticipantRepository
                 .findByChallengeIdOrderByProgressDesc(
                         challengeId, org.springframework.data.domain.PageRequest.of(0, 50))
-                .getContent();
+                .getContent()
+                .stream()
+                .map(p -> LeaderboardEntryDto.builder()
+                        .userId(p.getUserId())
+                        .progress(p.getProgress())
+                        .build())
+                .toList();
     }
 
     public List<PostResponse> getFeed() {
@@ -189,11 +197,20 @@ public class SocialService {
     @Transactional
     public void inviteFriend(String email) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        // In production, send invitation email
+        log.info("Friend invitation requested by user={} to email={}", userId, email);
+        // TODO: integrate with notification-service to send invitation email
     }
 
-    public List<Friendship> getFriends() {
+    public List<FriendDto> getFriends() {
         UUID userId = SecurityUtils.getCurrentUserId();
-        return friendshipRepository.findByUserIdAndStatus(userId, "ACCEPTED");
+        // FIX: return DTO instead of JPA entity to avoid lazy-loading issues and
+        //      accidental serialisation of internal fields.
+        return friendshipRepository.findByUserIdAndStatus(userId, "ACCEPTED").stream()
+                .map(f -> FriendDto.builder()
+                        .friendId(f.getFriendId())
+                        .status(f.getStatus())
+                        .since(f.getCreatedAt())
+                        .build())
+                .toList();
     }
 }

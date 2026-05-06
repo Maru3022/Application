@@ -192,8 +192,9 @@ public class AuthService {
             throw new BadRequestException("MFA is not enabled for this user");
         }
 
+        int totpCode = parseTotpCode(code);
         GoogleAuthenticator gAuth = new GoogleAuthenticator();
-        boolean valid = gAuth.authorize(user.getMfaSecret(), Integer.parseInt(code));
+        boolean valid = gAuth.authorize(user.getMfaSecret(), totpCode);
         log.info("MFA verification {} for user: {}", valid ? "successful" : "failed", userId);
         return valid;
     }
@@ -212,7 +213,7 @@ public class AuthService {
         }
 
         GoogleAuthenticator gAuth = new GoogleAuthenticator();
-        if (!gAuth.authorize(user.getMfaSecret(), Integer.parseInt(code))) {
+        if (!gAuth.authorize(user.getMfaSecret(), parseTotpCode(code))) {
             log.warn("Invalid MFA code for email: {}", email);
             throw new UnauthorizedException("Invalid MFA code");
         }
@@ -311,5 +312,18 @@ public class AuthService {
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getAccessTokenExpirationMs())
                 .build();
+    }
+
+    /**
+     * Parses a TOTP code string to an integer. Throws {@link BadRequestException} instead of
+     * {@link NumberFormatException} so the caller receives a proper 400 response rather than a 500.
+     */
+    private int parseTotpCode(String code) {
+        try {
+            return Integer.parseInt(code.trim());
+        } catch (NumberFormatException e) {
+            log.warn("Invalid TOTP code format: not a number");
+            throw new BadRequestException("MFA code must be a 6-digit number");
+        }
     }
 }

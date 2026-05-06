@@ -201,6 +201,58 @@ public class HealthDataService {
         return mapActivityDto(entry);
     }
 
+    public List<ActivityEntryDto> getActivityHistory() {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        // Limit to 100 most recent activity entries to prevent OOM
+        return activityEntryRepository
+                .findByUserIdOrderByDateDesc(userId, org.springframework.data.domain.PageRequest.of(0, 100))
+                .getContent()
+                .stream()
+                .map(this::mapActivityDto)
+                .toList();
+    }
+
+    public DashboardDto getDashboard() {
+        UUID userId = SecurityUtils.getCurrentUserId();
+
+        // Water today
+        int waterToday = getWaterToday();
+
+        // Steps today
+        Integer stepsToday = activityEntryRepository
+                .findByUserIdAndDate(userId, LocalDate.now())
+                .map(ActivityEntry::getSteps)
+                .orElse(null);
+
+        // Latest sleep
+        List<SleepEntry> recentSleep = sleepEntryRepository
+                .findByUserIdOrderBySleepStartDesc(userId, org.springframework.data.domain.PageRequest.of(0, 1))
+                .getContent();
+        Integer lastSleepDuration = null;
+        Integer lastSleepQuality = null;
+        if (!recentSleep.isEmpty()) {
+            lastSleepDuration = recentSleep.get(0).getDurationMin();
+            lastSleepQuality = recentSleep.get(0).getQuality();
+        }
+
+        // Latest weight
+        Double latestWeight = weightEntryRepository
+                .findByUserIdOrderByRecordedAtDesc(userId, org.springframework.data.domain.PageRequest.of(0, 1))
+                .getContent()
+                .stream()
+                .findFirst()
+                .map(e -> e.getWeightKg() != null ? e.getWeightKg().doubleValue() : null)
+                .orElse(null);
+
+        return DashboardDto.builder()
+                .waterTodayMl(waterToday)
+                .stepsTodayCount(stepsToday)
+                .lastSleepDurationMin(lastSleepDuration)
+                .lastSleepQuality(lastSleepQuality)
+                .latestWeightKg(latestWeight)
+                .build();
+    }
+
     @Transactional
     public ActivityEntryDto syncActivity(ActivityEntryDto dto) {
         UUID userId = SecurityUtils.getCurrentUserId();

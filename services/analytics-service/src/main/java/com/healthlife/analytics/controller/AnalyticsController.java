@@ -22,8 +22,7 @@ public class AnalyticsController {
      */
     @PostMapping("/events")
     public ResponseEntity<Void> trackEvent(
-            @RequestParam @NotBlank String eventName,
-            @RequestBody(required = false) String properties) {
+            @RequestParam @NotBlank String eventName, @RequestBody(required = false) String properties) {
         UUID userId = SecurityUtils.getCurrentUserId();
         analyticsService.trackEvent(userId, eventName, properties);
         return ResponseEntity.ok().build();

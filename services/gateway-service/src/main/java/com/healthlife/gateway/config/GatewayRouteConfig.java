@@ -86,6 +86,14 @@ public class GatewayRouteConfig {
         }
 
         String path = request.getRequestURI();
+        // Sanitise path: reject traversal sequences before forwarding to downstream services.
+        // request.getRequestURI() returns the raw (encoded) URI; after decoding, any "../"
+        // sequence would allow an attacker to escape the intended service path.
+        if (path.contains("..") || path.contains("%2e%2e") || path.contains("%2E%2E")) {
+            ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid request path");
+            problem.setTitle("Bad Request");
+            return ResponseEntity.badRequest().body(problem);
+        }
         String queryString = request.getQueryString();
         String targetUrl = targetBase + path + (queryString != null ? "?" + queryString : "");
 

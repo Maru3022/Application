@@ -30,6 +30,8 @@ public class HealthDataController {
 
     @GetMapping("/sleep/stats")
     public ResponseEntity<Void> getSleepStats() {
+        // Sleep stats aggregation is not yet implemented.
+        // Returns 200 with empty body to avoid breaking clients.
         return ResponseEntity.ok().build();
     }
 
@@ -50,8 +52,8 @@ public class HealthDataController {
     }
 
     @GetMapping("/activity/history")
-    public ResponseEntity<Void> getActivityHistory() {
-        return ResponseEntity.ok().build();
+    public ResponseEntity<List<ActivityEntryDto>> getActivityHistory() {
+        return ResponseEntity.ok(healthDataService.getActivityHistory());
     }
 
     @PostMapping("/weight")
@@ -81,6 +83,7 @@ public class HealthDataController {
 
     @GetMapping("/symptoms/triggers")
     public ResponseEntity<Void> getSymptomTriggers() {
+        // Symptom trigger analysis is not yet implemented.
         return ResponseEntity.ok().build();
     }
 
@@ -95,7 +98,7 @@ public class HealthDataController {
     }
 
     @GetMapping("/dashboard")
-    public ResponseEntity<Void> getDashboard() {
-        return ResponseEntity.ok().build();
+    public ResponseEntity<DashboardDto> getDashboard() {
+        return ResponseEntity.ok(healthDataService.getDashboard());
     }
 }
