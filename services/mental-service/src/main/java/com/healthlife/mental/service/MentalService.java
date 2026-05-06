@@ -8,7 +8,6 @@ import com.healthlife.common.exception.ResourceNotFoundException;
 import com.healthlife.common.security.SecurityUtils;
 import com.healthlife.mental.entity.*;
 import com.healthlife.mental.repository.*;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -182,9 +181,16 @@ public class MentalService {
         }
     }
 
-    /** Deserialises a JSON array string back to a list. Returns empty list on null/error. */
+    /**
+     * Deserialises a JSON array string back to a list.
+     *
+     * <p>Returns {@code null} when the stored value is {@code null} or blank — preserving the
+     * semantic distinction between "field was not provided" (null) and "field was provided as an
+     * empty list" ([]). Callers that need a non-null collection can use
+     * {@code Objects.requireNonNullElse(fromJson(json), List.of())}.
+     */
     private List<String> fromJson(String json) {
-        if (json == null || json.isBlank()) return Collections.emptyList();
+        if (json == null || json.isBlank()) return null;
         try {
             return objectMapper.readValue(json, new TypeReference<List<String>>() {});
         } catch (JsonProcessingException e) {
