@@ -86,24 +86,27 @@ services:
     port: 8086
     replicaCount: 2
     dbName: healthlife_aicoach
+    # AI Coach makes blocking calls to Claude API and performs heavy JSON serialisation.
+    # Needs more CPU and memory than lightweight CRUD services.
     resources:
       requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 500m
+        cpu: 200m
         memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
   social-service:
     port: 8087
     replicaCount: 2
     dbName: healthlife_social
+    # Social service handles feed queries, leaderboards, and bulk participant lookups.
     resources:
       requests:
-        cpu: 100m
-        memory: 256Mi
+        cpu: 150m
+        memory: 384Mi
       limits:
-        cpu: 500m
-        memory: 512Mi
+        cpu: 750m
+        memory: 768Mi
   notification-service:
     port: 8088
     replicaCount: 2
@@ -156,5 +159,12 @@ ingress:
   enabled: true
   host: healthlife.local
   tls:
-    enabled: false
+    # Set to true in production and configure cert-manager with a valid issuer.
+    # For local development keep false and use self-signed certs or plain HTTP.
+    enabled: true
     issuer: letsencrypt-prod
+    secretName: healthlife-tls
+
+cors:
+  # Override in production with the actual frontend domain(s), comma-separated.
+  allowedOrigins: "https://healthlife.local,https://app.healthlife.com"

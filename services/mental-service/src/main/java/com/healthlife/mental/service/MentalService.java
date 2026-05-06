@@ -1,17 +1,22 @@
 package com.healthlife.mental.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthlife.common.dto.mental.*;
 import com.healthlife.common.exception.ResourceNotFoundException;
 import com.healthlife.common.security.SecurityUtils;
 import com.healthlife.mental.entity.*;
 import com.healthlife.mental.repository.*;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MentalService {
@@ -21,6 +26,9 @@ public class MentalService {
     private final StressEntryRepository stressEntryRepository;
     private final MeditationRepository meditationRepository;
     private final BreathingSessionRepository breathingSessionRepository;
+    // FIX: use Jackson for serialising list fields instead of CSV join/split.
+    // CSV is unsafe when values contain commas (data corruption).
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public MoodResponse createMood(MoodRequest request) {
@@ -28,22 +36,12 @@ public class MentalService {
         MoodEntry entry = MoodEntry.builder()
                 .userId(userId)
                 .moodScore(request.getMoodScore())
-                .emotions(request.getEmotions() != null ? String.join(",", request.getEmotions()) : null)
+                .emotions(toJson(request.getEmotions()))
                 .note(request.getNote())
                 .recordedAt(request.getRecordedAt())
                 .build();
         entry = moodEntryRepository.save(entry);
-        return MoodResponse.builder()
-                .id(entry.getId())
-                .moodScore(entry.getMoodScore())
-                .emotions(
-                        entry.getEmotions() != null
-                                ? Arrays.asList(entry.getEmotions().split(","))
-                                : null)
-                .note(entry.getNote())
-                .recordedAt(entry.getRecordedAt())
-                .createdAt(entry.getCreatedAt())
-                .build();
+        return toMoodResponse(entry);
     }
 
     public List<MoodResponse> getMoodHistory() {
@@ -53,17 +51,7 @@ public class MentalService {
                 .findByUserIdOrderByRecordedAtDesc(userId, org.springframework.data.domain.PageRequest.of(0, 100))
                 .getContent()
                 .stream()
-                .map(e -> MoodResponse.builder()
-                        .id(e.getId())
-                        .moodScore(e.getMoodScore())
-                        .emotions(
-                                e.getEmotions() != null
-                                        ? Arrays.asList(e.getEmotions().split(","))
-                                        : null)
-                        .note(e.getNote())
-                        .recordedAt(e.getRecordedAt())
-                        .createdAt(e.getCreatedAt())
-                        .build())
+                .map(this::toMoodResponse)
                 .toList();
     }
 
@@ -73,17 +61,11 @@ public class MentalService {
         JournalEntry entry = JournalEntry.builder()
                 .userId(userId)
                 .content(request.getContent())
-                .tags(request.getTags() != null ? String.join(",", request.getTags()) : null)
+                .tags(toJson(request.getTags()))
                 .recordedAt(request.getRecordedAt())
                 .build();
         entry = journalEntryRepository.save(entry);
-        return JournalResponse.builder()
-                .id(entry.getId())
-                .content(entry.getContent())
-                .tags(entry.getTags() != null ? Arrays.asList(entry.getTags().split(",")) : null)
-                .recordedAt(entry.getRecordedAt())
-                .createdAt(entry.getCreatedAt())
-                .build();
+        return toJournalResponse(entry);
     }
 
     public List<JournalResponse> getJournals() {
@@ -93,13 +75,7 @@ public class MentalService {
                 .findByUserIdOrderByRecordedAtDesc(userId, org.springframework.data.domain.PageRequest.of(0, 100))
                 .getContent()
                 .stream()
-                .map(e -> JournalResponse.builder()
-                        .id(e.getId())
-                        .content(e.getContent())
-                        .tags(e.getTags() != null ? Arrays.asList(e.getTags().split(",")) : null)
-                        .recordedAt(e.getRecordedAt())
-                        .createdAt(e.getCreatedAt())
-                        .build())
+                .map(this::toJournalResponse)
                 .toList();
     }
 
@@ -188,5 +164,54 @@ public class MentalService {
                 .recordedAt(request.getRecordedAt() != null ? request.getRecordedAt() : java.time.OffsetDateTime.now())
                 .build();
         breathingSessionRepository.save(session);
+    }
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    /**
+     * Serialises a list to a JSON array string for storage in a VARCHAR column.
+     * Using JSON instead of CSV prevents data corruption when values contain commas.
+     */
+    private String toJson(List<String> list) {
+        if (list == null || list.isEmpty()) return null;
+        try {
+            return objectMapper.writeValueAsString(list);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialise list to JSON, falling back to null: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** Deserialises a JSON array string back to a list. Returns empty list on null/error. */
+    private List<String> fromJson(String json) {
+        if (json == null || json.isBlank()) return Collections.emptyList();
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            // Backward-compat: if stored value is old CSV format, split on comma
+            log.debug("JSON parse failed for list field, attempting CSV fallback: {}", e.getMessage());
+            return List.of(json.split(","));
+        }
+    }
+
+    private MoodResponse toMoodResponse(MoodEntry e) {
+        return MoodResponse.builder()
+                .id(e.getId())
+                .moodScore(e.getMoodScore())
+                .emotions(fromJson(e.getEmotions()))
+                .note(e.getNote())
+                .recordedAt(e.getRecordedAt())
+                .createdAt(e.getCreatedAt())
+                .build();
+    }
+
+    private JournalResponse toJournalResponse(JournalEntry e) {
+        return JournalResponse.builder()
+                .id(e.getId())
+                .content(e.getContent())
+                .tags(fromJson(e.getTags()))
+                .recordedAt(e.getRecordedAt())
+                .createdAt(e.getCreatedAt())
+                .build();
     }
 }

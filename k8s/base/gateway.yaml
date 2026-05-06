@@ -58,6 +58,8 @@ spec:
               value: "redis"
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
+            - name: CORS_ALLOWED_ORIGINS
+              value: "https://healthlife.local,https://app.healthlife.com"
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
@@ -88,11 +90,15 @@ kind: Service
 metadata:
   name: gateway-service
   namespace: healthlife
+  labels:
+    app: gateway-service
+    monitoring: enabled
 spec:
   selector:
     app: gateway-service
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 8080
   type: ClusterIP
 ---
@@ -143,8 +149,17 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+    # Redirect all HTTP traffic to HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # cert-manager will provision the TLS certificate automatically
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - healthlife.local
+      secretName: healthlife-tls
   rules:
     - host: healthlife.local
       http:

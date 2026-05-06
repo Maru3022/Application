@@ -10,9 +10,13 @@ spec:
   namespaceSelector:
     matchNames:
       - healthlife
+  # FIX: Services in k8s/base/*.yaml use label "app: <service-name>", not
+  # "app.kubernetes.io/part-of: healthlife". Use a label that all services share.
+  # We add "monitoring: enabled" to every Service so the selector is explicit and
+  # does not accidentally match unrelated services.
   selector:
     matchLabels:
-      app.kubernetes.io/part-of: healthlife
+      monitoring: enabled
   endpoints:
     - port: http
       path: /actuator/prometheus

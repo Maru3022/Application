@@ -102,6 +102,10 @@ public class JwtTokenProvider {
         return refreshTokenExpirationMs;
     }
 
+    public long getAccessTokenExpirationMs() {
+        return accessTokenExpirationMs;
+    }
+
     // FIX: centralised parse so we don't repeat parser setup in every method
     private Claims parseClaims(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();

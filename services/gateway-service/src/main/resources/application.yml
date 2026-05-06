@@ -43,6 +43,10 @@ gateway:
     notifications: ${GATEWAY_ROUTE_NOTIFICATIONS:http://localhost:8088}
     analytics: ${GATEWAY_ROUTE_ANALYTICS:http://localhost:8089}
 
+cors:
+  # Comma-separated list of allowed origins. Override via CORS_ALLOWED_ORIGINS env var in production.
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8081}
+
 management:
   endpoints:
     web:

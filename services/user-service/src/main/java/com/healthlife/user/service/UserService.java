@@ -110,7 +110,9 @@ public class UserService {
     private UserProfileResponse mapToResponse(UserProfile p) {
         return UserProfileResponse.builder()
                 .id(p.getUserId())
-                .email(null)
+                // Email is not stored in user-service DB; read it from the JWT claims
+                // so the client always receives the correct email address.
+                .email(SecurityUtils.getCurrentUserEmail())
                 .displayName(p.getDisplayName())
                 .timezone(p.getTimezone())
                 .dateOfBirth(p.getDateOfBirth())

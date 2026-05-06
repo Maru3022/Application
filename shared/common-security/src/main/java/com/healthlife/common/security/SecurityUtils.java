@@ -15,4 +15,16 @@ public final class SecurityUtils {
         }
         throw new com.healthlife.common.exception.UnauthorizedException("User not authenticated");
     }
+
+    /**
+     * Returns the email of the currently authenticated user, extracted from the JWT credentials
+     * stored in the {@link org.springframework.security.core.context.SecurityContext}.
+     */
+    public static String getCurrentUserEmail() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getCredentials() instanceof String email) {
+            return email;
+        }
+        throw new com.healthlife.common.exception.UnauthorizedException("User not authenticated");
+    }
 }

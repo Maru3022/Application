@@ -38,8 +38,8 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
     private final MeterRegistry meterRegistry;
-    // FIX: read expiration from JwtTokenProvider instead of hardcoding 900000
-    private long accessTokenExpirationMs = 900000L;
+    // Expiration is read from JwtTokenProvider which reads it from application.yml
+    // (jwt.access-token.expiration). No hardcoded value here.
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -309,7 +309,7 @@ public class AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
-                .expiresIn(accessTokenExpirationMs)
+                .expiresIn(jwtTokenProvider.getAccessTokenExpirationMs())
                 .build();
     }
 }

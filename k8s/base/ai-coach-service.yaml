@@ -40,12 +40,15 @@ spec:
               drop:
                 - ALL
           resources:
+            # AI Coach makes blocking calls to Claude API (external) and performs
+            # JSON serialisation of large prompts — needs more CPU and memory than
+            # the default lightweight services.
             requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 500m
+              cpu: 200m
               memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "production"
@@ -108,11 +111,15 @@ kind: Service
 metadata:
   name: ai-coach-service
   namespace: healthlife
+  labels:
+    app: ai-coach-service
+    monitoring: enabled
 spec:
   selector:
     app: ai-coach-service
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 8086
   type: ClusterIP
 ---

@@ -49,6 +49,8 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "production"
+            - name: CORS_ALLOWED_ORIGINS
+              value: "https://healthlife.local,https://app.healthlife.com"
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -98,11 +100,15 @@ kind: Service
 metadata:
   name: user-service
   namespace: healthlife
+  labels:
+    app: user-service
+    monitoring: enabled
 spec:
   selector:
     app: user-service
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 8082
   type: ClusterIP
 ---
