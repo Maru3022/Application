@@ -40,7 +40,7 @@ spec:
               drop:
                 - ALL
           resources:
-            # AI Coach makes blocking calls to Claude API (external) and performs
+            # AI Coach makes blocking calls to DeepSeek API (external) and performs
             # JSON serialisation of large prompts — needs more CPU and memory than
             # the default lightweight services.
             requests:
@@ -75,12 +75,14 @@ spec:
               value: "redis"
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
-            - name: CLAUDE_API_KEY
+            - name: DEEPSEEK_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: healthlife-secrets
-                  key: claude-api-key
+                  key: deepseek-api-key
                   optional: true
+            - name: DEEPSEEK_MODEL
+              value: "deepseek-chat"
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness

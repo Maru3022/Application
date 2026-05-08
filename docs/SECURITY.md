@@ -7,7 +7,7 @@
 - Authentication credentials (passwords, MFA secrets)
 - JWT tokens (access + refresh)
 - Personal identifiable information (PII)
-- API keys (Claude, Firebase)
+- API keys (DeepSeek, Firebase)
 
 ### Threats & Mitigations
 
@@ -150,7 +150,7 @@ Secret paths in AWS Secrets Manager:
 healthlife/production/jwt-secret
 healthlife/production/db-username
 healthlife/production/db-password
-healthlife/production/claude-api-key
+healthlife/production/deepseek-api-key
 healthlife/production/firebase-service-account-json
 healthlife/production/mail-username
 healthlife/production/mail-password

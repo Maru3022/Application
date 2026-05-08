@@ -8,9 +8,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Dedicated thread pool for blocking Claude API calls.
+ * Dedicated thread pool for blocking DeepSeek API calls.
  *
- * <p>Claude responses can take up to 30 seconds. Running {@code .block()} on a Tomcat thread
+ * <p>DeepSeek responses can take up to 30 seconds. Running {@code .block()} on a Tomcat thread
  * would exhaust the servlet thread pool under moderate load. This executor isolates those
  * blocking calls so Tomcat threads are always free to accept new requests.
  *
@@ -18,10 +18,10 @@ import org.springframework.context.annotation.Configuration;
  * back-pressure before rejecting. Adjust via {@code AI_EXECUTOR_CORE_THREADS} env var if needed.
  */
 @Configuration
-public class ClaudeExecutorConfig {
+public class DeepSeekExecutorConfig {
 
-    @Bean(name = "claudeExecutor")
-    public Executor claudeExecutor() {
+    @Bean(name = "deepseekExecutor")
+    public Executor deepseekExecutor() {
         int coreThreads = Integer.parseInt(System.getenv().getOrDefault("AI_EXECUTOR_CORE_THREADS", "20"));
         int maxThreads = coreThreads * 2;
         return new ThreadPoolExecutor(
@@ -31,7 +31,7 @@ public class ClaudeExecutorConfig {
                 TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(100),
                 r -> {
-                    Thread t = new Thread(r, "claude-api-" + System.nanoTime());
+                    Thread t = new Thread(r, "deepseek-api-" + System.nanoTime());
                     t.setDaemon(true);
                     return t;
                 },

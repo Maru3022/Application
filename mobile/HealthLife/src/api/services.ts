@@ -46,4 +46,17 @@ export const userApi = {
   getGoals: () => api.get('/api/v1/users/me/goals'),
   updateGoals: (data: any) => api.put('/api/v1/users/me/goals', data),
   getSubscription: () => api.get('/api/v1/users/me/subscription'),
+  exportData: () => api.get('/api/v1/users/me/data-export'),
+};
+
+export const paymentApi = {
+  getSubscriptionStatus: () => api.get('/api/v1/payments/subscription'),
+  createCheckout: (priceId: string) =>
+    api.post('/api/v1/payments/checkout', null, { params: { priceId } }),
+  createPortal: () => api.post('/api/v1/payments/portal'),
+};
+
+export const analyticsApi = {
+  trackEvent: (eventName: string, properties?: Record<string, unknown>) =>
+    api.post('/api/v1/analytics/events', properties ?? {}, { params: { eventName } }),
 };

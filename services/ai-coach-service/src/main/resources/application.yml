@@ -49,7 +49,7 @@ spring:
           min-idle: 4
 
 jwt:
-  secret: ${JWT_SECRET:HealthLifeSuperSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025}
+  secret: ${JWT_SECRET}
   access-token:
     expiration: 900000
   refresh-token:
@@ -110,9 +110,14 @@ springdoc:
     path: /swagger-ui.html
 
 ai:
-  claude:
-    api-key: ${CLAUDE_API_KEY:}
-    base-url: ${CLAUDE_BASE_URL:https://api.anthropic.com}
+  deepseek:
+    # DeepSeek API key — https://platform.deepseek.com/api_keys
+    # Set via DEEPSEEK_API_KEY environment variable
+    api-key: ${DEEPSEEK_API_KEY:}
+    # DeepSeek uses OpenAI-compatible API at this base URL
+    base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+    # deepseek-v4-flash = DeepSeek-V4 Flash (284B/13B active, 1M context, cache-hit pricing)
+    model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8081}

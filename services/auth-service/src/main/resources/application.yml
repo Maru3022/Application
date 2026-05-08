@@ -49,19 +49,25 @@ spring:
           max-idle: 8
           min-idle: 4
   mail:
-    host: smtp.example.com
-    port: 587
+    host: ${MAIL_SMTP_HOST:smtp.gmail.com}
+    port: ${MAIL_SMTP_PORT:587}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
+    protocol: ${MAIL_PROTOCOL:smtp}
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+          ssl:
+            enable: ${MAIL_SSL_ENABLE:false}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 jwt:
-  secret: ${JWT_SECRET:HealthLifeSuperSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025}
+  secret: ${JWT_SECRET}
   access-token:
     expiration: 900000
   refresh-token:
@@ -141,3 +147,11 @@ springdoc:
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8081}
+
+oauth:
+  google:
+    # Google OAuth2 client ID from Google Cloud Console → APIs & Services → Credentials
+    client-id: ${OAUTH_GOOGLE_CLIENT_ID:}
+  apple:
+    # Apple Sign-In is verified via Apple's public JWKS endpoint — no secret needed here.
+    # Configure your Apple App ID in Apple Developer Console → Certificates, IDs & Profiles.

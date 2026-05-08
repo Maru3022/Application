@@ -38,8 +38,6 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
     private final MeterRegistry meterRegistry;
-    // Expiration is read from JwtTokenProvider which reads it from application.yml
-    // (jwt.access-token.expiration). No hardcoded value here.
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -68,7 +66,6 @@ public class AuthService {
                 .build();
         user = userRepository.save(user);
 
-        // Send email verification
         String verificationToken = UUID.randomUUID().toString();
         EmailVerificationToken emailToken = EmailVerificationToken.builder()
                 .token(verificationToken)
@@ -149,7 +146,7 @@ public class AuthService {
 
     @Transactional
     public void logout(String refreshToken) {
-        log.info("Logging out with refresh token: {}", refreshToken);
+        log.info("Logging out with refresh token");
         refreshTokenRepository.findByToken(refreshToken).ifPresent(rt -> {
             refreshTokenRepository.delete(rt);
             log.info("Refresh token deleted for logout");
@@ -192,9 +189,8 @@ public class AuthService {
             throw new BadRequestException("MFA is not enabled for this user");
         }
 
-        int totpCode = parseTotpCode(code);
         GoogleAuthenticator gAuth = new GoogleAuthenticator();
-        boolean valid = gAuth.authorize(user.getMfaSecret(), totpCode);
+        boolean valid = gAuth.authorize(user.getMfaSecret(), parseTotpCode(code));
         log.info("MFA verification {} for user: {}", valid ? "successful" : "failed", userId);
         return valid;
     }
@@ -225,11 +221,10 @@ public class AuthService {
     @Transactional
     public void requestPasswordReset(String email) {
         log.info("Requesting password reset for email: {}", email);
-        // FIX: user enumeration prevention — do NOT reveal whether email exists
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             log.warn("Password reset requested for non-existent email (silently ignored)");
-            return; // Return silently — don't reveal user existence
+            return;
         }
         User user = userOpt.get();
 
@@ -242,18 +237,18 @@ public class AuthService {
                 .build();
         passwordResetTokenRepository.save(resetToken);
         emailService.sendPasswordResetEmail(user.getEmail(), token);
-        log.info("Password reset token generated and email sent for user: {}", user.getId());
+        log.info("Password reset token generated for user: {}", user.getId());
     }
 
     @Transactional
     public void confirmPasswordReset(String token, String newPassword) {
-        log.info("Confirming password reset with token: {}", token);
+        log.info("Confirming password reset with token");
         PasswordResetToken resetToken = passwordResetTokenRepository
                 .findByToken(token)
                 .orElseThrow(() -> new BadRequestException("Invalid or expired reset token"));
 
         if (resetToken.getUsed() || resetToken.getExpiryDate().isBefore(OffsetDateTime.now())) {
-            log.warn("Password reset token is used or expired: {}", token);
+            log.warn("Password reset token is used or expired");
             throw new BadRequestException("Invalid or expired reset token");
         }
 
@@ -263,8 +258,6 @@ public class AuthService {
 
         resetToken.setUsed(true);
         passwordResetTokenRepository.save(resetToken);
-
-        // Optionally, invalidate all refresh tokens for security
         refreshTokenRepository.deleteByUserId(user.getId());
 
         log.info("Password reset confirmed for user: {}", user.getId());
@@ -272,13 +265,13 @@ public class AuthService {
 
     @Transactional
     public void verifyEmail(String token) {
-        log.info("Verifying email with token: {}", token);
+        log.info("Verifying email with token");
         EmailVerificationToken verificationToken = emailVerificationTokenRepository
                 .findByToken(token)
                 .orElseThrow(() -> new BadRequestException("Invalid or expired verification token"));
 
         if (verificationToken.getUsed() || verificationToken.getExpiryDate().isBefore(OffsetDateTime.now())) {
-            log.warn("Email verification token is used or expired: {}", token);
+            log.warn("Email verification token is used or expired");
             throw new BadRequestException("Invalid or expired verification token");
         }
 
@@ -292,7 +285,7 @@ public class AuthService {
         log.info("Email verified for user: {}", user.getId());
     }
 
-    private AuthResponse generateAuthResponse(User user) {
+    AuthResponse generateAuthResponse(User user) {
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
@@ -314,15 +307,20 @@ public class AuthService {
                 .build();
     }
 
+    /** Package-visible so OAuthService can reuse token generation without duplication. */
+    AuthResponse generateAuthResponsePublic(User user) {
+        return generateAuthResponse(user);
+    }
+
     /**
      * Parses a TOTP code string to an integer. Throws {@link BadRequestException} instead of
-     * {@link NumberFormatException} so the caller receives a proper 400 response rather than a 500.
+     * {@link NumberFormatException} so the caller receives a proper 400 response.
      */
     private int parseTotpCode(String code) {
         try {
             return Integer.parseInt(code.trim());
         } catch (NumberFormatException e) {
-            log.warn("Invalid TOTP code format: not a number");
+            log.warn("Invalid TOTP code format");
             throw new BadRequestException("MFA code must be a 6-digit number");
         }
     }

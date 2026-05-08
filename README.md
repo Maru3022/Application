@@ -64,7 +64,7 @@ Full architecture details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 | **health-data-service** | 8083 | Sleep, weight, water, activity, symptoms, menstrual cycle, dashboard |
 | **mental-service** | 8084 | Mood tracking, journal, stress, meditations, breathing sessions |
 | **nutrition-service** | 8085 | Food log, food search/barcode, custom foods, nutrition analysis |
-| **ai-coach-service** | 8086 | Claude AI insights, daily/weekly reports, energy/symptom predictions |
+| **ai-coach-service** | 8086 | DeepSeek AI insights, daily/weekly reports, energy/symptom predictions |
 | **social-service** | 8087 | Posts, likes, challenges, leaderboards, friendships |
 | **notification-service** | 8088 | Email (SMTP) + Firebase push notifications, FCM device token management |
 | **analytics-service** | 8089 | Event tracking (Redis List, 30-day TTL, 1000 events/key) |
@@ -90,7 +90,7 @@ Full architecture details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 | CI/CD | GitHub Actions (9-stage pipeline) |
 | Mobile | React Native, Expo 52, Zustand, Axios |
 | Push | Firebase Admin SDK (FCM) |
-| AI | Anthropic Claude 3.5 Sonnet |
+| AI | DeepSeek V3 (deepseek-chat) |
 
 ---
 
@@ -168,7 +168,7 @@ kind create cluster --config k8s/kind-cluster.yaml
 kubectl create namespace healthlife
 kubectl create secret generic healthlife-secrets \
   --from-literal=jwt-secret=$(openssl rand -base64 64) \
-  --from-literal=claude-api-key="" \
+  --from-literal=deepseek-api-key="" \
   --from-literal=firebase-service-account-json="" \
   -n healthlife
 kubectl create secret generic healthlife-db-credentials \
@@ -335,12 +335,12 @@ Load tests also run automatically every **Sunday 02:00 UTC** via GitHub Actions.
 
 | Variable | Service | Description |
 |----------|---------|-------------|
-| `CLAUDE_API_KEY` | ai-coach | Anthropic API key for AI insights |
+| `DEEPSEEK_API_KEY` | ai-coach | DeepSeek API key for AI insights |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | notification | Firebase service account JSON for push notifications |
 | `MAIL_USERNAME` | auth, notification | SMTP username |
 | `MAIL_PASSWORD` | auth, notification | SMTP password |
 | `CORS_ALLOWED_ORIGINS` | all | Comma-separated allowed origins (default: `http://localhost:3000,http://localhost:8081`) |
-| `AI_EXECUTOR_CORE_THREADS` | ai-coach | Thread pool size for Claude API calls (default: `20`) |
+| `AI_EXECUTOR_CORE_THREADS` | ai-coach | Thread pool size for DeepSeek API calls (default: `20`) |
 
 ---
 
@@ -439,7 +439,7 @@ Full details: [docs/SECURITY.md](docs/SECURITY.md)
 │   ├── health-data-service/     # Port 8083 — Health metrics
 │   ├── mental-service/          # Port 8084 — Mental wellness
 │   ├── nutrition-service/       # Port 8085 — Nutrition tracking
-│   ├── ai-coach-service/        # Port 8086 — AI insights (Claude)
+│   ├── ai-coach-service/        # Port 8086 — AI insights (DeepSeek V3)
 │   ├── social-service/          # Port 8087 — Social features
 │   ├── notification-service/    # Port 8088 — Email + Firebase push
 │   └── analytics-service/       # Port 8089 — Event analytics

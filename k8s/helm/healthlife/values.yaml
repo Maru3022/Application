@@ -86,7 +86,7 @@ services:
     port: 8086
     replicaCount: 2
     dbName: healthlife_aicoach
-    # AI Coach makes blocking calls to Claude API and performs heavy JSON serialisation.
+    # AI Coach makes blocking calls to DeepSeek API and performs heavy JSON serialisation.
     # Needs more CPU and memory than lightweight CRUD services.
     resources:
       requests:
@@ -122,6 +122,17 @@ services:
     port: 8089
     replicaCount: 2
     needsRedis: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  payment-service:
+    port: 8090
+    replicaCount: 2
+    dbName: healthlife_payment
     resources:
       requests:
         cpu: 100m

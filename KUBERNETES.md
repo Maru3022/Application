@@ -301,7 +301,7 @@ kubectl apply -f k8s/base/namespace.yaml
 # Замени значения на реальные!
 kubectl -n healthlife create secret generic healthlife-secrets \
   --from-literal=jwt-secret="$(openssl rand -base64 64)" \
-  --from-literal=claude-api-key="sk-ant-..."
+  --from-literal=deepseek-api-key="sk-..."
 
 kubectl -n healthlife create secret generic healthlife-db-credentials \
   --from-literal=username="healthlife" \
@@ -339,7 +339,7 @@ kubectl rollout status deployment --all -n healthlife
 | Переменная | Где | Описание |
 |-----------|-----|----------|
 | `JWT_SECRET` | Secret: `healthlife-secrets` | Ключ подписи JWT (мин. 32 символа) |
-| `CLAUDE_API_KEY` | Secret: `healthlife-secrets` | Ключ Anthropic API (опционально) |
+| `DEEPSEEK_API_KEY` | Secret: `healthlife-secrets` | Ключ Anthropic API (опционально) |
 | `DB_HOST` | env var в деплойменте | Хост Postgres (дефолт: `postgres`) |
 | `DB_USERNAME` | Secret: `healthlife-db-credentials` | Логин Postgres |
 | `DB_PASSWORD` | Secret: `healthlife-db-credentials` | Пароль Postgres |

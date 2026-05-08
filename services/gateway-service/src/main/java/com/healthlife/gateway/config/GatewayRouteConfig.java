@@ -45,6 +45,7 @@ public class GatewayRouteConfig {
             @Value("${gateway.routes.social:http://localhost:8087}") String socialUrl,
             @Value("${gateway.routes.notifications:http://localhost:8088}") String notificationsUrl,
             @Value("${gateway.routes.analytics:http://localhost:8089}") String analyticsUrl,
+            @Value("${gateway.routes.payments:http://localhost:8090}") String paymentsUrl,
             RestTemplateBuilder restTemplateBuilder) {
 
         this.restTemplate = restTemplateBuilder
@@ -62,6 +63,7 @@ public class GatewayRouteConfig {
         this.routes.put("/api/v1/social", socialUrl);
         this.routes.put("/api/v1/notifications", notificationsUrl);
         this.routes.put("/api/v1/analytics", analyticsUrl);
+        this.routes.put("/api/v1/payments", paymentsUrl);
     }
 
     @RequestMapping("/api/v1/{service}/**")

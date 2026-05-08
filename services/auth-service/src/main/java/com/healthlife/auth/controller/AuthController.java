@@ -1,10 +1,12 @@
 package com.healthlife.auth.controller;
 
 import com.healthlife.auth.service.AuthService;
+import com.healthlife.auth.service.OAuthService;
 import com.healthlife.common.dto.auth.*;
 import com.healthlife.common.security.SecurityUtils;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final OAuthService oAuthService;
 
     @PostMapping("/register")
     @RateLimiter(name = "login")
@@ -70,5 +73,28 @@ public class AuthController {
     public ResponseEntity<Void> verifyEmail(@PathVariable String token) {
         authService.verifyEmail(token);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Google Sign-In — verifies a Google ID token from the mobile client and returns
+     * HealthLife JWT tokens. Creates a new account on first sign-in.
+     */
+    @PostMapping("/oauth/google")
+    @RateLimiter(name = "login")
+    public ResponseEntity<AuthResponse> loginWithGoogle(@RequestParam @NotBlank String idToken) {
+        return ResponseEntity.ok(oAuthService.loginWithGoogle(idToken));
+    }
+
+    /**
+     * Apple Sign-In — verifies an Apple identity token and returns HealthLife JWT tokens.
+     * {@code email} and {@code fullName} are only provided by Apple on the first sign-in.
+     */
+    @PostMapping("/oauth/apple")
+    @RateLimiter(name = "login")
+    public ResponseEntity<AuthResponse> loginWithApple(
+            @RequestParam @NotBlank String identityToken,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String fullName) {
+        return ResponseEntity.ok(oAuthService.loginWithApple(identityToken, email, fullName));
     }
 }

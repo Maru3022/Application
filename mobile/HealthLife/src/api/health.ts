@@ -26,6 +26,12 @@ export const healthApi = {
   getSleepEntries: (from?: string, to?: string) =>
     api.get('/api/v1/health/sleep', { params: { from, to } }),
 
+  getSleepStats: () =>
+    api.get('/api/v1/health/sleep/stats'),
+
+  deleteSleep: (id: string) =>
+    api.delete(`/api/v1/health/sleep/${id}`),
+
   addWater: (data: WaterRequest) =>
     api.post('/api/v1/health/water', data),
 
@@ -43,6 +49,9 @@ export const healthApi = {
 
   getActivityToday: () =>
     api.get('/api/v1/health/activity/today'),
+
+  getActivityHistory: () =>
+    api.get('/api/v1/health/activity/history'),
 
   createSymptom: (data: any) =>
     api.post('/api/v1/health/symptoms', data),

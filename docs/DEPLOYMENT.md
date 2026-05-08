@@ -47,7 +47,7 @@ DB_PASSWORD=$(openssl rand -base64 24)
 
 kubectl create secret generic healthlife-secrets \
   --from-literal=jwt-secret="${JWT_SECRET}" \
-  --from-literal=claude-api-key="" \
+  --from-literal=deepseek-api-key="" \
   --from-literal=firebase-service-account-json="" \
   -n healthlife
 
@@ -172,8 +172,8 @@ aws secretsmanager create-secret \
   --secret-string "$(openssl rand -base64 32)"
 
 aws secretsmanager create-secret \
-  --name healthlife/production/claude-api-key \
-  --secret-string "your-claude-api-key"
+  --name healthlife/production/deepseek-api-key \
+  --secret-string "your-deepseek-api-key"
 
 aws secretsmanager create-secret \
   --name healthlife/production/firebase-service-account-json \
@@ -293,7 +293,7 @@ kubectl exec -it postgres-0 -n healthlife -- \
 - [ ] TLS certificate issued by cert-manager
 - [ ] CORS_ALLOWED_ORIGINS set to production domain
 - [ ] Firebase service account configured (for push notifications)
-- [ ] Claude API key configured (for AI Coach)
+- [ ] DeepSeek API key configured (for AI Coach)
 - [ ] SMTP credentials configured (for email)
 
 ### Before every release

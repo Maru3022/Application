@@ -1,0 +1,85 @@
+server:
+  port: 8090
+  shutdown: graceful
+  tomcat:
+    max-threads: 100
+    min-spare-threads: 5
+    max-connections: 5000
+    accept-count: 50
+    connection-timeout: 5000
+
+spring:
+  application:
+    name: payment-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthlife_payment}
+    username: ${SPRING_DATASOURCE_USERNAME:healthlife}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthlife_pass}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+stripe:
+  # Set via STRIPE_SECRET_KEY env var — never commit real keys
+  secret-key: ${STRIPE_SECRET_KEY:}
+  # Set via STRIPE_WEBHOOK_SECRET env var — get from Stripe Dashboard → Webhooks
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  # Price IDs from Stripe Dashboard → Products
+  price-pro: ${STRIPE_PRICE_PRO:}
+  price-premium: ${STRIPE_PRICE_PREMIUM:}
+  success-url: ${STRIPE_SUCCESS_URL:https://app.healthlife.com/subscription/success}
+  cancel-url: ${STRIPE_CANCEL_URL:https://app.healthlife.com/subscription/cancel}
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    db:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 0.1
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8081}

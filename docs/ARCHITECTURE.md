@@ -11,13 +11,13 @@ graph TB
     HL["HealthLife Platform\n(10 microservices)"]
     Email["Email Provider\n(SMTP)"]
     Push["Firebase Cloud Messaging\n(Push Notifications)"]
-    Claude["Anthropic Claude API\n(AI Insights)"]
+    DeepSeek["DeepSeek API\n(AI Insights)"]
 
     User -->|HTTPS / REST + JWT| HL
     Admin -->|HTTPS / REST + JWT| HL
     HL -->|SMTP TLS| Email
     HL -->|FCM| Push
-    HL -->|HTTPS| Claude
+    HL -->|HTTPS| DeepSeek
 ```
 
 ### Container Diagram (Level 2)
@@ -127,8 +127,8 @@ Each service owns its own PostgreSQL database — **database-per-service** patte
 | Circuit Breaker | Resilience4j | 50% failure threshold, 30s open wait, slow call > 3s |
 | Retry | Resilience4j | 3 attempts, 1s wait, IOException + TimeoutException |
 | Rate Limiter | Redis INCR (atomic) | 300 req/min/user, 100 req/min/IP |
-| Bulkhead | Dedicated thread pool | AI Coach: 20 core threads for Claude API calls |
-| Timeout | RestTemplate + WebClient | Connect 5s, Read 30s, Claude 35s |
+| Bulkhead | Dedicated thread pool | AI Coach: 20 core threads for DeepSeek API calls |
+| Timeout | RestTemplate + WebClient | Connect 5s, Read 30s, DeepSeek 35s |
 | Graceful Shutdown | Spring lifecycle | 30s timeout, preStop sleep 10s |
 
 ## Observability
