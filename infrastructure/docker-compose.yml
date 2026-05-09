@@ -113,6 +113,22 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres-payment:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: healthlife_payment
+      POSTGRES_USER: healthlife
+      POSTGRES_PASSWORD: healthlife_pass
+    ports:
+      - "5439:5432"
+    volumes:
+      - pg_payment_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthlife"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     ports:
@@ -152,4 +168,5 @@ volumes:
   pg_nutrition_data:
   pg_aicoach_data:
   pg_social_data:
+  pg_payment_data:
   redis_data:

@@ -25,6 +25,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * AI Coach service backed by DeepSeek V4 Flash (deepseek-v4-flash model).
@@ -88,6 +89,122 @@ public class AiCoachService {
                 .message(aiResponse)
                 .conversationId(userId.toString())
                 .build();
+    }
+
+    /**
+     * Streaming chat via Server-Sent Events. Calls DeepSeek with stream=true and forwards
+     * each token chunk to the SSE emitter as it arrives. The client receives real-time output
+     * instead of waiting for the full response.
+     */
+    public SseEmitter chatStream(ChatRequest request) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        // Long timeout — streaming responses can take up to 60s for long answers
+        SseEmitter emitter = new SseEmitter(60_000L);
+
+        CompletableFuture.runAsync(
+                () -> {
+                    try {
+                        if (deepseekApiKey == null || deepseekApiKey.isEmpty()) {
+                            emitter.send(SseEmitter.event()
+                                    .name("error")
+                                    .data("AI Coach is not configured. Set DEEPSEEK_API_KEY."));
+                            emitter.complete();
+                            return;
+                        }
+
+                        String systemPrompt = "You are HealthLife AI Coach, a health and wellness assistant. "
+                                + "Provide evidence-based, supportive health insights. "
+                                + "Never provide medical diagnoses. Always recommend consulting"
+                                + " healthcare professionals.";
+                        String fullUserMessage = (request.getContext() != null ? request.getContext() + "\n" : "")
+                                + request.getMessage();
+
+                        Map<String, Object> requestMap = Map.of(
+                                "model",
+                                deepseekModel,
+                                "max_tokens",
+                                1024,
+                                "stream",
+                                true,
+                                "messages",
+                                List.of(
+                                        Map.of("role", "system", "content", systemPrompt),
+                                        Map.of("role", "user", "content", fullUserMessage)));
+
+                        String requestBody = objectMapper.writeValueAsString(requestMap);
+                        StringBuilder fullResponse = new StringBuilder();
+
+                        webClient
+                                .post()
+                                .uri(deepseekBaseUrl + "/v1/chat/completions")
+                                .header("Authorization", "Bearer " + deepseekApiKey)
+                                .header("Content-Type", "application/json")
+                                .bodyValue(requestBody)
+                                .retrieve()
+                                .bodyToFlux(String.class)
+                                .timeout(Duration.ofSeconds(55))
+                                .doOnNext(chunk -> {
+                                    try {
+                                        // DeepSeek SSE format: "data: {...}" or "data: [DONE]"
+                                        if (chunk.startsWith("data: ")) {
+                                            String data = chunk.substring(6).trim();
+                                            if ("[DONE]".equals(data)) {
+                                                emitter.complete();
+                                                return;
+                                            }
+                                            @SuppressWarnings("unchecked")
+                                            Map<String, Object> parsed = objectMapper.readValue(data, Map.class);
+                                            @SuppressWarnings("unchecked")
+                                            List<Map<String, Object>> choices =
+                                                    (List<Map<String, Object>>) parsed.get("choices");
+                                            if (choices != null && !choices.isEmpty()) {
+                                                @SuppressWarnings("unchecked")
+                                                Map<String, Object> delta = (Map<String, Object>)
+                                                        choices.get(0).get("delta");
+                                                if (delta != null && delta.get("content") != null) {
+                                                    String token =
+                                                            delta.get("content").toString();
+                                                    fullResponse.append(token);
+                                                    emitter.send(SseEmitter.event()
+                                                            .name("token")
+                                                            .data(token));
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        log.debug("SSE chunk parse error (non-fatal): {}", e.getMessage());
+                                    }
+                                })
+                                .doOnError(e -> {
+                                    log.error("SSE stream error: {}", e.getMessage());
+                                    try {
+                                        emitter.send(SseEmitter.event()
+                                                .name("error")
+                                                .data("Stream error. Please try again."));
+                                    } catch (Exception ignored) {
+                                    }
+                                    emitter.completeWithError(e);
+                                })
+                                .doOnComplete(() -> {
+                                    // Cache the full assembled response
+                                    if (!fullResponse.isEmpty()) {
+                                        String msgHash = sha256Prefix(request.getMessage());
+                                        String cacheKey = "ai:chat:" + userId + ":" + msgHash;
+                                        redisTemplate
+                                                .opsForValue()
+                                                .set(cacheKey, fullResponse.toString(), 1, TimeUnit.HOURS);
+                                    }
+                                    emitter.complete();
+                                })
+                                .subscribe();
+                    } catch (Exception e) {
+                        log.error("chatStream setup failed: {}", e.getMessage());
+                        emitter.completeWithError(e);
+                    }
+                },
+                deepseekExecutor);
+
+        return emitter;
     }
 
     @Transactional
