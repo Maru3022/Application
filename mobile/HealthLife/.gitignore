@@ -1,0 +1,21 @@
+# Generated native projects — run `npx expo prebuild --clean` to regenerate
+# Keep .gitkeep so the directories exist in the repo
+ios/*
+!ios/.gitkeep
+android/*
+!android/.gitkeep
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+
+# EAS
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+google-service-account.json

@@ -1,13 +1,15 @@
-# Mobile Build Guide
+# HealthLife Mobile — Build Guide
 
 ## Prerequisites
+| Tool | Version | Install |
+|------|---------|---------|
+| Node.js | 20 LTS | https://nodejs.org |
+| Expo CLI | latest | `npm i -g expo-cli` |
+| EAS CLI | latest | `npm i -g eas-cli` |
+| Xcode (iOS) | 15+ | Mac only — App Store |
+| Android Studio | latest | https://developer.android.com/studio |
 
-- Node.js 20+
-- Expo CLI: `npm install -g expo-cli eas-cli`
-- iOS: macOS + Xcode 15+ + Apple Developer Account ($99/year)
-- Android: Android Studio + Google Play Console ($25 one-time)
-
-## Local Development (Expo Go)
+## Quick Start (Expo Go — no native build needed)
 
 ```bash
 cd mobile/HealthLife
@@ -15,116 +17,76 @@ npm install
 npx expo start
 ```
 
-> **Note:** HealthKit and Health Connect are NOT available in Expo Go.
-> Use a development build for native health data access.
+Scan the QR code with the **Expo Go** app on your phone.  
+iOS and Android are both supported via Expo Go without any native build.
 
-## Development Build (with HealthKit/Health Connect)
+---
+
+## Native Build — `npx expo prebuild`
+
+> **Requires macOS with Xcode 15+** for the iOS native project.  
+> Android prebuild works on any OS.
+
+The `/ios` and `/android` directories are **generated artifacts** — they are excluded from source control (`.gitkeep` placeholders only) and must be created locally:
 
 ```bash
-# Install EAS CLI
-npm install -g eas-cli
+# Install dependencies first
+npm install
 
-# Login to Expo
+# Generate native projects (macOS + Xcode 15+ required for iOS)
+npx expo prebuild --clean
+
+# Run on simulator / device
+npx expo run:ios      # macOS only
+npx expo run:android  # any OS with Android Studio
+```
+
+After prebuild the generated `/ios` and `/android` folders are fully functional native projects that can be opened in Xcode / Android Studio directly.
+
+---
+
+## EAS Cloud Build (recommended for CI/CD)
+
+EAS Build runs prebuild in the cloud — **no local Mac needed for iOS**.
+
+```bash
+# One-time login
 eas login
 
-# Configure project (first time only)
-eas build:configure
+# Link to your EAS project (updates app.json → extra.eas.projectId)
+eas project:init
 
-# Build for iOS simulator
+# Build
 eas build --platform ios --profile development
-
-# Build for Android emulator
 eas build --platform android --profile development
+
+# Build both
+eas build --platform all --profile production
 ```
 
-## Production Build
+Profiles are defined in `eas.json`:
+- `development` — dev client, simulator-compatible
+- `preview`     — internal distribution APK/IPA
+- `production`  — App Store / Play Store release
 
-### iOS (App Store)
+---
 
-```bash
-# Build production IPA
-eas build --platform ios --profile production
+## Environment Variables
 
-# Submit to App Store Connect
-eas submit --platform ios
-```
+| Variable | Description |
+|----------|-------------|
+| `API_BASE_URL` | Backend base URL (set in `src/constants/index.ts`) |
+| `APP_ENV` | Injected by EAS (`development` / `staging` / `production`) |
 
-**Before submitting:**
-1. Create app in App Store Connect (https://appstoreconnect.apple.com)
-2. Set `bundleIdentifier` in app.json: `com.healthlife.app`
-3. Add HealthKit capability in Apple Developer Console
-4. Replace `REPLACE_WITH_EAS_PROJECT_ID` in app.json with your EAS project ID
-5. Configure signing certificates via `eas credentials`
+---
 
-### Android (Google Play)
+## Troubleshooting
 
-```bash
-# Build production AAB
-eas build --platform android --profile production
+**`/ios` or `/android` folder missing**  
+Run `npx expo prebuild --clean`. These folders are intentionally git-ignored.
 
-# Submit to Google Play
-eas submit --platform android
-```
+**Xcode version error during prebuild**  
+Upgrade to Xcode 15+ from the Mac App Store.
 
-**Before submitting:**
-1. Create app in Google Play Console (https://play.google.com/console)
-2. Set `package` in app.json: `com.healthlife.app`
-3. Configure signing keystore via `eas credentials`
-
-## eas.json Configuration
-
-Create `eas.json` in `mobile/HealthLife/`:
-
-```json
-{
-  "cli": { "version": ">= 5.0.0" },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "distribution": "internal"
-    },
-    "production": {
-      "autoIncrement": true
-    }
-  },
-  "submit": {
-    "production": {}
-  }
-}
-```
-
-## Environment Variables for Production Build
-
-Set in EAS secrets (https://expo.dev/accounts/[account]/projects/[project]/secrets):
-
-```
-API_BASE_URL=https://api.healthlife.com
-```
-
-Or use `app.config.js` for dynamic config:
-
-```js
-export default {
-  expo: {
-    extra: {
-      apiBaseUrl: process.env.API_BASE_URL ?? 'https://api.healthlife.com',
-    },
-  },
-};
-```
-
-## HealthKit Setup (iOS)
-
-1. In Apple Developer Console → Certificates, IDs & Profiles → Identifiers
-2. Select your App ID → Capabilities → Enable HealthKit
-3. The `NSHealthShareUsageDescription` and `NSHealthUpdateUsageDescription`
-   strings in `app.json` will appear in the iOS permission dialog
-
-## Health Connect Setup (Android)
-
-1. Health Connect is built into Android 14+ and available as an app on Android 9-13
-2. The permissions in `app.json` → `android.permissions` are declared automatically
-3. Users must grant permissions in the Health Connect app settings
+**`eas build` fails with "project not found"**  
+Run `eas project:init` and update `extra.eas.projectId` in `app.json`.
