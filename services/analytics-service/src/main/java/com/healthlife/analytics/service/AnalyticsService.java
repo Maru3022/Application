@@ -2,7 +2,10 @@ package com.healthlife.analytics.service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +20,7 @@ import org.springframework.stereotype.Service;
  * (userId, eventName) pair are preserved. Each entry is a JSON-like string:
  * {@code <timestamp>|<properties>}. The list TTL is reset to 30 days on every write.
  *
- * <p>This replaces the previous implementation that used SET and silently overwrote every
- * previous event for the same key.
+ * <p>Supports event tracking, aggregation, and summary queries for dashboard display.
  */
 @Slf4j
 @Service
@@ -28,6 +30,8 @@ public class AnalyticsService {
     private static final long TTL_DAYS = 30;
     /** Maximum number of events kept per (userId, eventName) pair to bound memory usage. */
     private static final long MAX_EVENTS_PER_KEY = 1000;
+
+    private static final String KEY_PREFIX = "analytics:events:";
 
     private final StringRedisTemplate redisTemplate;
 
@@ -54,6 +58,33 @@ public class AnalyticsService {
     }
 
     /**
+     * Returns the count of events for a given user and event name.
+     */
+    public long getEventCount(UUID userId, String eventName) {
+        String key = buildKey(userId, eventName);
+        Long size = redisTemplate.opsForList().size(key);
+        return size != null ? size : 0;
+    }
+
+    /**
+     * Returns a summary of all tracked events for a user.
+     * Scans Redis keys matching the user's prefix and returns event names with counts.
+     */
+    public Map<String, Long> getUserSummary(UUID userId) {
+        Set<String> keys = redisTemplate.keys(KEY_PREFIX + userId + ":*");
+        Map<String, Long> summary = new HashMap<>();
+        if (keys != null) {
+            for (String key : keys) {
+                // Extract event name from key: analytics:events:<userId>:<eventName>
+                String eventName = key.substring((KEY_PREFIX + userId + ":").length());
+                Long size = redisTemplate.opsForList().size(key);
+                summary.put(eventName, size != null ? size : 0L);
+            }
+        }
+        return summary;
+    }
+
+    /**
      * Returns the most recent occurrence of the given event, or {@code null} if none exists.
      *
      * @deprecated Prefer {@link #getEvents(UUID, String)} to avoid losing historical data.
@@ -65,6 +96,6 @@ public class AnalyticsService {
     }
 
     private static String buildKey(UUID userId, String eventName) {
-        return "analytics:events:" + userId + ":" + eventName;
+        return KEY_PREFIX + userId + ":" + eventName;
     }
 }

@@ -8,6 +8,11 @@ import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
+/**
+ * Test configuration for auth-service.
+ * Excludes OAuth2 auto-configurations that are pulled in transitively by google-api-client
+ * (used by OAuthService for Google Sign-In token verification).
+ */
 @TestConfiguration
 public class AuthTestConfig implements BeanDefinitionRegistryPostProcessor {
 

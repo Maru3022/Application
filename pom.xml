@@ -194,7 +194,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                    <!-- @{argLine} is replaced by JaCoCo's prepare-agent goal at runtime.
+                         Without this prefix, JaCoCo cannot instrument classes and coverage = 0%. -->
+                    <argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
                     <excludedGroups>integration</excludedGroups>
                 </configuration>
             </plugin>

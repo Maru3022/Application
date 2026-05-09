@@ -15,10 +15,13 @@ export const mentalApi = {
 export const nutritionApi = {
   addFoodLog: (data: any) => api.post('/api/v1/nutrition/food-log', data),
   getFoodLogToday: () => api.get('/api/v1/nutrition/food-log/today'),
+  getFoodLogHistory: () => api.get('/api/v1/nutrition/food-log/history'),
   searchFoods: (q: string) => api.get('/api/v1/nutrition/foods/search', { params: { q } }),
   getFoodByBarcode: (barcode: string) => api.post('/api/v1/nutrition/foods/barcode', barcode),
   createCustomFood: (data: any) => api.post('/api/v1/nutrition/foods/custom', data),
   getCustomFoods: () => api.get('/api/v1/nutrition/foods/custom'),
+  getNutritionAnalysis: () => api.get('/api/v1/nutrition/analysis'),
+  getNutritionGoals: () => api.get('/api/v1/nutrition/goals'),
 };
 
 export const aiCoachApi = {

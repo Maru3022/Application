@@ -41,6 +41,12 @@ public class PaymentService {
     @Value("${stripe.cancel-url:https://app.healthlife.com/subscription/cancel}")
     private String cancelUrl;
 
+    @Value("${stripe.price-pro:}")
+    private String pricePro;
+
+    @Value("${stripe.price-premium:}")
+    private String pricePremium;
+
     // ── Checkout ─────────────────────────────────────────────────────────────
 
     /**
@@ -244,14 +250,15 @@ public class PaymentService {
     }
 
     /**
-     * Maps a Stripe price ID to a plan name. Configure price IDs via environment variables.
-     * Falls back to PRO for any unrecognised paid price.
+     * Maps a Stripe price ID to a plan name using configured price IDs.
+     * Set STRIPE_PRICE_PRO and STRIPE_PRICE_PREMIUM environment variables.
      */
     private String resolvePlan(String priceId) {
         if (priceId == null) return "FREE";
-        // Price IDs are configured in Stripe Dashboard and passed via env vars
-        // STRIPE_PRICE_PRO and STRIPE_PRICE_PREMIUM
-        return "PRO"; // default for any active paid subscription
+        if (priceId.equals(pricePremium)) return "PREMIUM";
+        if (priceId.equals(pricePro)) return "PRO";
+        // Fallback: any active paid subscription that isn't explicitly mapped → PRO
+        return "PRO";
     }
 
     private void requireStripe() {

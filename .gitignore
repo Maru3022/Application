@@ -20,6 +20,9 @@ Thumbs.db
 .env
 *.env.local
 
+# Kubernetes secrets — never commit real values
+k8s/base/secrets.yaml
+
 # Logs
 *.log
 
