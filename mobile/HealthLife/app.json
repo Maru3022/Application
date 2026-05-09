@@ -13,15 +13,50 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.healthlife.app"
+      "bundleIdentifier": "com.healthlife.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "HealthLife reads your health data to provide personalised insights and track your wellness goals.",
+        "NSHealthUpdateUsageDescription": "HealthLife writes activity and weight data to Apple Health.",
+        "NSMotionUsageDescription": "HealthLife uses motion data to count your steps."
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.background-delivery": true
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#4CAF50"
       },
-      "package": "com.healthlife.app"
+      "package": "com.healthlife.app",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_SLEEP",
+        "android.permission.health.READ_WEIGHT",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.WRITE_STEPS",
+        "android.permission.health.WRITE_WEIGHT"
+      ]
     },
-    "plugins": ["expo-router", "expo-secure-store"]
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "react-native-health",
+        {
+          "isClinicalDataEnabled": false
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    }
   }
 }

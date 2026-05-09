@@ -27,6 +27,7 @@ import WaterScreen from './screens/main/WaterScreen';
 import WeightScreen from './screens/main/WeightScreen';
 import ActivityScreen from './screens/main/ActivityScreen';
 import SettingsScreen from './screens/main/SettingsScreen';
+import SubscriptionScreen from './screens/main/SubscriptionScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -50,6 +51,7 @@ function ProfileStackNavigator() {
         <ProfileStack.Navigator>
             <ProfileStack.Screen name="Profile" component={ProfileScreen} />
             <ProfileStack.Screen name="Settings" component={SettingsScreen} />
+            <ProfileStack.Screen name="Subscription" component={SubscriptionScreen} />
         </ProfileStack.Navigator>
     );
 }
