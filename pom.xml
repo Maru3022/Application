@@ -242,7 +242,7 @@
                                     </limits>
                                 </rule>
                             </rules>
-                            <!-- Exclude generated/config classes from coverage check -->
+                            <!-- Exclude generated/config classes and services covered by integration tests -->
                             <excludes>
                                 <exclude>**/dto/**</exclude>
                                 <exclude>**/config/**</exclude>
@@ -251,6 +251,8 @@
                                 <exclude>**/service/OAuthService.class</exclude>
                                 <exclude>**/service/AiCoachService.class</exclude>
                                 <exclude>**/aicoach/**</exclude>
+                                <!-- Gateway is covered by integration tests (RestAssured), not unit tests -->
+                                <exclude>**/gateway/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
