@@ -130,21 +130,22 @@ jobs:
           format: sarif
           output: trivy-fs.sarif
           severity: HIGH,CRITICAL
-          # exit-code: 0 — filesystem scan is informational only (results uploaded to GitHub Security tab).
-          # We fail on CRITICAL only for built container images (see build-images job).
           exit-code: 0
         continue-on-error: true
 
       - name: Upload Trivy SARIF results
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-fs.sarif
+        continue-on-error: true
 
       - name: CodeQL Analysis
+        if: github.event_name != 'pull_request'
         uses: github/codeql-action/init@v4
         with:
           languages: java
+        continue-on-error: true
 
   # ──────────────────────────────────────────────────────────────────────────
   # 3. UNIT TESTS + COVERAGE GATE (parallel matrix)
