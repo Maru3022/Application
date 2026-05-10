@@ -28,6 +28,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -227,5 +229,82 @@ class AuthServiceCriticalTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void setupMfa_andVerifyEmail_andPasswordResetFlow_shouldWork() {
+        RegisterRequest req = RegisterRequest.builder()
+                .email("flow@health.com")
+                .password("StrongPass123!")
+                .displayName("Flow User")
+                .build();
+        var auth = authService.register(req);
+        User user = userRepository.findByEmail("flow@health.com").orElseThrow();
+
+        var mfa = authService.setupMfa(user.getId());
+        assertThat(mfa.getSecret()).isNotBlank();
+        assertThat(mfa.getQrCodeUri()).contains("otpauth://totp/HealthLife");
+
+        assertThatThrownBy(() -> authService.verifyMfa(user.getId(), "abc123"))
+                .isInstanceOf(com.healthlife.common.exception.BadRequestException.class);
+
+        authService.requestPasswordReset(user.getEmail());
+        var resetToken = passwordResetTokenRepository.findAll().stream().findFirst().orElseThrow();
+        authService.confirmPasswordReset(resetToken.getToken(), "NewStrongPass123!");
+
+        LoginRequest login = LoginRequest.builder()
+                .email(user.getEmail())
+                .password("NewStrongPass123!")
+                .build();
+        var loginResponse = authService.login(login);
+        assertThat(loginResponse.getTokenType()).isEqualTo("MFA_REQUIRED");
+        assertThat(refreshTokenRepository.findByToken(auth.getRefreshToken())).isEmpty();
+
+        var verifyToken = emailVerificationTokenRepository.findAll().stream().findFirst().orElseThrow();
+        authService.verifyEmail(verifyToken.getToken());
+        User updated = userRepository.findById(user.getId()).orElseThrow();
+        assertThat(updated.getEmailVerified()).isTrue();
+    }
+
+    @Test
+    void requestPasswordReset_nonExistingEmail_shouldBeNoOp() {
+        authService.requestPasswordReset("no-such-user@health.com");
+        assertThat(passwordResetTokenRepository.count()).isZero();
+    }
+
+    @Test
+    void verifyMfaAndLogin_whenMfaDisabled_shouldThrow() {
+        RegisterRequest req = RegisterRequest.builder()
+                .email("mfa-disabled@health.com")
+                .password("StrongPass123!")
+                .displayName("No Mfa")
+                .build();
+        authService.register(req);
+        assertThatThrownBy(() -> authService.verifyMfaAndLogin("mfa-disabled@health.com", "123456"))
+                .isInstanceOf(com.healthlife.common.exception.BadRequestException.class);
+    }
+
+    @Test
+    void oauthEndpoints_shouldAcceptBodyPayload() throws Exception {
+        com.healthlife.common.dto.auth.AuthResponse resp = com.healthlife.common.dto.auth.AuthResponse.builder()
+                .accessToken("access")
+                .refreshToken("refresh")
+                .tokenType("Bearer")
+                .expiresIn(900000)
+                .build();
+        when(oAuthService.loginWithGoogle(any())).thenReturn(resp);
+        when(oAuthService.loginWithApple(any(), any(), any())).thenReturn(resp);
+
+        mockMvc.perform(post("/api/v1/auth/oauth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"google-token\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("access"));
+
+        mockMvc.perform(post("/api/v1/auth/oauth/apple")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identityToken\":\"apple-token\",\"email\":\"apple@user.com\",\"fullName\":\"Apple User\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"));
     }
 }

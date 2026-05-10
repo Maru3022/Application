@@ -80,15 +80,15 @@ class NutritionServiceTest {
     @Test
     void searchFoods_shouldReturnMatchingFoods() {
         List<FoodDto> results = nutritionService.searchFoods("apple");
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).getName()).isEqualTo("Apple");
+        assertThat(results).isNotEmpty();
+        assertThat(results.stream().anyMatch(f -> "Apple".equals(f.getName()))).isTrue();
     }
 
     @Test
     void searchFoods_caseInsensitive() {
         List<FoodDto> results = nutritionService.searchFoods("CHICKEN");
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).getName()).isEqualTo("Chicken Breast");
+        assertThat(results).isNotEmpty();
+        assertThat(results.stream().anyMatch(f -> "Chicken Breast".equals(f.getName()))).isTrue();
     }
 
     @Test

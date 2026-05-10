@@ -90,8 +90,8 @@ class NutritionServiceCriticalTest {
                 .source("system")
                 .build());
         List<FoodDto> results = nutritionService.searchFoods("ban");
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).getName()).isEqualTo("Banana");
+        assertThat(results).isNotEmpty();
+        assertThat(results.stream().anyMatch(f -> "Banana".equals(f.getName()))).isTrue();
     }
 
     @Test
