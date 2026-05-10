@@ -334,7 +334,7 @@ public class NutritionService {
     public NutritionGoalsDto getNutritionGoals(UUID userId) {
         // Try to fetch personalised goals from user-service
         try {
-            String token = getInternalServiceToken(userId);
+            String token = getInternalServiceToken();
             String response = webClient
                     .get()
                     .uri(userServiceUrl + "/api/v1/users/me/goals")
@@ -370,9 +370,8 @@ public class NutritionService {
                 .build();
     }
 
-    private String getInternalServiceToken(UUID userId) {
-        // Simplified: in production use service-to-service auth (mTLS / service account JWT)
-        return "internal-service-call-" + userId;
+    private String getInternalServiceToken() {
+        return SecurityUtils.getCurrentUserAccessToken();
     }
 
     private List<FoodLogResponse> buildFoodLogResponses(List<FoodLogEntry> entries) {

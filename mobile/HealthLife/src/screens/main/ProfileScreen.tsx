@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { List, Switch, Button, Text } from 'react-native-paper';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../../store/authStore';
 
 export default function ProfileScreen({ navigation }: any) {
   const logout = useAuthStore((s) => s.logout);

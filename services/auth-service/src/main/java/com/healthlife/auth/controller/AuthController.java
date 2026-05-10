@@ -6,7 +6,6 @@ import com.healthlife.common.dto.auth.*;
 import com.healthlife.common.security.SecurityUtils;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -81,8 +80,8 @@ public class AuthController {
      */
     @PostMapping("/oauth/google")
     @RateLimiter(name = "login")
-    public ResponseEntity<AuthResponse> loginWithGoogle(@RequestParam @NotBlank String idToken) {
-        return ResponseEntity.ok(oAuthService.loginWithGoogle(idToken));
+    public ResponseEntity<AuthResponse> loginWithGoogle(@Valid @RequestBody OAuth2Request request) {
+        return ResponseEntity.ok(oAuthService.loginWithGoogle(request.getIdToken()));
     }
 
     /**
@@ -91,10 +90,8 @@ public class AuthController {
      */
     @PostMapping("/oauth/apple")
     @RateLimiter(name = "login")
-    public ResponseEntity<AuthResponse> loginWithApple(
-            @RequestParam @NotBlank String identityToken,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String fullName) {
-        return ResponseEntity.ok(oAuthService.loginWithApple(identityToken, email, fullName));
+    public ResponseEntity<AuthResponse> loginWithApple(@Valid @RequestBody AppleOAuthRequest request) {
+        return ResponseEntity.ok(
+                oAuthService.loginWithApple(request.getIdentityToken(), request.getEmail(), request.getFullName()));
     }
 }

@@ -1,7 +1,7 @@
 {
   "name": "healthlife",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "expo": "~52.0.0",
-    "expo-router": "~4.0.0",
     "expo-secure-store": "~14.0.0",
     "expo-status-bar": "~2.0.0",
     "react": "18.3.1",
@@ -27,8 +26,9 @@
     "@expo/vector-icons": "^14.0.0",
     "date-fns": "^3.6.0",
     "zustand": "^4.5.0",
-    "react-native-health": "^1.21.0",
-    "react-native-health-connect": "^2.0.0"
+    "react-native-health": "^1.19.0",
+    "react-native-health-connect": "^3.5.0",
+    "@react-native-community/slider": "^4.5.5"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

@@ -5,12 +5,10 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.healthlife.auth.entity.User;
-import com.healthlife.auth.repository.RefreshTokenRepository;
 import com.healthlife.auth.repository.UserRepository;
 import com.healthlife.common.dto.auth.AuthResponse;
 import com.healthlife.common.exception.BadRequestException;
 import com.healthlife.common.exception.UnauthorizedException;
-import com.healthlife.common.security.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.io.IOException;
@@ -41,12 +39,13 @@ import org.springframework.util.StringUtils;
 public class OAuthService {
 
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final AuthService authService;
 
     @Value("${oauth.google.client-id:}")
     private String googleClientId;
+
+    @Value("${oauth.apple.audience:}")
+    private String appleAudience;
 
     // ── Google Sign-In ────────────────────────────────────────────────────────
 
@@ -176,6 +175,7 @@ public class OAuthService {
             if (!"https://appleid.apple.com".equals(issuer)) {
                 throw new UnauthorizedException("Invalid Apple token issuer");
             }
+            validateAppleAudience(claims);
 
             return claims.getSubject();
         } catch (UnauthorizedException e) {
@@ -217,5 +217,26 @@ public class OAuthService {
 
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(new RSAPublicKeySpec(modulus, exponent));
+    }
+
+    private void validateAppleAudience(Claims claims) {
+        if (!StringUtils.hasText(appleAudience)) {
+            throw new BadRequestException("Apple Sign-In is not configured. Set OAUTH_APPLE_AUDIENCE.");
+        }
+        Object aud = claims.get("aud");
+        if (aud instanceof String audStr) {
+            if (!appleAudience.equals(audStr)) {
+                throw new UnauthorizedException("Invalid Apple token audience");
+            }
+            return;
+        }
+        if (aud instanceof List<?> audList) {
+            boolean valid = audList.stream().anyMatch(appleAudience::equals);
+            if (!valid) {
+                throw new UnauthorizedException("Invalid Apple token audience");
+            }
+            return;
+        }
+        throw new UnauthorizedException("Invalid Apple token audience");
     }
 }

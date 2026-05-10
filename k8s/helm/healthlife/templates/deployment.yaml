@@ -24,6 +24,22 @@ spec:
         {{- include "healthlife.labels" $ | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 45
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app: {{ $name }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: {{ $name }}
       securityContext:
         {{- toYaml $.Values.securityContext | nindent 8 }}
       containers:
@@ -92,9 +108,64 @@ spec:
                 secretKeyRef:
                   name: healthlife-secrets
                   key: deepseek-api-key
-                  optional: true
             - name: DEEPSEEK_MODEL
               value: "deepseek-chat"
+            {{- end }}
+            {{- if eq $name "auth-service" }}
+            - name: MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-mail-credentials
+                  key: username
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-mail-credentials
+                  key: password
+            - name: OAUTH_GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: oauth-google-client-id
+            - name: OAUTH_APPLE_AUDIENCE
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: oauth-apple-audience
+            {{- end }}
+            {{- if eq $name "notification-service" }}
+            - name: FIREBASE_SERVICE_ACCOUNT_JSON
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: firebase-service-account-json
+            {{- end }}
+            {{- if eq $name "payment-service" }}
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: stripe-secret-key
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: stripe-webhook-secret
+            - name: STRIPE_PRICE_PRO
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: stripe-price-pro
+            - name: STRIPE_PRICE_PREMIUM
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: stripe-price-premium
+            - name: STRIPE_PRICE_FAMILY
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: stripe-price-family
             {{- end }}
             - name: CORS_ALLOWED_ORIGINS
               value: {{ $.Values.cors.allowedOrigins | quote }}

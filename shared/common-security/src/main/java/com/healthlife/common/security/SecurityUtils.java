@@ -27,4 +27,16 @@ public final class SecurityUtils {
         }
         throw new com.healthlife.common.exception.UnauthorizedException("User not authenticated");
     }
+
+    /**
+     * Returns the raw JWT access token captured by {@link JwtAuthenticationFilter}.
+     * Used for secure user-context propagation in internal service-to-service calls.
+     */
+    public static String getCurrentUserAccessToken() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getDetails() instanceof String token && !token.isBlank()) {
+            return token;
+        }
+        throw new com.healthlife.common.exception.UnauthorizedException("Access token not available");
+    }
 }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Card, Text, Button, Slider, RadioButton, TextInput } from 'react-native-paper';
-import { mentalApi } from '../api/services';
+import { Card, Text, Button, TextInput } from 'react-native-paper';
+import Slider from '@react-native-community/slider';
+import { mentalApi } from '../../api/services';
 
 export default function MoodScreen() {
   const [moodScore, setMoodScore] = useState(5);
@@ -31,7 +32,13 @@ export default function MoodScreen() {
       <Card style={styles.card}>
         <Card.Content>
           <Text style={styles.score}>{moodScore}/10</Text>
-          <Slider value={moodScore} min={1} max={10} step={1} onValueChange={setMoodScore} />
+          <Slider
+            value={moodScore}
+            minimumValue={1}
+            maximumValue={10}
+            step={1}
+            onValueChange={setMoodScore}
+          />
           <TextInput label="Note (optional)" value={note} onChangeText={setNote} multiline style={styles.input} />
           <Button mode="contained" onPress={submitMood} loading={loading}>Save Mood</Button>
         </Card.Content>

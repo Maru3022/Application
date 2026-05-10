@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { TextInput, Button, Text, HelperText } from 'react-native-paper';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../../store/authStore';
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
+  const mfaRequired = useAuthStore((s) => s.mfaRequired);
+
+  useEffect(() => {
+    if (mfaRequired) {
+      navigation.navigate('MFA');
+    }
+  }, [mfaRequired, navigation]);
 
   const handleLogin = async () => {
     if (!email || !password) {

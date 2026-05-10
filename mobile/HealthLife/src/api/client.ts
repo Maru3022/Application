@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { API_BASE_URL, STORAGE_KEYS } from '../constants';
+import { useAuthStore } from '../store/authStore';
 
 const api: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,
@@ -44,12 +45,7 @@ api.interceptors.response.use(
                     // Refresh failed — clear tokens so the app redirects to login
                     await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
                     await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
-                    // Notify the auth store to update isAuthenticated state
-                    // (imported lazily to avoid circular dependency)
-                    try {
-                        const { useAuthStore } = await import('../store/authStore');
-                        useAuthStore.getState().logout();
-                    } catch {}
+                    useAuthStore.getState().logout();
                 }
             }
         }

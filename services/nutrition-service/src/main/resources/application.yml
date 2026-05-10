@@ -103,3 +103,8 @@ springdoc:
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8081}
 
+# Internal service URLs for fetching user goals
+internal:
+  user-service:
+    url: ${INTERNAL_USER_SERVICE_URL:http://user-service:8082}
+

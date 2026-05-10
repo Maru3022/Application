@@ -11,6 +11,7 @@ import { useAuthStore } from './store/authStore';
 
 // Auth screens
 import LoginScreen from './screens/auth/LoginScreen';
+import MfaScreen from './screens/auth/MfaScreen';
 import RegisterScreen from './screens/auth/RegisterScreen';
 
 // Onboarding
@@ -57,6 +58,10 @@ function ProfileStackNavigator() {
 }
 
 function MainTabs() {
+    const user = useAuthStore((s) => s.user);
+    const coachComponent =
+        user?.subscriptionPlan && user.subscriptionPlan !== 'FREE' ? AiCoachScreen : SubscriptionScreen;
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -84,17 +89,23 @@ function MainTabs() {
             <Tab.Screen name="Home" component={HealthStackNavigator} options={{ tabBarLabel: 'Home' }} />
             <Tab.Screen name="Mood" component={MoodScreen} />
             <Tab.Screen name="Food" component={NutritionScreen} options={{ headerShown: true }} />
-            <Tab.Screen name="Coach" component={AiCoachScreen} options={{ headerShown: true, title: 'AI Coach' }} />
+            <Tab.Screen
+                name="Coach"
+                component={coachComponent}
+                options={{ headerShown: true, title: user?.subscriptionPlan === 'FREE' ? 'Upgrade' : 'AI Coach' }}
+            />
             <Tab.Screen name="Me" component={ProfileStackNavigator} options={{ tabBarLabel: 'Profile' }} />
         </Tab.Navigator>
     );
 }
 
 function AuthStack() {
+    const mfaRequired = useAuthStore((s) => s.mfaRequired);
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            {mfaRequired && <Stack.Screen name="MFA" component={MfaScreen} />}
         </Stack.Navigator>
     );
 }
@@ -119,12 +130,12 @@ export default function App() {
     return (
         <PaperProvider theme={THEME}>
             <NavigationContainer>
-                {!onboarded ? (
-                    <OnboardingScreen onComplete={() => setOnboarded(true)} />
-                ) : isAuthenticated ? (
-                    <MainTabs />
-                ) : (
+                {!isAuthenticated ? (
                     <AuthStack />
+                ) : !onboarded ? (
+                    <OnboardingScreen onComplete={() => setOnboarded(true)} />
+                ) : (
+                    <MainTabs />
                 )}
             </NavigationContainer>
             <StatusBar style="auto" />

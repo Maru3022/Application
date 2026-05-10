@@ -15,11 +15,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @SpringBootTest(classes = NutritionServiceApplication.class)
 @ActiveProfiles("test")
@@ -34,6 +36,10 @@ class NutritionServiceTest {
 
     @Autowired
     private FoodLogEntryRepository foodLogEntryRepository;
+
+    // Mock WebClient so tests don't make real HTTP calls to user-service or OpenFoodFacts
+    @MockBean
+    private WebClient webClient;
 
     private UUID userId;
     private Food apple;

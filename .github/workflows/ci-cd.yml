@@ -82,7 +82,6 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
 
   # ──────────────────────────────────────────────────────────────────────────
   # 2. SECURITY SCANNING
@@ -114,7 +113,6 @@ jobs:
         run: mvn org.owasp:dependency-check-maven:check -B -DfailBuildOnCVSS=7
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        continue-on-error: true
 
       - name: Upload OWASP Report
         if: always()
@@ -132,8 +130,7 @@ jobs:
           format: sarif
           output: trivy-fs.sarif
           severity: HIGH,CRITICAL
-          exit-code: 0
-        continue-on-error: true
+          exit-code: 1
 
       - name: Upload Trivy SARIF results
         if: always()
@@ -145,7 +142,6 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: java
-        continue-on-error: true
 
   # ──────────────────────────────────────────────────────────────────────────
   # 3. UNIT TESTS + COVERAGE GATE (parallel matrix)
@@ -415,7 +411,6 @@ jobs:
           output: trivy-${{ matrix.service }}.sarif
           severity: CRITICAL
           exit-code: 1   # Fail on CRITICAL vulnerabilities in production images
-        continue-on-error: true
 
       - name: Upload Trivy scan results
         if: always()
@@ -471,21 +466,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Configure kubeconfig
+        run: |
+          if [ -z "${KUBE_CONFIG_B64}" ]; then
+            echo "::error::KUBE_CONFIG_B64 secret is required for deployment"
+            exit 1
+          fi
+          mkdir -p ~/.kube
+          echo "${KUBE_CONFIG_B64}" | base64 -d > ~/.kube/config
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+
       - name: Deploy to staging
         run: |
-          echo "::group::Deploying to staging"
-          echo "helm upgrade --install healthlife k8s/helm/healthlife \
+          helm upgrade --install healthlife k8s/helm/healthlife \
             --namespace healthlife-staging \
+            --create-namespace \
             --set image.tag=sha-${{ github.sha }} \
             --values k8s/helm/healthlife/values.yaml \
-            --wait --timeout 300s"
-          echo "::endgroup::"
+            --wait --timeout 300s
 
       - name: Health check
         run: |
           if [ -z "$STAGING_HEALTH_URL" ]; then
-            echo "::warning::STAGING_HEALTH_URL not set — skipping health check"
-            exit 0
+            echo "::error::STAGING_HEALTH_URL is required for staging health checks"
+            exit 1
           fi
           curl -sf --retry 5 --retry-delay 5 --retry-connrefused \
             "${STAGING_HEALTH_URL}/actuator/health" || exit 1
@@ -540,6 +548,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Configure kubeconfig
+        run: |
+          if [ -z "${KUBE_CONFIG_B64}" ]; then
+            echo "::error::KUBE_CONFIG_B64 secret is required for deployment"
+            exit 1
+          fi
+          mkdir -p ~/.kube
+          echo "${KUBE_CONFIG_B64}" | base64 -d > ~/.kube/config
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+
       - name: Create deployment record
         uses: actions/github-script@v7
         with:
@@ -553,41 +575,20 @@ jobs:
               payload: { version: '${{ github.sha }}' }
             });
 
-      - name: Canary deploy (10% traffic)
+      - name: Deploy to production
         run: |
-          echo "::group::Canary deploy — 10% traffic"
-          echo "helm upgrade --install healthlife-canary k8s/helm/healthlife \
+          helm upgrade --install healthlife k8s/helm/healthlife \
             --namespace healthlife \
-            --set image.tag=sha-${{ github.sha }} \
-            --set replicaCount=1 \
-            --set canary.enabled=true \
-            --set canary.weight=10 \
-            --wait --timeout 120s"
-          echo "::endgroup::"
-
-      - name: Monitor canary (5 min error rate check)
-        run: |
-          echo "Monitoring canary for 5 minutes..."
-          echo "# In production: query Prometheus for error rate on canary pods"
-          echo "# promtool query instant 'rate(http_server_requests_seconds_count{status=~\"5..\",pod=~\".*canary.*\"}[5m])'"
-          sleep 10  # Placeholder — replace with real Prometheus query
-
-      - name: Promote canary to full production
-        run: |
-          echo "::group::Promoting canary to 100% traffic"
-          echo "helm upgrade --install healthlife k8s/helm/healthlife \
-            --namespace healthlife \
+            --create-namespace \
             --set image.tag=sha-${{ github.sha }} \
             --values k8s/helm/healthlife/values.yaml \
-            --wait --timeout 300s"
-          echo "helm uninstall healthlife-canary --namespace healthlife"
-          echo "::endgroup::"
+            --wait --timeout 300s
 
       - name: Post-deploy health check
         run: |
           if [ -z "$PRODUCTION_HEALTH_URL" ]; then
-            echo "::warning::PRODUCTION_HEALTH_URL not set — skipping health check"
-            exit 0
+            echo "::error::PRODUCTION_HEALTH_URL is required for production health checks"
+            exit 1
           fi
           curl -sf --retry 5 --retry-delay 5 --retry-connrefused \
             "${PRODUCTION_HEALTH_URL}/actuator/health" || exit 1
@@ -598,8 +599,7 @@ jobs:
         if: failure()
         run: |
           echo "::error::Production deployment failed — rolling back"
-          echo "helm rollback healthlife --namespace healthlife"
-          echo "helm uninstall healthlife-canary --namespace healthlife || true"
+          helm rollback healthlife --namespace healthlife
 
       - name: Update deployment status
         if: always()

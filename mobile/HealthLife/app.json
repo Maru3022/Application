@@ -4,13 +4,7 @@
     "slug": "healthlife",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#4CAF50"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.healthlife.app",
@@ -26,10 +20,6 @@
       }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#4CAF50"
-      },
       "package": "com.healthlife.app",
       "versionCode": 1,
       "permissions": [
@@ -54,7 +44,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+        "projectId": ""
       }
     }
   }

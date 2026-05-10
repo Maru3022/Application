@@ -30,7 +30,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * AI Coach service backed by DeepSeek V4 Flash (deepseek-v4-flash model).
+ * AI Coach service backed by DeepSeek Chat / V3 compatible models.
  *
  * <p>Before every AI call, fetches the user's health context (dashboard + profile) from
  * internal services and injects it into the system prompt so the AI responds with
@@ -60,7 +60,7 @@ public class AiCoachService {
     @Value("${ai.deepseek.base-url:https://api.deepseek.com}")
     private String deepseekBaseUrl;
 
-    @Value("${ai.deepseek.model:deepseek-v4-flash}")
+    @Value("${ai.deepseek.model:deepseek-chat}")
     private String deepseekModel;
 
     private static final int MAX_RETRIES = 3;
@@ -330,7 +330,7 @@ public class AiCoachService {
 
         // Fetch dashboard data (water, steps, sleep, weight)
         try {
-            String token = getInternalServiceToken(userId);
+            String token = getInternalServiceToken();
             String dashboard = webClient
                     .get()
                     .uri(healthDataServiceUrl + "/api/v1/health/dashboard")
@@ -348,7 +348,7 @@ public class AiCoachService {
 
         // Fetch user profile (goals, weight target, timezone)
         try {
-            String token = getInternalServiceToken(userId);
+            String token = getInternalServiceToken();
             String profile = webClient
                     .get()
                     .uri(userServiceUrl + "/api/v1/users/me")
@@ -377,11 +377,8 @@ public class AiCoachService {
      * dedicated service-to-service auth mechanism (e.g. mTLS or a service account JWT).
      * For now we re-use the user's identity from the SecurityContext.
      */
-    private String getInternalServiceToken(UUID userId) {
-        // The JWT is already in the SecurityContext — extract it from the Authorization header
-        // via a ThreadLocal set by JwtAuthenticationFilter. For internal calls we pass it through.
-        // This is a simplified approach; in production use a service mesh or dedicated S2S token.
-        return "internal-service-call-" + userId; // placeholder — real impl reads from SecurityContext
+    private String getInternalServiceToken() {
+        return SecurityUtils.getCurrentUserAccessToken();
     }
 
     private String buildSystemPrompt(String userContext) {

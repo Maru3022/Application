@@ -4,7 +4,9 @@ import com.healthlife.common.exception.BadRequestException;
 import com.healthlife.common.exception.ResourceNotFoundException;
 import com.healthlife.common.security.SecurityUtils;
 import com.healthlife.payment.dto.*;
+import com.healthlife.payment.entity.StripeWebhookEvent;
 import com.healthlife.payment.entity.Subscription;
+import com.healthlife.payment.repository.StripeWebhookEventRepository;
 import com.healthlife.payment.repository.SubscriptionRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.*;
@@ -14,6 +16,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,7 @@ import org.springframework.util.StringUtils;
 public class PaymentService {
 
     private final SubscriptionRepository subscriptionRepository;
+    private final StripeWebhookEventRepository stripeWebhookEventRepository;
 
     @Value("${stripe.secret-key:}")
     private String stripeSecretKey;
@@ -59,6 +63,7 @@ public class PaymentService {
     @Transactional
     public CheckoutSessionResponse createCheckoutSession(String priceId) {
         requireStripe();
+        validatePriceId(priceId);
         UUID userId = SecurityUtils.getCurrentUserId();
 
         // Get or create Stripe customer
@@ -161,6 +166,10 @@ public class PaymentService {
     @Transactional
     public void handleWebhook(Event event) {
         log.info("Stripe webhook received: type={} id={}", event.getType(), event.getId());
+        if (stripeWebhookEventRepository.existsById(event.getId())) {
+            log.info("Stripe webhook already processed: id={}", event.getId());
+            return;
+        }
 
         switch (event.getType()) {
             case "checkout.session.completed" -> handleCheckoutCompleted(event);
@@ -169,6 +178,8 @@ public class PaymentService {
             case "invoice.payment_failed" -> handlePaymentFailed(event);
             default -> log.debug("Unhandled Stripe event type: {}", event.getType());
         }
+        stripeWebhookEventRepository.save(
+                StripeWebhookEvent.builder().eventId(event.getId()).eventType(event.getType()).build());
     }
 
     private void handleCheckoutCompleted(Event event) {
@@ -254,21 +265,35 @@ public class PaymentService {
 
     /**
      * Maps a Stripe price ID to a plan name using configured price IDs.
-     * Set STRIPE_PRICE_PRO, STRIPE_PRICE_PREMIUM, and STRIPE_PRICE_FAMILY env vars.
+     * Set STRIPE_PRICE_PRO / STRIPE_PRICE_PREMIUM / STRIPE_PRICE_FAMILY env vars.
      */
     private String resolvePlan(String priceId) {
         if (priceId == null) return "FREE";
         if (StringUtils.hasText(priceFamily) && priceId.equals(priceFamily)) return "FAMILY";
         if (StringUtils.hasText(pricePremium) && priceId.equals(pricePremium)) return "PREMIUM";
         if (StringUtils.hasText(pricePro) && priceId.equals(pricePro)) return "PRO";
-        // Fallback: any active paid subscription that isn't explicitly mapped → PRO
-        log.warn("Unknown Stripe price ID: {} — defaulting to PRO", priceId);
-        return "PRO";
+        // Unknown Stripe price IDs should not silently map to a paid plan.
+        return "FREE";
     }
 
     private void requireStripe() {
         if (!StringUtils.hasText(stripeSecretKey)) {
             throw new BadRequestException("Payment processing is not configured. Set STRIPE_SECRET_KEY.");
+        }
+    }
+
+    private void validatePriceId(String priceId) {
+        if (!StringUtils.hasText(priceId)) {
+            throw new BadRequestException("Stripe priceId is required");
+        }
+        Set<String> allowed = java.util.stream.Stream.of(pricePro, pricePremium, priceFamily)
+                .filter(StringUtils::hasText)
+                .collect(java.util.stream.Collectors.toSet());
+        if (allowed.isEmpty()) {
+            throw new BadRequestException("Stripe price IDs are not configured");
+        }
+        if (!allowed.contains(priceId)) {
+            throw new BadRequestException("Unsupported subscription plan");
         }
     }
 }
