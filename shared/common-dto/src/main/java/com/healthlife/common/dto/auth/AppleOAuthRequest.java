@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class AppleOAuthRequest {
     @NotBlank
     private String identityToken;
+
     private String email;
     private String fullName;
 }

@@ -88,7 +88,8 @@ class NutritionServiceTest {
     void searchFoods_caseInsensitive() {
         List<FoodDto> results = nutritionService.searchFoods("CHICKEN");
         assertThat(results).isNotEmpty();
-        assertThat(results.stream().anyMatch(f -> "Chicken Breast".equals(f.getName()))).isTrue();
+        assertThat(results.stream().anyMatch(f -> "Chicken Breast".equals(f.getName())))
+                .isTrue();
     }
 
     @Test

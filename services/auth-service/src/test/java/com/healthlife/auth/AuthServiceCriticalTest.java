@@ -1,6 +1,8 @@
 package com.healthlife.auth;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -28,8 +30,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -249,7 +249,8 @@ class AuthServiceCriticalTest {
                 .isInstanceOf(com.healthlife.common.exception.BadRequestException.class);
 
         authService.requestPasswordReset(user.getEmail());
-        var resetToken = passwordResetTokenRepository.findAll().stream().findFirst().orElseThrow();
+        var resetToken =
+                passwordResetTokenRepository.findAll().stream().findFirst().orElseThrow();
         authService.confirmPasswordReset(resetToken.getToken(), "NewStrongPass123!");
 
         LoginRequest login = LoginRequest.builder()
@@ -260,7 +261,8 @@ class AuthServiceCriticalTest {
         assertThat(loginResponse.getTokenType()).isEqualTo("MFA_REQUIRED");
         assertThat(refreshTokenRepository.findByToken(auth.getRefreshToken())).isEmpty();
 
-        var verifyToken = emailVerificationTokenRepository.findAll().stream().findFirst().orElseThrow();
+        var verifyToken =
+                emailVerificationTokenRepository.findAll().stream().findFirst().orElseThrow();
         authService.verifyEmail(verifyToken.getToken());
         User updated = userRepository.findById(user.getId()).orElseThrow();
         assertThat(updated.getEmailVerified()).isTrue();
@@ -301,9 +303,11 @@ class AuthServiceCriticalTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("access"));
 
-        mockMvc.perform(post("/api/v1/auth/oauth/apple")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identityToken\":\"apple-token\",\"email\":\"apple@user.com\",\"fullName\":\"Apple User\"}"))
+        mockMvc.perform(
+                        post("/api/v1/auth/oauth/apple")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"identityToken\":\"apple-token\",\"email\":\"apple@user.com\",\"fullName\":\"Apple User\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tokenType").value("Bearer"));
     }

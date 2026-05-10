@@ -178,8 +178,10 @@ public class PaymentService {
             case "invoice.payment_failed" -> handlePaymentFailed(event);
             default -> log.debug("Unhandled Stripe event type: {}", event.getType());
         }
-        stripeWebhookEventRepository.save(
-                StripeWebhookEvent.builder().eventId(event.getId()).eventType(event.getType()).build());
+        stripeWebhookEventRepository.save(StripeWebhookEvent.builder()
+                .eventId(event.getId())
+                .eventType(event.getType())
+                .build());
     }
 
     private void handleCheckoutCompleted(Event event) {
