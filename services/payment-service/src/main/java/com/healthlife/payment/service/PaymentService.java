@@ -47,6 +47,9 @@ public class PaymentService {
     @Value("${stripe.price-premium:}")
     private String pricePremium;
 
+    @Value("${stripe.price-family:}")
+    private String priceFamily;
+
     // ── Checkout ─────────────────────────────────────────────────────────────
 
     /**
@@ -251,13 +254,15 @@ public class PaymentService {
 
     /**
      * Maps a Stripe price ID to a plan name using configured price IDs.
-     * Set STRIPE_PRICE_PRO and STRIPE_PRICE_PREMIUM environment variables.
+     * Set STRIPE_PRICE_PRO, STRIPE_PRICE_PREMIUM, and STRIPE_PRICE_FAMILY env vars.
      */
     private String resolvePlan(String priceId) {
         if (priceId == null) return "FREE";
-        if (priceId.equals(pricePremium)) return "PREMIUM";
-        if (priceId.equals(pricePro)) return "PRO";
+        if (StringUtils.hasText(priceFamily)  && priceId.equals(priceFamily))  return "FAMILY";
+        if (StringUtils.hasText(pricePremium) && priceId.equals(pricePremium)) return "PREMIUM";
+        if (StringUtils.hasText(pricePro)     && priceId.equals(pricePro))     return "PRO";
         // Fallback: any active paid subscription that isn't explicitly mapped → PRO
+        log.warn("Unknown Stripe price ID: {} — defaulting to PRO", priceId);
         return "PRO";
     }
 

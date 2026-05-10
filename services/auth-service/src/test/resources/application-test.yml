@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:auth_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    open-in-view: false
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+
+jwt:
+  secret: test-secret-key-for-unit-tests-only-not-production-at-least-64-chars-long
+  expiration: 3600000
+  refresh-expiration: 86400000
+
+app:
+  oauth2:
+    google-client-id: test-google-client-id
+  frontend-url: http://localhost:3000
+
+logging:
+  level:
+    root: WARN
+    com.healthlife: INFO
