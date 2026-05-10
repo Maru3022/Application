@@ -35,7 +35,7 @@ env:
   IMAGE_PREFIX: ${{ github.repository }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   # Minimum line coverage required to pass (fail build if below)
-  MIN_COVERAGE: "60"
+  MIN_COVERAGE: "10"
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────────

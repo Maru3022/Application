@@ -38,3 +38,10 @@ logging:
   level:
     root: WARN
     com.healthlife: INFO
+
+management:
+  health:
+    mail:
+      enabled: false
+    redis:
+      enabled: false
