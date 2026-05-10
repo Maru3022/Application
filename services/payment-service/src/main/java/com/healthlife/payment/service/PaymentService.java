@@ -258,9 +258,9 @@ public class PaymentService {
      */
     private String resolvePlan(String priceId) {
         if (priceId == null) return "FREE";
-        if (StringUtils.hasText(priceFamily)  && priceId.equals(priceFamily))  return "FAMILY";
+        if (StringUtils.hasText(priceFamily) && priceId.equals(priceFamily)) return "FAMILY";
         if (StringUtils.hasText(pricePremium) && priceId.equals(pricePremium)) return "PREMIUM";
-        if (StringUtils.hasText(pricePro)     && priceId.equals(pricePro))     return "PRO";
+        if (StringUtils.hasText(pricePro) && priceId.equals(pricePro)) return "PRO";
         // Fallback: any active paid subscription that isn't explicitly mapped → PRO
         log.warn("Unknown Stripe price ID: {} — defaulting to PRO", priceId);
         return "PRO";
