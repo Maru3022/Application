@@ -20,6 +20,8 @@ spec:
       labels:
         app: gateway-service
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       terminationGracePeriodSeconds: 45
       securityContext:
         runAsNonRoot: true
@@ -31,6 +33,7 @@ spec:
       containers:
         - name: gateway-service
           image: ghcr.io/maru3022/application/gateway-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           securityContext:
@@ -145,17 +148,15 @@ metadata:
   name: gateway-ingress
   namespace: healthlife
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
-    # Redirect all HTTP traffic to HTTPS
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # Traefik middleware for compression and buffering (k3s default ingress)
+    traefik.ingress.kubernetes.io/router.middlewares: healthlife-compress@kubernetescrd,healthlife-buffering@kubernetescrd
     # cert-manager will provision the TLS certificate automatically
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Redirect all HTTP traffic to HTTPS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
     - hosts:
         - healthlife.local

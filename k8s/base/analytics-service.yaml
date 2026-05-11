@@ -20,6 +20,8 @@ spec:
       labels:
         app: analytics-service
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       terminationGracePeriodSeconds: 45
       securityContext:
         runAsNonRoot: true
@@ -31,6 +33,7 @@ spec:
       containers:
         - name: analytics-service
           image: ghcr.io/maru3022/application/analytics-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8089
           securityContext:

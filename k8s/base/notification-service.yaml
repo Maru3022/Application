@@ -20,6 +20,8 @@ spec:
       labels:
         app: notification-service
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       terminationGracePeriodSeconds: 45
       securityContext:
         runAsNonRoot: true
@@ -31,6 +33,7 @@ spec:
       containers:
         - name: notification-service
           image: ghcr.io/maru3022/application/notification-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8088
           securityContext:

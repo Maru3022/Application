@@ -4,7 +4,9 @@ image:
   registry: ghcr.io
   repository: maru3022/application
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
+  pullSecrets:
+    - name: ghcr-secret
 
 db:
   host: postgres

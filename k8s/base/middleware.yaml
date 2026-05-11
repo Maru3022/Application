@@ -1,0 +1,23 @@
+# Traefik Middlewares for the HealthLife ingress
+# k3s uses Traefik by default — these CRD-based middlewares replace nginx annotations.
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: compress
+  namespace: healthlife
+spec:
+  compress: {}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: buffering
+  namespace: healthlife
+spec:
+  buffering:
+    maxRequestBodyBytes: 10485760   # 10 MB — replaces nginx proxy-body-size
+    memRequestBodyBytes: 2097152     # 2 MB in-memory buffer
+    maxResponseBodyBytes: 10485760  # 10 MB
+    memResponseBodyBytes: 2097152   # 2 MB in-memory buffer
+    retryExpression: "Attempts() < 3"

@@ -20,6 +20,8 @@ spec:
       labels:
         app: ai-coach-service
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       terminationGracePeriodSeconds: 45
       securityContext:
         runAsNonRoot: true
@@ -31,6 +33,7 @@ spec:
       containers:
         - name: ai-coach-service
           image: ghcr.io/maru3022/application/ai-coach-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8086
           securityContext:
@@ -57,16 +60,14 @@ spec:
                 secretKeyRef:
                   name: healthlife-secrets
                   key: jwt-secret
-            - name: DB_HOST
-              value: "postgres"
-            - name: DB_PORT
-              value: "5432"
-            - name: DB_USERNAME
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/healthlife_aicoach"
+            - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: healthlife-db-credentials
                   key: username
-            - name: DB_PASSWORD
+            - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: healthlife-db-credentials
@@ -82,7 +83,7 @@ spec:
                   key: deepseek-api-key
                   optional: true
             - name: DEEPSEEK_MODEL
-              value: "deepseek-chat"
+              value: "deepseek-v4-flash"
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness

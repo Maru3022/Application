@@ -20,6 +20,8 @@ spec:
       labels:
         app: mental-service
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       terminationGracePeriodSeconds: 45
       securityContext:
         runAsNonRoot: true
@@ -31,6 +33,7 @@ spec:
       containers:
         - name: mental-service
           image: ghcr.io/maru3022/application/mental-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8084
           securityContext:
@@ -56,16 +59,14 @@ spec:
                 secretKeyRef:
                   name: healthlife-secrets
                   key: jwt-secret
-            - name: DB_HOST
-              value: "postgres"
-            - name: DB_PORT
-              value: "5432"
-            - name: DB_USERNAME
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/healthlife_mental"
+            - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: healthlife-db-credentials
                   key: username
-            - name: DB_PASSWORD
+            - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: healthlife-db-credentials

@@ -20,6 +20,8 @@ spec:
       labels:
         app: payment-service
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       terminationGracePeriodSeconds: 45
       securityContext:
         runAsNonRoot: true
@@ -31,6 +33,7 @@ spec:
       containers:
         - name: payment-service
           image: ghcr.io/maru3022/application/payment-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8090
           securityContext:
@@ -56,10 +59,6 @@ spec:
                 secretKeyRef:
                   name: healthlife-secrets
                   key: jwt-secret
-            - name: DB_HOST
-              value: "postgres"
-            - name: DB_PORT
-              value: "5432"
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://postgres:5432/healthlife_payment"
             - name: SPRING_DATASOURCE_USERNAME
@@ -83,6 +82,18 @@ spec:
                 secretKeyRef:
                   name: healthlife-secrets
                   key: stripe-webhook-secret
+                  optional: true
+            - name: STRIPE_PRICE_PRO
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: stripe-price-pro
+                  optional: true
+            - name: STRIPE_PRICE_PREMIUM
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: stripe-price-premium
                   optional: true
           readinessProbe:
             httpGet:
