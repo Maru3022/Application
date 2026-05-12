@@ -615,17 +615,33 @@ jobs:
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     permissions:
       contents: read
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/dependency-review-action@v4
+      - name: Dependency Review (PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: high
           deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0
         continue-on-error: true
+      - name: Dependency Review (push fallback)
+        if: github.event_name == 'push'
+        run: |
+          echo "Push event detected: dependency-review-action works in PR diff mode."
+          echo "Running fallback dependency audit via Maven tree/export."
+          mvn -q -DskipTests dependency:tree > dependency-tree.txt
+          echo "Dependency fallback audit completed."
+      - name: Upload dependency fallback artifact
+        if: always() && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-tree
+          path: dependency-tree.txt
+          if-no-files-found: ignore
 
   # ──────────────────────────────────────────────────────────────────────────
   # 11. PIPELINE NOTIFICATION

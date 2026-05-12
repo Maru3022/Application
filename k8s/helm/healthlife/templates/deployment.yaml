@@ -115,7 +115,7 @@ spec:
                   name: healthlife-secrets
                   key: deepseek-api-key
             - name: DEEPSEEK_MODEL
-              value: "deepseek-v4-flash"
+              value: "deepseek-chat"
             {{- end }}
             {{- if eq $name "auth-service" }}
             - name: MAIL_USERNAME

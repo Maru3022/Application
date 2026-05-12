@@ -83,7 +83,7 @@ spec:
                   key: deepseek-api-key
                   optional: true
             - name: DEEPSEEK_MODEL
-              value: "deepseek-v4-flash"
+              value: "deepseek-chat"
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
