@@ -95,11 +95,11 @@ postgres (per service)
 ### 1. Start infrastructure + all services
 
 ```bash
-cd docs
-docker-compose up -d
+docker compose -f infrastructure/docker-compose.yml up -d
 ```
 
-This starts PostgreSQL (one per service), Redis, and all 11 Spring Boot services.
+This starts PostgreSQL (one per service), Redis, Kafka, and Zookeeper.
+Spring Boot services are started via Maven (see `docs/LOCAL-RUN.md`).
 
 ### 2. Verify services are up
 
