@@ -160,16 +160,19 @@ grafana:
     size: 5Gi
   ingress:
     enabled: true
-    ingressClassName: nginx
+    ingressClassName: traefik
     annotations:
+      # TLS with cert-manager
       cert-manager.io/cluster-issuer: letsencrypt-prod
-      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      # Traefik TLS-only configuration
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
     hosts:
-      - grafana.healthlife.com
+      - monitoring.healthlife.app
     tls:
-      - secretName: grafana-tls
+      - secretName: monitoring-tls
         hosts:
-          - grafana.healthlife.com
+          - monitoring.healthlife.app
   # Auto-provision dashboards from ConfigMaps
   sidecar:
     dashboards:

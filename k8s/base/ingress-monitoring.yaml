@@ -1,0 +1,33 @@
+# Monitoring Ingress for Grafana in monitoring namespace
+# Routes monitoring.healthlife.app to Grafana service
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monitoring-ingress
+  namespace: monitoring
+  annotations:
+    # TLS with cert-manager
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Traefik TLS-only configuration
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Middleware for compression and buffering
+    traefik.ingress.kubernetes.io/router.middlewares: monitoring-compress@kubernetescrd,monitoring-buffering@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - monitoring.healthlife.app
+      secretName: monitoring-tls
+  rules:
+    - host: monitoring.healthlife.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-grafana
+                port:
+                  number: 80

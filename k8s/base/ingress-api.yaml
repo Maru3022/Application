@@ -1,0 +1,33 @@
+# API Ingress for HealthLife backend services
+# Routes /api/* to gateway-service
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  namespace: healthlife
+  annotations:
+    # TLS with cert-manager
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Traefik TLS-only configuration
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Middleware for compression and buffering
+    traefik.ingress.kubernetes.io/router.middlewares: healthlife-compress@kubernetescrd,healthlife-buffering@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - api.healthlife.app
+      secretName: api-tls
+  rules:
+    - host: api.healthlife.app
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway-service
+                port:
+                  number: 80
