@@ -46,7 +46,7 @@ stripe:
   cancel-url: ${STRIPE_CANCEL_URL:https://app.healthlife.com/subscription/cancel}
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:local-dev-jwt-secret-change-me-please-64-chars-minimum-123456}
   access-token:
     expiration: 900000
   refresh-token:
