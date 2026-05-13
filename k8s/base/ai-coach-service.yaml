@@ -156,3 +156,4 @@ spec:
   selector:
     matchLabels:
       app: ai-coach-service
+

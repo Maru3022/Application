@@ -2,7 +2,7 @@
 
 ## Обзор
 
-HealthLife — платформа из 10 микросервисов, запускаемых в Kubernetes через kind (Kubernetes IN Docker).
+HealthLife — платформа из 11 микросервисов, запускаемых в Kubernetes через kind (Kubernetes IN Docker).
 
 ```
 kind-healthlife (3 ноды: control-plane + 2 worker)
@@ -18,7 +18,8 @@ kind-healthlife (3 ноды: control-plane + 2 worker)
 │   ├── ai-coach-service     :8086  (DB + Redis)
 │   ├── social-service       :8087  (DB)
 │   ├── notification-service :8088
-│   └── analytics-service    :8089  (Redis)
+│   ├── analytics-service    :8089  (Redis)
+│   └── payment-service      :8090  (DB)
 └── Ingress: nginx (порт 80 хоста → gateway)
 ```
 
@@ -38,7 +39,9 @@ kind-healthlife (3 ноды: control-plane + 2 worker)
 ### Windows (PowerShell)
 
 ```powershell
-# Из корня проекта
+# Из корня проекта (Docker Desktop должен быть запущен)
+# Опционально: PAT GitHub с правом read:packages — иначе поды могут не скачать образы с GHCR
+$env:GHCR_TOKEN = "<ваш_github_pat>"
 .\k8s\Start-Cluster.ps1
 ```
 
@@ -53,8 +56,8 @@ chmod +x k8s/start-cluster.sh
 1. Создаёт kind-кластер
 2. Устанавливает NGINX Ingress Controller
 3. Создаёт namespace и секреты
-4. Разворачивает PostgreSQL (7 БД) и Redis
-5. Устанавливает все 10 сервисов через Helm
+4. Разворачивает PostgreSQL (8 БД) и Redis
+5. Устанавливает все 11 сервисов через Helm
 6. Применяет NetworkPolicies
 
 ## Ручная установка (пошагово)
@@ -111,8 +114,8 @@ kubectl wait --for=condition=ready pod -l app=postgres -n healthlife --timeout=1
 kubectl wait --for=condition=ready pod -l app=redis -n healthlife --timeout=60s
 ```
 
-PostgreSQL автоматически создаёт 7 баз данных через init-скрипт:
-`healthlife_auth`, `healthlife_user`, `healthlife_healthdata`, `healthlife_mental`, `healthlife_nutrition`, `healthlife_aicoach`, `healthlife_social`
+PostgreSQL автоматически создаёт 8 баз данных через init-скрипт (только при **первом** создании тома данных):
+`healthlife_auth`, `healthlife_user`, `healthlife_healthdata`, `healthlife_mental`, `healthlife_nutrition`, `healthlife_aicoach`, `healthlife_social`, `healthlife_payment`
 
 ### 6. Микросервисы (Helm)
 
@@ -139,13 +142,39 @@ kubectl apply -f k8s/base/network-policy.yaml
 
 ## Доступ к приложению
 
-### Способ 1: Port-forward (быстрый тест)
+### Почему в браузере `ERR_CONNECTION_REFUSED` на localhost:8080
+
+Сервисы в Kubernetes имеют тип **ClusterIP**: на вашем ПК **нет** процесса, который слушает `:8080`, пока вы не запустите **port-forward** (или ingress на 80 с hosts). Открыть только браузер без туннеля — нормально приведёт к отказу в соединении.
+
+### Способ 1: Port-forward (обязательный минимум для localhost:8080)
+
+**Windows (отдельное окно PowerShell, оставьте его открытым):**
+
+```powershell
+cd C:\Project\Application
+.\k8s\Port-Forward-Gateway.ps1
+```
+
+Или после установки кластера сразу открыть второе окно с пробросом:
+
+```powershell
+.\k8s\Start-Cluster.ps1 -StartGatewayPortForward
+```
+
+**Linux / macOS:**
+
+```bash
+chmod +x k8s/port-forward-gateway.sh
+./k8s/port-forward-gateway.sh
+```
+
+Вручную то же самое:
 
 ```bash
 kubectl port-forward svc/gateway-service 8080:80 -n healthlife
 ```
 
-Открыть: http://localhost:8080
+Открыть: http://localhost:8080 (например http://localhost:8080/actuator/health).
 
 ### Способ 2: Ingress (production-like)
 
@@ -174,6 +203,7 @@ kubectl port-forward svc/gateway-service 8080:80 -n healthlife
 | `/api/v1/social/**` | social-service |
 | `/api/v1/notifications/**` | notification-service |
 | `/api/v1/analytics/**` | analytics-service |
+| `/api/v1/payments/**` | payment-service |
 
 Примеры:
 
@@ -254,7 +284,8 @@ kind delete cluster --name healthlife
 
 | Проблема | Решение |
 |---|---|
-| `ImagePullBackOff` | Проверьте доступ к GHCR: `kubectl describe pod <name> -n healthlife` |
+| `ImagePullBackOff` | Создайте `ghcr-secret` (PAT с `read:packages`) или задайте `$env:GHCR_TOKEN` перед `Start-Cluster.ps1`; см. `k8s/base/registry-secret.yaml` |
+| `ERR_CONNECTION_REFUSED` на `localhost:8080` | Запустите `.\k8s\Port-Forward-Gateway.ps1` (окно не закрывать) или `kubectl port-forward svc/gateway-service 8080:80 -n healthlife` |
 | `CrashLoopBackOff` | Смотрите логи: `kubectl logs <pod> -n healthlife` |
 | PostgreSQL не готов | `kubectl describe pod -l app=postgres -n healthlife` |
 | Ingress не работает | Проверьте поды: `kubectl get pods -n ingress-nginx` |

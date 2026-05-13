@@ -138,6 +138,8 @@ kubectl apply -f k8s/base/network-policy.yaml
 
 ## Access the Application
 
+Without a port-forward or ingress, **nothing listens on your PC’s port 8080** — the browser will show `ERR_CONNECTION_REFUSED`. On Windows you can run `.\k8s\Port-Forward-Gateway.ps1` from the repo root (leave the window open).
+
 ### Port-forward (quick test)
 
 ```bash

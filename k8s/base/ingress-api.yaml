@@ -31,3 +31,4 @@ spec:
                 name: gateway-service
                 port:
                   number: 80
+

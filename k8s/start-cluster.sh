@@ -65,6 +65,21 @@ kubectl create secret generic healthlife-db-credentials \
   -n healthlife --dry-run=client -o yaml | kubectl apply -f -
 ok "Secrets created"
 
+# ── GHCR pull secret (required for private images unless using kind load) ──
+GHCR_USER="${GHCR_USERNAME:-Maru3022}"
+if [ -n "${GHCR_TOKEN:-}" ]; then
+  log "Creating ghcr-secret from GHCR_TOKEN..."
+  kubectl create secret docker-registry ghcr-secret \
+    --namespace=healthlife \
+    --docker-server=ghcr.io \
+    --docker-username="$GHCR_USER" \
+    --docker-password="$GHCR_TOKEN" \
+    --dry-run=client -o yaml | kubectl apply -f -
+  ok "ghcr-secret applied"
+else
+  log "GHCR_TOKEN not set: if pods stay ImagePullBackOff, create ghcr-secret (see k8s/base/registry-secret.yaml)"
+fi
+
 # ── Deploy infrastructure ─────────────────────
 log "Deploying PostgreSQL and Redis..."
 kubectl apply -f k8s/infrastructure/postgres-init-cm.yaml
@@ -117,7 +132,13 @@ echo "════════════════════════�
 echo ""
 echo "  Cluster:     kind-healthlife"
 echo "  Namespace:   healthlife"
-echo "  Services:    10 microservices"
+echo "  Services:    11 microservices"
+echo ""
+echo "  IMPORTANT: ClusterIP is not exposed on your host until you port-forward."
+echo "  Without it, the browser shows ERR_CONNECTION_REFUSED on localhost:8080."
+echo ""
+echo "  Open gateway in browser:"
+echo "    ./k8s/port-forward-gateway.sh"
 echo ""
 echo "  Quick commands:"
 echo "    kubectl get pods -n healthlife"

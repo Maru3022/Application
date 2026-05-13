@@ -232,3 +232,4 @@ spec:
           cpu: 1000m
           memory: 1Gi
         controlledResources: ["cpu", "memory"]
+

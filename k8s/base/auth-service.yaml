@@ -159,3 +159,4 @@ spec:
   selector:
     matchLabels:
       app: auth-service
+

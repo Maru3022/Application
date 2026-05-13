@@ -135,3 +135,4 @@ spec:
   selector:
     matchLabels:
       app: analytics-service
+

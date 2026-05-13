@@ -39,7 +39,7 @@ spec:
             - name: POSTGRES_DB
               value: "healthlife"
             - name: POSTGRES_MULTIPLE_DATABASES
-              value: "healthlife_auth,healthlife_user,healthlife_healthdata,healthlife_mental,healthlife_nutrition,healthlife_aicoach,healthlife_social"
+              value: "healthlife_auth,healthlife_user,healthlife_healthdata,healthlife_mental,healthlife_nutrition,healthlife_aicoach,healthlife_social,healthlife_payment"
             # FIX: prevent data directory permission issues
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata

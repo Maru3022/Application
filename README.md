@@ -134,7 +134,14 @@ For a native build see [`mobile/HealthLife/BUILD.md`](mobile/HealthLife/BUILD.md
 
 See [`docs/K8S-RUN.md`](docs/K8S-RUN.md) for full instructions.
 
-Quick deploy:
+**After the cluster is up**, services use **ClusterIP** — your browser on `http://localhost:8080` will show **connection refused** until you run a port-forward. From the repo root:
+
+```powershell
+.\k8s\Port-Forward-Gateway.ps1
+```
+
+Quick deploy (Windows): `.\k8s\Start-Cluster.ps1` (optional: `-StartGatewayPortForward` opens the forward in a new window).
+
 ```bash
 kubectl apply -f k8s/base/namespace.yaml
 # Create secrets first (see Environment Variables below)

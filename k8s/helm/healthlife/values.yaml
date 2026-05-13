@@ -13,7 +13,7 @@ db:
   port: 5432
 
 redis:
-  host: redis
+  host: redis-master
   port: 6379
 
 services:
@@ -181,3 +181,7 @@ ingress:
 cors:
   # Override in production with the actual frontend domain(s), comma-separated.
   allowedOrigins: "https://healthlife.local,https://app.healthlife.com"
+
+mail:
+  host: "smtp.sendgrid.net"
+  port: "587"
