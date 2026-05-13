@@ -33,3 +33,5 @@ npx expo start
 ## Security notes (`npm audit`)
 
 Expo and React Native pull large dependency trees; some advisories are transitive and not fixable without upstream releases. Prefer **`npm audit`** for context; avoid **`npm audit fix --force`** unless you understand the breaking upgrades.
+
+This app uses **`.npmrc`** with **`legacy-peer-deps=true`** so `npm install` matches typical Expo/RN installs and avoids noisy strict peer conflicts (for example between **`jest-expo`** nested tooling and **`react`**). If **`npm test`** passes, those peer warnings are safe to ignore.
