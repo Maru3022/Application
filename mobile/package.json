@@ -1,0 +1,14 @@
+{
+  "name": "healthlife-mobile",
+  "private": true,
+  "description": "Thin wrapper: the Expo app and TypeScript live in ./HealthLife. Run npm commands here or cd HealthLife first.",
+  "scripts": {
+    "postinstall": "npm install --prefix ./HealthLife",
+    "start": "npm start --prefix ./HealthLife",
+    "android": "npm run android --prefix ./HealthLife",
+    "ios": "npm run ios --prefix ./HealthLife",
+    "web": "npm run web --prefix ./HealthLife",
+    "test": "npm exec --prefix ./HealthLife -- jest",
+    "typecheck": "npm run typecheck --prefix ./HealthLife"
+  }
+}

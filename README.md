@@ -120,6 +120,8 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
 
 ## Mobile App
 
+See **[`mobile/README.md`](mobile/README.md)** — run `npm install` / `npm test` / `npm run typecheck` from **`mobile`** (wrapper) or from **`mobile/HealthLife`** (Expo app).
+
 ```bash
 cd mobile/HealthLife
 npm install

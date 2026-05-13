@@ -116,10 +116,20 @@ curl -X POST "http://localhost:8080/api/v1/auth/login" \
 From repo root:
 
 ```bash
+cd mobile
+npm install
+npm start
+```
+
+Or from the app folder (same result if you use the wrapper from `mobile/`):
+
+```bash
 cd mobile/HealthLife
 npm install
 npx expo start
 ```
+
+See [`mobile/README.md`](../mobile/README.md) for **`npm run typecheck`** / **`npm test`** from `mobile/` without `cd HealthLife`.
 
 Point the mobile app API base URL to:
 
