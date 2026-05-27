@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -38,6 +39,8 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class OAuthService {
 
+    private static final Duration APPLE_JWKS_CONNECT_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration APPLE_JWKS_REQUEST_TIMEOUT = Duration.ofSeconds(5);
     private final UserRepository userRepository;
     private final AuthService authService;
 
@@ -152,13 +155,21 @@ public class OAuthService {
      */
     private String verifyAppleToken(String identityToken) {
         try {
+            validateAppleTokenFormat(identityToken);
             // Fetch Apple's public keys
-            HttpClient client = HttpClient.newHttpClient();
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(APPLE_JWKS_CONNECT_TIMEOUT)
+                    .build();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(APPLE_KEYS_URL))
+                    .timeout(APPLE_JWKS_REQUEST_TIMEOUT)
                     .GET()
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                log.warn("Apple JWKS endpoint returned status={}", response.statusCode());
+                throw new UnauthorizedException("Apple token verification failed");
+            }
 
             // Parse the JWKS response to find the matching key
             // Simple extraction — in production use a proper JWKS library
@@ -199,14 +210,31 @@ public class OAuthService {
         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
         Map<String, Object> header = mapper.readValue(headerJson, Map.class);
         String kid = (String) header.get("kid");
+        String alg = (String) header.get("alg");
+        String typ = (String) header.get("typ");
+        if (!StringUtils.hasText(kid)) {
+            throw new UnauthorizedException("Apple token header is missing kid");
+        }
+        if (!"RS256".equals(alg)) {
+            throw new UnauthorizedException("Unsupported Apple token algorithm");
+        }
+        if (StringUtils.hasText(typ) && !"JWT".equalsIgnoreCase(typ)) {
+            throw new UnauthorizedException("Invalid Apple token type");
+        }
 
         Map<String, Object> jwks = mapper.readValue(jwksJson, Map.class);
         List<Map<String, Object>> keys = (List<Map<String, Object>>) jwks.get("keys");
+        if (keys == null || keys.isEmpty()) {
+            throw new UnauthorizedException("Apple JWKS did not contain keys");
+        }
 
         Map<String, Object> matchingKey = keys.stream()
                 .filter(k -> kid.equals(k.get("kid")))
                 .findFirst()
                 .orElseThrow(() -> new UnauthorizedException("No matching Apple public key found"));
+        if (!"RSA".equals(matchingKey.get("kty")) || !"sig".equals(matchingKey.get("use"))) {
+            throw new UnauthorizedException("Invalid Apple JWKS key type");
+        }
 
         // Build RSA public key from n and e
         byte[] nBytes = Base64.getUrlDecoder().decode((String) matchingKey.get("n"));
@@ -238,5 +266,15 @@ public class OAuthService {
             return;
         }
         throw new UnauthorizedException("Invalid Apple token audience");
+    }
+
+    private void validateAppleTokenFormat(String identityToken) {
+        if (!StringUtils.hasText(identityToken)) {
+            throw new UnauthorizedException("Apple identity token is required");
+        }
+        String[] parts = identityToken.split("\\.");
+        if (parts.length != 3) {
+            throw new UnauthorizedException("Invalid Apple identity token format");
+        }
     }
 }

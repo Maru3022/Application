@@ -15,6 +15,13 @@ NAMESPACE="monitoring"
 RELEASE="prometheus"
 VALUES_FILE="$(dirname "$0")/prometheus-stack-values.yaml"
 
+if [[ -z "${GRAFANA_ADMIN_PASSWORD:-}" ]]; then
+  echo "ERROR: GRAFANA_ADMIN_PASSWORD is required. Refusing to deploy Grafana with a default password."
+  echo "Set it explicitly, e.g.:"
+  echo "  GRAFANA_ADMIN_PASSWORD='strong-password' ./k8s/monitoring/deploy-monitoring.sh"
+  exit 1
+fi
+
 echo "==> Adding Prometheus Community Helm repo..."
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
@@ -26,7 +33,7 @@ echo "==> Installing / upgrading kube-prometheus-stack..."
 helm upgrade --install "${RELEASE}" prometheus-community/kube-prometheus-stack \
   --namespace "${NAMESPACE}" \
   --values "${VALUES_FILE}" \
-  --set "grafana.adminPassword=${GRAFANA_ADMIN_PASSWORD:-ChangeMe2025!}" \
+  --set "grafana.adminPassword=${GRAFANA_ADMIN_PASSWORD}" \
   --set "alertmanager.config.global.smtp_auth_password=${ALERTMANAGER_SMTP_PASSWORD:-}" \
   --set "alertmanager.config.receivers[2].slack_configs[0].api_url=${SLACK_WEBHOOK_URL:-}" \
   --set "alertmanager.config.receivers[2].pagerduty_configs[0].routing_key=${PAGERDUTY_ROUTING_KEY:-}" \

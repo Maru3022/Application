@@ -5,7 +5,7 @@ CREATE TABLE sleep_entries (
     sleep_start TIMESTAMPTZ NOT NULL,
     sleep_end   TIMESTAMPTZ NOT NULL,
     duration_min INT,
-    quality     SMALLINT CHECK (quality BETWEEN 1 AND 5),
+    quality     INTEGER CHECK (quality BETWEEN 1 AND 5),
     notes       TEXT,
     source      VARCHAR(30),
     created_at  TIMESTAMPTZ DEFAULT NOW()
@@ -45,7 +45,7 @@ CREATE TABLE symptom_entries (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID NOT NULL,
     symptom     VARCHAR(100) NOT NULL,
-    intensity   SMALLINT CHECK (intensity BETWEEN 1 AND 10),
+    intensity   INTEGER CHECK (intensity BETWEEN 1 AND 10),
     recorded_at TIMESTAMPTZ NOT NULL,
     notes       TEXT
 );

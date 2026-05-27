@@ -147,7 +147,9 @@ alertmanager:
 # ── Grafana ───────────────────────────────────────────────────────────────────
 grafana:
   enabled: true
-  adminPassword: "${GRAFANA_ADMIN_PASSWORD:ChangeMe2025!}"
+  # Must be provided securely (e.g. --set grafana.adminPassword="$GRAFANA_ADMIN_PASSWORD"
+  # or an external secret). Do not keep default passwords in git.
+  adminPassword: ""
   resources:
     requests:
       cpu: 100m

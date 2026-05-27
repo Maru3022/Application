@@ -2,7 +2,7 @@
 CREATE TABLE mood_entries (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID NOT NULL,
-    mood_score  SMALLINT CHECK (mood_score BETWEEN 1 AND 10),
+    mood_score  INTEGER CHECK (mood_score BETWEEN 1 AND 10),
     emotions    TEXT,
     note        TEXT,
     recorded_at TIMESTAMPTZ NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE journal_entries (
 CREATE TABLE stress_entries (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID NOT NULL,
-    level       SMALLINT NOT NULL CHECK (level BETWEEN 1 AND 10),
+    level       INTEGER NOT NULL CHECK (level BETWEEN 1 AND 10),
     recorded_at TIMESTAMPTZ NOT NULL,
     notes       TEXT
 );

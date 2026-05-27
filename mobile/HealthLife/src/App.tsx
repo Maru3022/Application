@@ -6,6 +6,8 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as SecureStore from 'expo-secure-store';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+// GestureHandlerRootView MUST wrap the entire app — required by react-native-gesture-handler ≥ 2.x
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { THEME, STORAGE_KEYS } from './constants';
 import { useAuthStore } from './store/authStore';
 
@@ -128,17 +130,20 @@ export default function App() {
     if (onboarded === null) return null;
 
     return (
-        <PaperProvider theme={THEME}>
-            <NavigationContainer>
-                {!isAuthenticated ? (
-                    <AuthStack />
-                ) : !onboarded ? (
-                    <OnboardingScreen onComplete={() => setOnboarded(true)} />
-                ) : (
-                    <MainTabs />
-                )}
-            </NavigationContainer>
-            <StatusBar style="auto" />
-        </PaperProvider>
+        // GestureHandlerRootView must be the outermost component
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <PaperProvider theme={THEME}>
+                <NavigationContainer>
+                    {!isAuthenticated ? (
+                        <AuthStack />
+                    ) : !onboarded ? (
+                        <OnboardingScreen onComplete={() => setOnboarded(true)} />
+                    ) : (
+                        <MainTabs />
+                    )}
+                </NavigationContainer>
+                <StatusBar style="auto" />
+            </PaperProvider>
+        </GestureHandlerRootView>
     );
 }

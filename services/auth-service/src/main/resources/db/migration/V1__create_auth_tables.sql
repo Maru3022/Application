@@ -35,3 +35,12 @@ CREATE TABLE password_reset_tokens (
     used        BOOLEAN DEFAULT FALSE,
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE email_verification_tokens (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    token       VARCHAR(255) UNIQUE NOT NULL,
+    user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
+    expiry_date TIMESTAMPTZ NOT NULL,
+    used        BOOLEAN DEFAULT FALSE,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);

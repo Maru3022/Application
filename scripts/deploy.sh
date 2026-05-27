@@ -10,9 +10,9 @@ set -euo pipefail
 # Configuration
 NAMESPACE="healthlife"
 MONITORING_NAMESPACE="monitoring"
-POSTGRES_PASSWORD="${DB_PASSWORD:-ChangeMe2025!}"
+POSTGRES_PASSWORD="${DB_PASSWORD:-}"
 JWT_SECRET="${JWT_SECRET:-$(openssl rand -base64 32)}"
-GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD:-Grafana2025!}"
+GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD:-}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -46,6 +46,8 @@ check_prerequisites() {
     command -v helm >/dev/null 2>&1 || error "helm is not installed"
     
     kubectl cluster-info >/dev/null 2>&1 || error "Cannot connect to Kubernetes cluster"
+    [[ -n "$POSTGRES_PASSWORD" ]] || error "DB_PASSWORD is required (do not use default DB credentials in deployment)"
+    [[ -n "$GRAFANA_ADMIN_PASSWORD" ]] || error "GRAFANA_ADMIN_PASSWORD is required"
     
     # Check if Traefik is the default ingress
     kubectl get ingressclass traefik >/dev/null 2>&1 || warn "Traefik IngressClass not found - ensure k3s with Traefik"
