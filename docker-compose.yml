@@ -1,0 +1,408 @@
+version: '3.8'
+
+# HealthLife — Production Docker Compose
+# Usage:
+#   cp .env.example .env   # fill in real secrets
+#   docker compose up -d --build
+#
+# All 11 microservices + Postgres (per-service) + Redis start automatically.
+# Gateway is the single public entry point → http://localhost:8080
+
+networks:
+  healthlife:
+    driver: bridge
+
+volumes:
+  pg_auth_data:
+  pg_user_data:
+  pg_health_data:
+  pg_mental_data:
+  pg_nutrition_data:
+  pg_aicoach_data:
+  pg_social_data:
+  pg_payment_data:
+  redis_data:
+
+# ── Anchors ───────────────────────────────────────────────────────────────────
+
+x-common-env: &common-env
+  JWT_SECRET: ${JWT_SECRET}
+  SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-production}
+  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+
+x-db-env: &db-env
+  SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-healthlife}
+  SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+
+x-healthcheck: &spring-healthcheck
+  interval: 20s
+  timeout: 5s
+  retries: 10
+  start_period: 90s
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+
+  # ── Infrastructure ─────────────────────────────────────────────────────────
+
+  postgres-auth:
+    image: postgres:16-alpine
+    <<: *restart
+    environment:
+      POSTGRES_DB: healthlife_auth
+      POSTGRES_USER: ${DB_USERNAME:-healthlife}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pg_auth_data:/var/lib/postgresql/data]
+    networks: [healthlife]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-healthlife} -d healthlife_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-user:
+    image: postgres:16-alpine
+    <<: *restart
+    environment:
+      POSTGRES_DB: healthlife_user
+      POSTGRES_USER: ${DB_USERNAME:-healthlife}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pg_user_data:/var/lib/postgresql/data]
+    networks: [healthlife]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-healthlife} -d healthlife_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-health:
+    image: postgres:16-alpine
+    <<: *restart
+    environment:
+      POSTGRES_DB: healthlife_healthdata
+      POSTGRES_USER: ${DB_USERNAME:-healthlife}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pg_health_data:/var/lib/postgresql/data]
+    networks: [healthlife]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-healthlife} -d healthlife_healthdata"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-mental:
+    image: postgres:16-alpine
+    <<: *restart
+    environment:
+      POSTGRES_DB: healthlife_mental
+      POSTGRES_USER: ${DB_USERNAME:-healthlife}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pg_mental_data:/var/lib/postgresql/data]
+    networks: [healthlife]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-healthlife} -d healthlife_mental"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-nutrition:
+    image: postgres:16-alpine
+    <<: *restart
+    environment:
+      POSTGRES_DB: healthlife_nutrition
+      POSTGRES_USER: ${DB_USERNAME:-healthlife}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pg_nutrition_data:/var/lib/postgresql/data]
+    networks: [healthlife]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-healthlife} -d healthlife_nutrition"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-aicoach:
+    image: postgres:16-alpine
+    <<: *restart
+    environment:
+      POSTGRES_DB: healthlife_aicoach
+      POSTGRES_USER: ${DB_USERNAME:-healthlife}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pg_aicoach_data:/var/lib/postgresql/data]
+    networks: [healthlife]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-healthlife} -d healthlife_aicoach"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-social:
+    image: postgres:16-alpine
+    <<: *restart
+    environment:
+      POSTGRES_DB: healthlife_social
+      POSTGRES_USER: ${DB_USERNAME:-healthlife}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pg_social_data:/var/lib/postgresql/data]
+    networks: [healthlife]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-healthlife} -d healthlife_social"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-payment:
+    image: postgres:16-alpine
+    <<: *restart
+    environment:
+      POSTGRES_DB: healthlife_payment
+      POSTGRES_USER: ${DB_USERNAME:-healthlife}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pg_payment_data:/var/lib/postgresql/data]
+    networks: [healthlife]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-healthlife} -d healthlife_payment"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    <<: *restart
+    command: redis-server --save 60 1 --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
+    volumes: [redis_data:/data]
+    networks: [healthlife]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Microservices ──────────────────────────────────────────────────────────
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      <<: [*common-env, *db-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/healthlife_auth
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      MAIL_SMTP_HOST: ${MAIL_SMTP_HOST}
+      MAIL_SMTP_PORT: ${MAIL_SMTP_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
+      OAUTH_APPLE_AUDIENCE: ${OAUTH_APPLE_AUDIENCE:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      postgres-user:
+        condition: service_healthy
+    environment:
+      <<: [*common-env, *db-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/healthlife_user
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  health-data-service:
+    build:
+      context: ./services/health-data-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      postgres-health:
+        condition: service_healthy
+    environment:
+      <<: [*common-env, *db-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-health:5432/healthlife_healthdata
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  mental-service:
+    build:
+      context: ./services/mental-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      postgres-mental:
+        condition: service_healthy
+    environment:
+      <<: [*common-env, *db-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-mental:5432/healthlife_mental
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  nutrition-service:
+    build:
+      context: ./services/nutrition-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      postgres-nutrition:
+        condition: service_healthy
+    environment:
+      <<: [*common-env, *db-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-nutrition:5432/healthlife_nutrition
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  ai-coach-service:
+    build:
+      context: ./services/ai-coach-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      postgres-aicoach:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      <<: [*common-env, *db-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-aicoach:5432/healthlife_aicoach
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  social-service:
+    build:
+      context: ./services/social-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      postgres-social:
+        condition: service_healthy
+    environment:
+      <<: [*common-env, *db-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-social:5432/healthlife_social
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8088/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  analytics-service:
+    build:
+      context: ./services/analytics-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8089/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+      dockerfile: Dockerfile
+    <<: *restart
+    networks: [healthlife]
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+    environment:
+      <<: [*common-env, *db-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-payment:5432/healthlife_payment
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_PRO: ${STRIPE_PRICE_PRO:-}
+      STRIPE_PRICE_PREMIUM: ${STRIPE_PRICE_PREMIUM:-}
+      STRIPE_PRICE_FAMILY: ${STRIPE_PRICE_FAMILY:-}
+      STRIPE_SUCCESS_URL: ${STRIPE_SUCCESS_URL:-https://app.healthlife.com/subscription/success}
+      STRIPE_CANCEL_URL: ${STRIPE_CANCEL_URL:-https://app.healthlife.com/subscription/cancel}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
+
+  gateway-service:
+    build:
+      context: ./services/gateway-service
+      dockerfile: Dockerfile
+    <<: *restart
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    networks: [healthlife]
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      health-data-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      GATEWAY_ROUTE_AUTH: http://auth-service:8081
+      GATEWAY_ROUTE_USERS: http://user-service:8082
+      GATEWAY_ROUTE_HEALTH: http://health-data-service:8083
+      GATEWAY_ROUTE_MENTAL: http://mental-service:8084
+      GATEWAY_ROUTE_NUTRITION: http://nutrition-service:8085
+      GATEWAY_ROUTE_AI: http://ai-coach-service:8086
+      GATEWAY_ROUTE_SOCIAL: http://social-service:8087
+      GATEWAY_ROUTE_NOTIFICATIONS: http://notification-service:8088
+      GATEWAY_ROUTE_ANALYTICS: http://analytics-service:8089
+      GATEWAY_ROUTE_PAYMENTS: http://payment-service:8090
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/internal/actuator/health/liveness || exit 1"]
+      <<: *spring-healthcheck
