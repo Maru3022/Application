@@ -1,8 +1,35 @@
-target/
-.git/
-*.md
+# Git
+.git
+.gitignore
+
+# Local dev
 .env
+*.env.local
+docker-compose.local.yml
+
+# IDE
+.idea
+*.iml
+.vscode
+
+# Mobile (not needed for backend build)
+mobile/HealthLife/node_modules
+mobile/HealthLife/.expo
+
+# Load tests
+load-tests/
+
+# Docs
+docs/
+*.md
+!README.md
+
+# Target directories (except the service being built - Maven will generate them)
+# Note: multi-stage build runs Maven inside Docker so local target/ is irrelevant
+**/target/
+
+# k8s configs (not needed in image)
 k8s/
-secrets/
-**/node_modules/
-mobile/
+
+# SSL certs
+ssl/

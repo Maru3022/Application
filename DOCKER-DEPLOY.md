@@ -13,22 +13,7 @@
 
 ## Quick Start (3 steps)
 
-### 1 — Build all JARs
-
-Maven must be run **before** Docker so that each service `target/*.jar` exists for the Dockerfiles.
-
-```bash
-# From repo root
-mvn clean package -DskipTests -B
-```
-
-> If you don't have Maven locally, run it inside a container:
-> ```bash
-> docker run --rm -v "$PWD":/workspace -w /workspace \
->   maven:3.9-eclipse-temurin-21 mvn clean package -DskipTests -B
-> ```
-
-### 2 — Configure environment
+### 1 — Configure environment
 
 ```bash
 cp .env.example .env
@@ -45,7 +30,7 @@ nano .env
 | `REDIS_PASSWORD` | Redis password — `openssl rand -base64 32` |
 | `CORS_ALLOWED_ORIGINS` | Your frontend domain, e.g. `https://app.yourdomain.com` |
 
-### 3 — Start the stack
+### 2 — Start the stack
 
 ```bash
 docker compose up -d --build
@@ -158,3 +143,24 @@ All optional features gracefully degrade when their env var is empty — the ser
 
 **Out of memory during build**
 → Increase Docker Desktop memory limit to 8 GB in Settings → Resources
+
+---
+
+## HTTPS / Production Mode (with nginx)
+
+To start with TLS termination via nginx, first place your SSL certificates in the `ssl/` directory, then start with the `production` Docker profile:
+
+```bash
+# Place certificates (see ssl/README.md for Let's Encrypt instructions)
+cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem ssl/fullchain.pem
+cp /etc/letsencrypt/live/yourdomain.com/privkey.pem ssl/privkey.pem
+
+# Edit nginx.conf: replace api.yourdomain.com with your actual domain
+
+# Start everything including nginx
+docker compose --profile production up -d --build
+```
+
+Without `--profile production`, the backend starts on `http://localhost:8080` (useful for local development and testing).
+
+**Important:** Edit `nginx.conf` and replace `api.yourdomain.com` with your actual domain before starting.

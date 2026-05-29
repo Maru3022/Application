@@ -14,9 +14,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
@@ -28,6 +33,10 @@ public class SocialService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
     private final FriendshipRepository friendshipRepository;
+    private final RestTemplate restTemplate;
+
+    @Value("${gateway.routes.notifications:http://notification-service:8088}")
+    private String notificationServiceUrl;
 
     @Transactional(readOnly = true)
     public List<ChallengeResponse> getChallenges() {
@@ -198,7 +207,22 @@ public class SocialService {
     public void inviteFriend(String email) {
         UUID userId = SecurityUtils.getCurrentUserId();
         log.info("Friend invitation requested by user={} to email={}", userId, email);
-        // TODO: integrate with notification-service to send invitation email
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String body = String.format(
+                    "{\"to\":\"%s\",\"subject\":\"You have been invited to HealthLife!\","
+                            + "\"body\":\"A HealthLife user has invited you to join the platform. "
+                            + "Sign up at https://app.healthlife.com\"}",
+                    email);
+            restTemplate.postForEntity(
+                    notificationServiceUrl + "/api/v1/notifications/email",
+                    new HttpEntity<>(body, headers),
+                    Void.class);
+            log.info("Friend invitation email sent to {}", email);
+        } catch (Exception ex) {
+            log.warn("Failed to send friend invitation email to {} — notification-service unavailable: {}", email, ex.getMessage());
+        }
     }
 
     public List<FriendDto> getFriends() {

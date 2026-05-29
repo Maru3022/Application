@@ -19,7 +19,7 @@ spec:
       monitoring: enabled
   endpoints:
     - port: http
-      path: /actuator/prometheus
+      path: /internal/actuator/prometheus
       interval: 15s
       scrapeTimeout: 10s
       honorLabels: true

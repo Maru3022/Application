@@ -30,7 +30,7 @@ env:
   JAVA_VERSION: "21"
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ${{ github.repository }}
-  MIN_COVERAGE: "10"
+  MIN_COVERAGE: "40"
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────────
@@ -503,7 +503,7 @@ jobs:
             exit 0
           fi
           curl -sf --retry 5 --retry-delay 5 --retry-connrefused \
-            "${STAGING_HEALTH_URL}/actuator/health" || exit 1
+            "${STAGING_HEALTH_URL}/internal/actuator/health" || exit 1
           echo "✅ Staging health check passed"
         env:
           STAGING_HEALTH_URL: ${{ vars.STAGING_HEALTH_URL }}
@@ -594,7 +594,7 @@ jobs:
             exit 0
           fi
           curl -sf --retry 5 --retry-delay 5 --retry-connrefused \
-            "${PRODUCTION_HEALTH_URL}/actuator/health" || exit 1
+            "${PRODUCTION_HEALTH_URL}/internal/actuator/health" || exit 1
           echo "✅ Production health check passed"
         env:
           PRODUCTION_HEALTH_URL: ${{ vars.PRODUCTION_HEALTH_URL }}

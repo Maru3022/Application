@@ -62,3 +62,8 @@ k8s/base/secrets.yaml
 
 # ─── Package lock (генерируется автоматически) ────────────────────────────────
 package-lock.json
+
+# SSL certificates — never commit
+ssl/*.pem
+ssl/*.key
+ssl/*.crt
