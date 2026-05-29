@@ -89,6 +89,9 @@ public class DefaultSecurityConfig {
                     // Публичные auth эндпоинты (регистрация, логин, сброс пароля)
                     auth.requestMatchers("/api/v1/auth/**").permitAll();
 
+                    // Stripe webhook — без JWT (проверка подписи Stripe в payment-service)
+                    auth.requestMatchers("/api/v1/payments/webhook").permitAll();
+
                     // K8s health probes — публичный доступ только к health/info (базовый путь /internal/actuator)
                     auth.requestMatchers(
                                     "/internal/actuator/health",

@@ -19,6 +19,8 @@ Production-ready, cloud-native microservices platform for personal health manage
 9. [Security](#security)
 10. [Project Structure](#project-structure)
 
+**Before global release:** see [`docs/PRE-RELEASE-CHECKLIST.md`](docs/PRE-RELEASE-CHECKLIST.md) (readiness ~55–60%, blockers, env vars).
+
 ---
 
 ## Architecture

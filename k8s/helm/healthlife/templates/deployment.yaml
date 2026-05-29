@@ -205,20 +205,20 @@ spec:
               value: {{ $.Values.cors.allowedOrigins | quote }}
           startupProbe:
             httpGet:
-              path: /internal/internal/actuator/health/liveness
+              path: /internal/actuator/health/liveness
               port: {{ $svc.port }}
             failureThreshold: 30
             periodSeconds: 5
           readinessProbe:
             httpGet:
-              path: /internal/internal/actuator/health/readiness
+              path: /internal/actuator/health/readiness
               port: {{ $svc.port }}
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /internal/internal/actuator/health/liveness
+              path: /internal/actuator/health/liveness
               port: {{ $svc.port }}
             initialDelaySeconds: 60
             periodSeconds: 15
