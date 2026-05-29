@@ -1,0 +1,8 @@
+target/
+.git/
+*.md
+.env
+k8s/
+secrets/
+**/node_modules/
+mobile/

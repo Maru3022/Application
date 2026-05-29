@@ -57,12 +57,14 @@ public class AuthController {
     }
 
     @PostMapping("/password/reset")
+    @RateLimiter(name = "login")
     public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
         authService.requestPasswordReset(request.getEmail());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/password/reset/confirm")
+    @RateLimiter(name = "login")
     public ResponseEntity<Void> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
         authService.confirmPasswordReset(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok().build();

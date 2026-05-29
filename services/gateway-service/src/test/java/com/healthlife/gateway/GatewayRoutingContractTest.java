@@ -62,7 +62,7 @@ class GatewayRoutingContractTest {
 
     @Test
     void actuatorHealth_shouldReturn200() {
-        given().when().get("/actuator/health").then().statusCode(200);
+        given().when().get("/internal/actuator/health").then().statusCode(200);
     }
 
     @Test

@@ -19,4 +19,4 @@ ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:8090/actuator/health/liveness || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost:8090/internal/actuator/health/liveness || exit 1

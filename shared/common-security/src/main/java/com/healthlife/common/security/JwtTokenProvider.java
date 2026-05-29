@@ -19,31 +19,47 @@ public class JwtTokenProvider {
     private final SecretKey key;
     private final long accessTokenExpirationMs;
     private final long refreshTokenExpirationMs;
+    private final String issuer;
+    private final String audience;
 
     public JwtTokenProvider(
-            @Value("${jwt.secret:defaultSecretKeyThatIsAtLeast256BitsLongForHS256}") String secret,
+            @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token.expiration:900000}") long accessTokenExpirationMs,
-            @Value("${jwt.refresh-token.expiration:604800000}") long refreshTokenExpirationMs) {
-        // FIX: validate key length — HS256 requires at least 256 bits (32 bytes)
+            @Value("${jwt.refresh-token.expiration:604800000}") long refreshTokenExpirationMs,
+            @Value("${jwt.issuer:}") String issuer,
+            @Value("${jwt.audience:}") String audience) {
+        // Проверяем длину ключа — HS256 требует минимум 256 бит (32 байта)
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET environment variable is not set. " + "Generate a secure key: openssl rand -base64 64");
+        }
         if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
-            throw new IllegalArgumentException("JWT secret must be at least 32 characters (256 bits) for HS256");
+            throw new IllegalArgumentException("JWT secret must be at least 32 characters (256 bits) for HS256. "
+                    + "Current length: " + secret.length() + " chars");
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
+        this.issuer = issuer == null ? "" : issuer.trim();
+        this.audience = audience == null ? "" : audience.trim();
     }
 
     public String generateAccessToken(UUID userId, String email, String role) {
         Date now = new Date();
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(userId.toString())
                 .claim("email", email)
                 .claim("role", role)
                 .claim("type", "access")
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + accessTokenExpirationMs))
-                .signWith(key)
-                .compact();
+                .expiration(new Date(now.getTime() + accessTokenExpirationMs));
+        if (!issuer.isEmpty()) {
+            builder.issuer(issuer);
+        }
+        if (!audience.isEmpty()) {
+            builder.claim("aud", audience);
+        }
+        return builder.signWith(key).compact();
     }
 
     public String generateRefreshToken(UUID userId) {
@@ -108,6 +124,28 @@ public class JwtTokenProvider {
 
     // FIX: centralised parse so we don't repeat parser setup in every method
     private Claims parseClaims(String token) {
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        Claims claims =
+                Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        validateIssuerAndAudience(claims);
+        return claims;
+    }
+
+    /** Проверка iss/aud при наличии конфигурации (production). */
+    private void validateIssuerAndAudience(Claims claims) {
+        if (!issuer.isEmpty() && !issuer.equals(claims.getIssuer())) {
+            throw new JwtException("Invalid JWT issuer");
+        }
+        if (!audience.isEmpty()) {
+            Object aud = claims.get("aud");
+            boolean valid = false;
+            if (aud instanceof String audStr) {
+                valid = audience.equals(audStr);
+            } else if (aud instanceof java.util.List<?> audList) {
+                valid = audList.stream().anyMatch(audience::equals);
+            }
+            if (!valid) {
+                throw new JwtException("Invalid JWT audience");
+            }
+        }
     }
 }

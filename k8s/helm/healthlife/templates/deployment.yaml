@@ -95,6 +95,8 @@ spec:
               value: "http://health-data-service:80"
             - name: GATEWAY_ROUTE_MENTAL
               value: "http://mental-service:80"
+            - name: GATEWAY_ROUTE_SUPPORT
+              value: "http://mental-service:80"
             - name: GATEWAY_ROUTE_NUTRITION
               value: "http://nutrition-service:80"
             - name: GATEWAY_ROUTE_AI
@@ -107,6 +109,14 @@ spec:
               value: "http://analytics-service:80"
             - name: GATEWAY_ROUTE_PAYMENTS
               value: "http://payment-service:80"
+            {{- end }}
+            {{- if eq $name "mental-service" }}
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthlife-secrets
+                  key: anthropic-api-key
+                  optional: true
             {{- end }}
             {{- if eq $name "ai-coach-service" }}
             - name: DEEPSEEK_API_KEY
@@ -195,20 +205,20 @@ spec:
               value: {{ $.Values.cors.allowedOrigins | quote }}
           startupProbe:
             httpGet:
-              path: /actuator/health/liveness
+              path: /internal/internal/actuator/health/liveness
               port: {{ $svc.port }}
             failureThreshold: 30
             periodSeconds: 5
           readinessProbe:
             httpGet:
-              path: /actuator/health/readiness
+              path: /internal/internal/actuator/health/readiness
               port: {{ $svc.port }}
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /actuator/health/liveness
+              path: /internal/internal/actuator/health/liveness
               port: {{ $svc.port }}
             initialDelaySeconds: 60
             periodSeconds: 15

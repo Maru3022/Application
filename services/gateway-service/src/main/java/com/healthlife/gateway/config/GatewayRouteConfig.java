@@ -40,6 +40,7 @@ public class GatewayRouteConfig {
             @Value("${gateway.routes.users:http://localhost:8082}") String usersUrl,
             @Value("${gateway.routes.health:http://localhost:8083}") String healthUrl,
             @Value("${gateway.routes.mental:http://localhost:8084}") String mentalUrl,
+            @Value("${gateway.routes.support:${gateway.routes.mental:http://localhost:8084}}") String supportUrl,
             @Value("${gateway.routes.nutrition:http://localhost:8085}") String nutritionUrl,
             @Value("${gateway.routes.ai:http://localhost:8086}") String aiUrl,
             @Value("${gateway.routes.social:http://localhost:8087}") String socialUrl,
@@ -58,6 +59,7 @@ public class GatewayRouteConfig {
         this.routes.put("/api/v1/users", usersUrl);
         this.routes.put("/api/v1/health", healthUrl);
         this.routes.put("/api/v1/mental", mentalUrl);
+        this.routes.put("/api/v1/support", supportUrl);
         this.routes.put("/api/v1/nutrition", nutritionUrl);
         this.routes.put("/api/v1/ai", aiUrl);
         this.routes.put("/api/v1/social", socialUrl);

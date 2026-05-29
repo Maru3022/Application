@@ -10,7 +10,7 @@ if ($ctx -ne "kind-healthlife") {
 
 Write-Host ""
 Write-Host "  Gateway port-forward:  http://localhost:8080  ->  svc/gateway-service:80"
-Write-Host "  Health:                http://localhost:8080/actuator/health"
+Write-Host "  Health:                http://localhost:8080/internal/actuator/health"
 Write-Host ""
 Write-Host "  (Press Ctrl+C to stop. Closing this window stops the tunnel.)"
 Write-Host ""

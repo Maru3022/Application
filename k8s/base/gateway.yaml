@@ -65,14 +65,14 @@ spec:
               value: "https://healthlife.local,https://app.healthlife.com"
           readinessProbe:
             httpGet:
-              path: /actuator/health/readiness
+              path: /internal/actuator/health/readiness
               port: 8080
             initialDelaySeconds: 20
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /actuator/health/liveness
+              path: /internal/actuator/health/liveness
               port: 8080
             initialDelaySeconds: 40
             periodSeconds: 15

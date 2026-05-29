@@ -139,7 +139,7 @@ class GatewaySecurityTest {
 
     @Test
     void actuatorHealth_isPublic() {
-        given().when().get("/actuator/health").then().statusCode(200);
+        given().when().get("/internal/actuator/health").then().statusCode(200);
     }
 
     @Test
@@ -159,20 +159,20 @@ class GatewaySecurityTest {
 
     @Test
     void response_shouldHaveXFrameOptionsHeader() {
-        given().when().get("/actuator/health").then().header("X-Frame-Options", "DENY");
+        given().when().get("/internal/actuator/health").then().header("X-Frame-Options", "DENY");
     }
 
     @Test
     void response_shouldHaveContentSecurityPolicyHeader() {
         given().when()
-                .get("/actuator/health")
+                .get("/internal/actuator/health")
                 .then()
                 .header("Content-Security-Policy", containsString("default-src 'self'"));
     }
 
     @Test
     void response_shouldHaveHstsHeader() {
-        given().when().get("/actuator/health").then().header("Strict-Transport-Security", containsString("max-age="));
+        given().when().get("/internal/actuator/health").then().header("Strict-Transport-Security", containsString("max-age="));
     }
 
     // ── Valid JWT passes through ──────────────────────────────────────────────

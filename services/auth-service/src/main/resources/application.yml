@@ -68,7 +68,7 @@ spring:
           writetimeout: 5000
 
 jwt:
-  secret: ${JWT_SECRET:local-dev-jwt-secret-change-me-please-64-chars-minimum-123456}
+  secret: ${JWT_SECRET}
   access-token:
     expiration: 900000
   refresh-token:
@@ -78,8 +78,8 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics
-      base-path: /actuator
+        include: health,info
+      base-path: /internal/actuator
   endpoint:
     health:
       show-details: when-authorized

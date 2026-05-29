@@ -10,7 +10,7 @@ fi
 
 echo ""
 echo "  Gateway port-forward:  http://localhost:8080  ->  svc/gateway-service:80"
-echo "  Health:                http://localhost:8080/actuator/health"
+echo "  Health:                http://localhost:8080/internal/actuator/health"
 echo ""
 echo "  (Press Ctrl+C to stop.)"
 echo ""

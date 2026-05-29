@@ -75,14 +75,14 @@ spec:
                   key: password
           readinessProbe:
             httpGet:
-              path: /actuator/health/readiness
+              path: /internal/actuator/health/readiness
               port: 8087
             initialDelaySeconds: 20
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /actuator/health/liveness
+              path: /internal/actuator/health/liveness
               port: 8087
             initialDelaySeconds: 40
             periodSeconds: 15
