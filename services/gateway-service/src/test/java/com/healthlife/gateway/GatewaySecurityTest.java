@@ -172,7 +172,10 @@ class GatewaySecurityTest {
 
     @Test
     void response_shouldHaveHstsHeader() {
-        given().when().get("/internal/actuator/health").then().header("Strict-Transport-Security", containsString("max-age="));
+        given().when()
+                .get("/internal/actuator/health")
+                .then()
+                .header("Strict-Transport-Security", containsString("max-age="));
     }
 
     // ── Valid JWT passes through ──────────────────────────────────────────────
