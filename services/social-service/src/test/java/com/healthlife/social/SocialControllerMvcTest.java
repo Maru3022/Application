@@ -176,13 +176,13 @@ class SocialControllerMvcTest {
     void getFriends_shouldReturn200() throws Exception {
         when(socialService.getFriends())
                 .thenReturn(List.of(FriendDto.builder()
-                        .userId(UUID.randomUUID())
-                        .displayName("Alice")
+                        .friendId(UUID.randomUUID())
+                        .status("accepted")
                         .build()));
 
         mockMvc.perform(get("/api/v1/social/friends").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].displayName").value("Alice"));
+                .andExpect(jsonPath("$[0].status").value("accepted"));
     }
 
     // ── GET /api/v1/social/challenges/{id}/leaderboard ────────────────────────
