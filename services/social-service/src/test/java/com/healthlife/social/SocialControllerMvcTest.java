@@ -9,7 +9,6 @@ import com.healthlife.common.dto.social.*;
 import com.healthlife.common.exception.BadRequestException;
 import com.healthlife.common.security.JwtTokenProvider;
 import com.healthlife.social.service.SocialService;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -37,10 +36,14 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 class SocialControllerMvcTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    MockMvc mockMvc;
 
-    @MockBean SocialService socialService;
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    SocialService socialService;
 
     private String jwt() {
         return jwtTokenProvider.generateAccessToken(UUID.randomUUID(), "u@t.com", "USER");
@@ -50,32 +53,38 @@ class SocialControllerMvcTest {
 
     @Test
     void getChallenges_shouldReturn200() throws Exception {
-        when(socialService.getChallenges()).thenReturn(List.of(
-                ChallengeResponse.builder().id(UUID.randomUUID()).title("10K Steps").build()));
+        when(socialService.getChallenges())
+                .thenReturn(List.of(ChallengeResponse.builder()
+                        .id(UUID.randomUUID())
+                        .title("10K Steps")
+                        .build()));
 
-        mockMvc.perform(get("/api/v1/social/challenges")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/social/challenges").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("10K Steps"));
     }
 
     @Test
     void getChallenges_withoutJwt_shouldReturn4xx() throws Exception {
-        mockMvc.perform(get("/api/v1/social/challenges"))
-                .andExpect(status().is4xxClientError());
+        mockMvc.perform(get("/api/v1/social/challenges")).andExpect(status().is4xxClientError());
     }
 
     // ── POST /api/v1/social/challenges ────────────────────────────────────────
 
     @Test
     void createChallenge_shouldReturn200() throws Exception {
-        when(socialService.createChallenge(any())).thenReturn(ChallengeResponse.builder()
-                .id(UUID.randomUUID()).title("New Challenge").build());
+        when(socialService.createChallenge(any()))
+                .thenReturn(ChallengeResponse.builder()
+                        .id(UUID.randomUUID())
+                        .title("New Challenge")
+                        .build());
 
-        mockMvc.perform(post("/api/v1/social/challenges")
-                        .header("Authorization", "Bearer " + jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/social/challenges")
+                                .header("Authorization", "Bearer " + jwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"title":"New Challenge","type":"steps","startDate":"2025-01-01","endDate":"2025-01-31"}
                             """))
                 .andExpect(status().isOk())
@@ -95,8 +104,7 @@ class SocialControllerMvcTest {
 
     @Test
     void joinChallenge_alreadyJoined_shouldReturn400() throws Exception {
-        doThrow(new BadRequestException("Already joined"))
-                .when(socialService).joinChallenge(any());
+        doThrow(new BadRequestException("Already joined")).when(socialService).joinChallenge(any());
 
         mockMvc.perform(post("/api/v1/social/challenges/" + UUID.randomUUID() + "/join")
                         .header("Authorization", "Bearer " + jwt()))
@@ -107,11 +115,14 @@ class SocialControllerMvcTest {
 
     @Test
     void getFeed_shouldReturn200() throws Exception {
-        when(socialService.getFeed()).thenReturn(List.of(
-                PostResponse.builder().id(UUID.randomUUID()).content("Hello!").likesCount(3).build()));
+        when(socialService.getFeed())
+                .thenReturn(List.of(PostResponse.builder()
+                        .id(UUID.randomUUID())
+                        .content("Hello!")
+                        .likesCount(3)
+                        .build()));
 
-        mockMvc.perform(get("/api/v1/social/feed")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/social/feed").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].content").value("Hello!"));
     }
@@ -120,8 +131,7 @@ class SocialControllerMvcTest {
     void getFeed_empty_shouldReturn200WithEmptyList() throws Exception {
         when(socialService.getFeed()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/social/feed")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/social/feed").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
@@ -130,13 +140,19 @@ class SocialControllerMvcTest {
 
     @Test
     void createPost_shouldReturn200() throws Exception {
-        when(socialService.createPost(any())).thenReturn(PostResponse.builder()
-                .id(UUID.randomUUID()).content("My achievement!").likesCount(0).build());
+        when(socialService.createPost(any()))
+                .thenReturn(PostResponse.builder()
+                        .id(UUID.randomUUID())
+                        .content("My achievement!")
+                        .likesCount(0)
+                        .build());
 
-        mockMvc.perform(post("/api/v1/social/posts")
-                        .header("Authorization", "Bearer " + jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/social/posts")
+                                .header("Authorization", "Bearer " + jwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"content":"My achievement!","type":"achievement"}
                             """))
                 .andExpect(status().isOk())
@@ -158,11 +174,13 @@ class SocialControllerMvcTest {
 
     @Test
     void getFriends_shouldReturn200() throws Exception {
-        when(socialService.getFriends()).thenReturn(List.of(
-                FriendDto.builder().userId(UUID.randomUUID()).displayName("Alice").build()));
+        when(socialService.getFriends())
+                .thenReturn(List.of(FriendDto.builder()
+                        .userId(UUID.randomUUID())
+                        .displayName("Alice")
+                        .build()));
 
-        mockMvc.perform(get("/api/v1/social/friends")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/social/friends").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].displayName").value("Alice"));
     }
@@ -171,8 +189,11 @@ class SocialControllerMvcTest {
 
     @Test
     void getLeaderboard_shouldReturn200() throws Exception {
-        when(socialService.getLeaderboard(any())).thenReturn(List.of(
-                LeaderboardEntryDto.builder().userId(UUID.randomUUID()).progress(9000).build()));
+        when(socialService.getLeaderboard(any()))
+                .thenReturn(List.of(LeaderboardEntryDto.builder()
+                        .userId(UUID.randomUUID())
+                        .progress(9000)
+                        .build()));
 
         mockMvc.perform(get("/api/v1/social/challenges/" + UUID.randomUUID() + "/leaderboard")
                         .header("Authorization", "Bearer " + jwt()))

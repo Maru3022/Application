@@ -33,12 +33,23 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class SocialFriendshipTest {
 
-    @Autowired private SocialService socialService;
-    @Autowired private ChallengeRepository challengeRepository;
-    @Autowired private ChallengeParticipantRepository challengeParticipantRepository;
-    @Autowired private PostRepository postRepository;
-    @Autowired private PostLikeRepository postLikeRepository;
-    @Autowired private FriendshipRepository friendshipRepository;
+    @Autowired
+    private SocialService socialService;
+
+    @Autowired
+    private ChallengeRepository challengeRepository;
+
+    @Autowired
+    private ChallengeParticipantRepository challengeParticipantRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private PostLikeRepository postLikeRepository;
+
+    @Autowired
+    private FriendshipRepository friendshipRepository;
 
     private UUID userId;
 
@@ -60,7 +71,8 @@ class SocialFriendshipTest {
         UUID friendId = UUID.randomUUID();
         socialService.addFriend(friendId);
 
-        assertThat(friendshipRepository.existsByUserIdAndFriendId(userId, friendId)).isTrue();
+        assertThat(friendshipRepository.existsByUserIdAndFriendId(userId, friendId))
+                .isTrue();
     }
 
     @Test
@@ -68,8 +80,7 @@ class SocialFriendshipTest {
         UUID friendId = UUID.randomUUID();
         socialService.addFriend(friendId);
 
-        assertThatThrownBy(() -> socialService.addFriend(friendId))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> socialService.addFriend(friendId)).isInstanceOf(BadRequestException.class);
     }
 
     @Test
@@ -78,15 +89,15 @@ class SocialFriendshipTest {
         socialService.addFriend(friendId);
         socialService.removeFriend(friendId);
 
-        assertThat(friendshipRepository.existsByUserIdAndFriendId(userId, friendId)).isFalse();
+        assertThat(friendshipRepository.existsByUserIdAndFriendId(userId, friendId))
+                .isFalse();
     }
 
     @Test
     void removeFriend_notFriend_shouldThrow() {
         UUID notFriendId = UUID.randomUUID();
 
-        assertThatThrownBy(() -> socialService.removeFriend(notFriendId))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> socialService.removeFriend(notFriendId)).isInstanceOf(BadRequestException.class);
     }
 
     // ── feed with friends ─────────────────────────────────────────────────────
@@ -97,8 +108,8 @@ class SocialFriendshipTest {
         socialService.addFriend(friendId);
 
         // Friend creates a post
-        postRepository.save(Post.builder()
-                .userId(friendId).content("Friend's post").build());
+        postRepository.save(
+                Post.builder().userId(friendId).content("Friend's post").build());
 
         List<PostResponse> feed = socialService.getFeed();
         assertThat(feed).hasSize(1);
@@ -111,7 +122,8 @@ class SocialFriendshipTest {
         socialService.addFriend(friendId);
 
         postRepository.save(Post.builder().userId(userId).content("My post").build());
-        postRepository.save(Post.builder().userId(friendId).content("Friend post").build());
+        postRepository.save(
+                Post.builder().userId(friendId).content("Friend post").build());
 
         List<PostResponse> feed = socialService.getFeed();
         assertThat(feed).hasSize(2);
@@ -122,25 +134,40 @@ class SocialFriendshipTest {
     @Test
     void getChallengeLeaderboard_shouldReturnParticipants() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
-                .creatorId(userId).title("Steps").type("steps")
-                .startDate(LocalDate.now()).endDate(LocalDate.now().plusDays(7)).build());
+                .creatorId(userId)
+                .title("Steps")
+                .type("steps")
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(7))
+                .build());
 
         challengeParticipantRepository.save(ChallengeParticipant.builder()
-                .challengeId(challenge.getId()).userId(userId).progress(5000).build());
+                .challengeId(challenge.getId())
+                .userId(userId)
+                .progress(5000)
+                .build());
         challengeParticipantRepository.save(ChallengeParticipant.builder()
-                .challengeId(challenge.getId()).userId(UUID.randomUUID()).progress(8000).build());
+                .challengeId(challenge.getId())
+                .userId(UUID.randomUUID())
+                .progress(8000)
+                .build());
 
         List<LeaderboardEntry> leaderboard = socialService.getChallengeLeaderboard(challenge.getId());
         assertThat(leaderboard).hasSize(2);
         // Should be ordered by progress descending
-        assertThat(leaderboard.get(0).getProgress()).isGreaterThanOrEqualTo(leaderboard.get(1).getProgress());
+        assertThat(leaderboard.get(0).getProgress())
+                .isGreaterThanOrEqualTo(leaderboard.get(1).getProgress());
     }
 
     @Test
     void getChallengeLeaderboard_noParticipants_shouldReturnEmpty() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
-                .creatorId(userId).title("Empty").type("steps")
-                .startDate(LocalDate.now()).endDate(LocalDate.now().plusDays(7)).build());
+                .creatorId(userId)
+                .title("Empty")
+                .type("steps")
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(7))
+                .build());
 
         List<LeaderboardEntry> leaderboard = socialService.getChallengeLeaderboard(challenge.getId());
         assertThat(leaderboard).isEmpty();
@@ -151,22 +178,31 @@ class SocialFriendshipTest {
     @Test
     void updateChallengeProgress_shouldUpdateParticipant() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
-                .creatorId(userId).title("Steps").type("steps")
-                .startDate(LocalDate.now()).endDate(LocalDate.now().plusDays(7)).build());
+                .creatorId(userId)
+                .title("Steps")
+                .type("steps")
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(7))
+                .build());
 
         socialService.joinChallenge(challenge.getId());
         socialService.updateChallengeProgress(challenge.getId(), 7500);
 
         ChallengeParticipant participant = challengeParticipantRepository
-                .findByChallengeIdAndUserId(challenge.getId(), userId).orElseThrow();
+                .findByChallengeIdAndUserId(challenge.getId(), userId)
+                .orElseThrow();
         assertThat(participant.getProgress()).isEqualTo(7500);
     }
 
     @Test
     void updateChallengeProgress_notJoined_shouldThrow() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
-                .creatorId(UUID.randomUUID()).title("Steps").type("steps")
-                .startDate(LocalDate.now()).endDate(LocalDate.now().plusDays(7)).build());
+                .creatorId(UUID.randomUUID())
+                .title("Steps")
+                .type("steps")
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(7))
+                .build());
 
         assertThatThrownBy(() -> socialService.updateChallengeProgress(challenge.getId(), 1000))
                 .isInstanceOf(BadRequestException.class);
@@ -183,7 +219,10 @@ class SocialFriendshipTest {
     @Test
     void likePost_multipleUsers_shouldCountSeparately() {
         Post post = postRepository.save(Post.builder()
-                .userId(userId).content("Popular post").likesCount(0).build());
+                .userId(userId)
+                .content("Popular post")
+                .likesCount(0)
+                .build());
 
         // User1 likes
         socialService.likePost(post.getId());

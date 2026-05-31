@@ -156,8 +156,7 @@ class NutritionAnalysisTest {
         UUID user2 = UUID.randomUUID();
         setAuth(user2);
 
-        assertThatThrownBy(() -> nutritionService.deleteFoodLog(entry.getId()))
-                .isInstanceOf(ForbiddenException.class);
+        assertThatThrownBy(() -> nutritionService.deleteFoodLog(entry.getId())).isInstanceOf(ForbiddenException.class);
     }
 
     // ── nutrition goals fallback ──────────────────────────────────────────────
@@ -178,9 +177,15 @@ class NutritionAnalysisTest {
     @Test
     void getFoodLogHistory_shouldReturnAllEntries() {
         nutritionService.addFoodLog(FoodLogRequest.builder()
-                .foodId(chicken.getId()).weightGrams(100.0).mealType("breakfast").build());
+                .foodId(chicken.getId())
+                .weightGrams(100.0)
+                .mealType("breakfast")
+                .build());
         nutritionService.addFoodLog(FoodLogRequest.builder()
-                .foodId(rice.getId()).weightGrams(200.0).mealType("lunch").build());
+                .foodId(rice.getId())
+                .weightGrams(200.0)
+                .mealType("lunch")
+                .build());
 
         List<FoodLogResponse> history = nutritionService.getFoodLogHistory();
 
@@ -191,7 +196,10 @@ class NutritionAnalysisTest {
     void getFoodLogHistory_differentUsers_shouldBeIsolated() {
         // User1 adds entry
         nutritionService.addFoodLog(FoodLogRequest.builder()
-                .foodId(chicken.getId()).weightGrams(100.0).mealType("lunch").build());
+                .foodId(chicken.getId())
+                .weightGrams(100.0)
+                .mealType("lunch")
+                .build());
 
         // User2 should see empty history
         UUID user2 = UUID.randomUUID();

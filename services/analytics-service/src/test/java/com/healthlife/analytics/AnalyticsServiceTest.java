@@ -46,9 +46,7 @@ class AnalyticsServiceTest {
         UUID userId = UUID.randomUUID();
         service.trackEvent(userId, "step_goal_reached", "{\"steps\":10000}");
 
-        verify(listOps).rightPush(
-                eq("analytics:events:" + userId + ":step_goal_reached"),
-                anyString());
+        verify(listOps).rightPush(eq("analytics:events:" + userId + ":step_goal_reached"), anyString());
     }
 
     @Test
@@ -56,10 +54,8 @@ class AnalyticsServiceTest {
         UUID userId = UUID.randomUUID();
         service.trackEvent(userId, "login", null);
 
-        verify(redisTemplate).expire(
-                eq("analytics:events:" + userId + ":login"),
-                eq(30L),
-                eq(java.util.concurrent.TimeUnit.DAYS));
+        verify(redisTemplate)
+                .expire(eq("analytics:events:" + userId + ":login"), eq(30L), eq(java.util.concurrent.TimeUnit.DAYS));
     }
 
     @Test
@@ -67,17 +63,13 @@ class AnalyticsServiceTest {
         UUID userId = UUID.randomUUID();
         service.trackEvent(userId, "water_logged", "{}");
 
-        verify(listOps).trim(
-                eq("analytics:events:" + userId + ":water_logged"),
-                eq(-1000L),
-                eq(-1L));
+        verify(listOps).trim(eq("analytics:events:" + userId + ":water_logged"), eq(-1000L), eq(-1L));
     }
 
     @Test
     void trackEvent_nullProperties_shouldNotThrow() {
         UUID userId = UUID.randomUUID();
-        assertThatCode(() -> service.trackEvent(userId, "event", null))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> service.trackEvent(userId, "event", null)).doesNotThrowAnyException();
     }
 
     @Test
@@ -87,14 +79,12 @@ class AnalyticsServiceTest {
 
         service.trackEvent(userId, "mood_logged", "{\"score\":8}");
 
-        verify(listOps).rightPush(
-                anyString(),
-                argThat(entry -> {
-                    String[] parts = entry.split("\\|");
-                    if (parts.length < 2) return false;
-                    long ts = Long.parseLong(parts[0]);
-                    return ts >= before && ts <= System.currentTimeMillis();
-                }));
+        verify(listOps).rightPush(anyString(), argThat(entry -> {
+            String[] parts = entry.split("\\|");
+            if (parts.length < 2) return false;
+            long ts = Long.parseLong(parts[0]);
+            return ts >= before && ts <= System.currentTimeMillis();
+        }));
     }
 
     // ── getEvents ─────────────────────────────────────────────────────────────
@@ -198,8 +188,7 @@ class AnalyticsServiceTest {
     @SuppressWarnings("deprecation")
     void getEvent_shouldReturnLastEvent() {
         UUID userId = UUID.randomUUID();
-        when(listOps.range(anyString(), anyLong(), anyLong()))
-                .thenReturn(List.of("1000|{}", "2000|{\"score\":9}"));
+        when(listOps.range(anyString(), anyLong(), anyLong())).thenReturn(List.of("1000|{}", "2000|{\"score\":9}"));
 
         String result = service.getEvent(userId, "mood_logged");
 

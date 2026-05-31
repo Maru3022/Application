@@ -40,13 +40,23 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 class MentalControllerMvcTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
-    @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    MockMvc mockMvc;
 
-    @MockBean MentalService mentalService;
-    @MockBean SupportChatService supportChatService;
-    @MockBean AnthropicClient anthropicClient;
+    @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    MentalService mentalService;
+
+    @MockBean
+    SupportChatService supportChatService;
+
+    @MockBean
+    AnthropicClient anthropicClient;
 
     private String jwt() {
         return jwtTokenProvider.generateAccessToken(UUID.randomUUID(), "u@t.com", "USER");
@@ -56,13 +66,19 @@ class MentalControllerMvcTest {
 
     @Test
     void createMood_shouldReturn200() throws Exception {
-        when(mentalService.createMood(any())).thenReturn(MoodResponse.builder()
-                .id(UUID.randomUUID()).moodScore(8).recordedAt(OffsetDateTime.now()).build());
+        when(mentalService.createMood(any()))
+                .thenReturn(MoodResponse.builder()
+                        .id(UUID.randomUUID())
+                        .moodScore(8)
+                        .recordedAt(OffsetDateTime.now())
+                        .build());
 
-        mockMvc.perform(post("/api/v1/mental/mood")
-                        .header("Authorization", "Bearer " + jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/mental/mood")
+                                .header("Authorization", "Bearer " + jwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"moodScore":8,"recordedAt":"2025-01-01T10:00:00Z"}
                             """))
                 .andExpect(status().isOk())
@@ -71,9 +87,11 @@ class MentalControllerMvcTest {
 
     @Test
     void createMood_withoutJwt_shouldReturn4xx() throws Exception {
-        mockMvc.perform(post("/api/v1/mental/mood")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/mental/mood")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"moodScore":8,"recordedAt":"2025-01-01T10:00:00Z"}
                             """))
                 .andExpect(status().is4xxClientError());
@@ -83,12 +101,18 @@ class MentalControllerMvcTest {
 
     @Test
     void getMoodHistory_shouldReturn200WithList() throws Exception {
-        when(mentalService.getMoodHistory()).thenReturn(List.of(
-                MoodResponse.builder().id(UUID.randomUUID()).moodScore(7).build(),
-                MoodResponse.builder().id(UUID.randomUUID()).moodScore(9).build()));
+        when(mentalService.getMoodHistory())
+                .thenReturn(List.of(
+                        MoodResponse.builder()
+                                .id(UUID.randomUUID())
+                                .moodScore(7)
+                                .build(),
+                        MoodResponse.builder()
+                                .id(UUID.randomUUID())
+                                .moodScore(9)
+                                .build()));
 
-        mockMvc.perform(get("/api/v1/mental/mood/history")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/mental/mood/history").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
@@ -97,8 +121,7 @@ class MentalControllerMvcTest {
     void getMoodHistory_empty_shouldReturn200WithEmptyList() throws Exception {
         when(mentalService.getMoodHistory()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/mental/mood/history")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/mental/mood/history").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
@@ -107,13 +130,18 @@ class MentalControllerMvcTest {
 
     @Test
     void createJournal_shouldReturn200() throws Exception {
-        when(mentalService.createJournal(any())).thenReturn(JournalResponse.builder()
-                .id(UUID.randomUUID()).content("My thoughts").build());
+        when(mentalService.createJournal(any()))
+                .thenReturn(JournalResponse.builder()
+                        .id(UUID.randomUUID())
+                        .content("My thoughts")
+                        .build());
 
-        mockMvc.perform(post("/api/v1/mental/journal")
-                        .header("Authorization", "Bearer " + jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/mental/journal")
+                                .header("Authorization", "Bearer " + jwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"content":"My thoughts","recordedAt":"2025-01-01T10:00:00Z"}
                             """))
                 .andExpect(status().isOk())
@@ -124,13 +152,16 @@ class MentalControllerMvcTest {
 
     @Test
     void createStress_shouldReturn200() throws Exception {
-        when(mentalService.createStress(any())).thenReturn(StressResponse.builder()
-                .id(UUID.randomUUID()).level(6).build());
+        when(mentalService.createStress(any()))
+                .thenReturn(
+                        StressResponse.builder().id(UUID.randomUUID()).level(6).build());
 
-        mockMvc.perform(post("/api/v1/mental/stress")
-                        .header("Authorization", "Bearer " + jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/mental/stress")
+                                .header("Authorization", "Bearer " + jwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"level":6,"recordedAt":"2025-01-01T10:00:00Z"}
                             """))
                 .andExpect(status().isOk())
@@ -141,22 +172,28 @@ class MentalControllerMvcTest {
 
     @Test
     void getMeditations_shouldReturn200() throws Exception {
-        when(mentalService.getMeditations(any())).thenReturn(List.of(
-                MeditationDto.builder().id(UUID.randomUUID()).title("Calm").category("sleep").build()));
+        when(mentalService.getMeditations(any()))
+                .thenReturn(List.of(MeditationDto.builder()
+                        .id(UUID.randomUUID())
+                        .title("Calm")
+                        .category("sleep")
+                        .build()));
 
-        mockMvc.perform(get("/api/v1/mental/meditations")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/mental/meditations").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Calm"));
     }
 
     @Test
     void getMeditations_withCategory_shouldReturn200() throws Exception {
-        when(mentalService.getMeditations("sleep")).thenReturn(List.of(
-                MeditationDto.builder().id(UUID.randomUUID()).title("Sleep Well").category("sleep").build()));
+        when(mentalService.getMeditations("sleep"))
+                .thenReturn(List.of(MeditationDto.builder()
+                        .id(UUID.randomUUID())
+                        .title("Sleep Well")
+                        .category("sleep")
+                        .build()));
 
-        mockMvc.perform(get("/api/v1/mental/meditations?category=sleep")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/mental/meditations?category=sleep").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].category").value("sleep"));
     }
@@ -168,8 +205,7 @@ class MentalControllerMvcTest {
         when(mentalService.getRecommendedMeditation())
                 .thenThrow(new ResourceNotFoundException("Meditation", "any", ""));
 
-        mockMvc.perform(get("/api/v1/mental/meditations/recommended")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/mental/meditations/recommended").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isNotFound());
     }
 
@@ -178,13 +214,15 @@ class MentalControllerMvcTest {
     @Test
     void supportChat_shouldReturn200() throws Exception {
         when(supportChatService.chat(any(), any()))
-                .thenReturn(new com.healthlife.mental.support.dto.SupportChatResponse(
-                        "Привет! Чем могу помочь?", "ru"));
+                .thenReturn(
+                        new com.healthlife.mental.support.dto.SupportChatResponse("Привет! Чем могу помочь?", "ru"));
 
-        mockMvc.perform(post("/api/v1/support/chat")
-                        .header("Authorization", "Bearer " + jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/support/chat")
+                                .header("Authorization", "Bearer " + jwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"message":"Привет","language":"ru"}
                             """))
                 .andExpect(status().isOk())
@@ -193,9 +231,11 @@ class MentalControllerMvcTest {
 
     @Test
     void supportChat_withoutJwt_shouldReturn4xx() throws Exception {
-        mockMvc.perform(post("/api/v1/support/chat")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/support/chat")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"message":"Hello","language":"en"}
                             """))
                 .andExpect(status().is4xxClientError());

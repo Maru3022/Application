@@ -110,8 +110,7 @@ class SupportChatServiceTest {
     @Test
     void chat_rateLimiterThrows_shouldPropagateException() {
         UUID userId = UUID.randomUUID();
-        doThrow(new RuntimeException("Rate limit exceeded"))
-                .when(rateLimiter).checkLimit(userId);
+        doThrow(new RuntimeException("Rate limit exceeded")).when(rateLimiter).checkLimit(userId);
 
         assertThatThrownBy(() -> service.chat(userId, new SupportChatRequest("Test", "ru")))
                 .isInstanceOf(RuntimeException.class)
@@ -142,9 +141,10 @@ class SupportChatServiceTest {
 
         service.chat(userId, new SupportChatRequest("Question", "ru"));
 
-        verify(anthropicClient).chat(
-                argThat(prompt -> prompt.contains("ментального здоровья") && prompt.contains("8-800-2000-122")),
-                anyString());
+        verify(anthropicClient)
+                .chat(
+                        argThat(prompt -> prompt.contains("ментального здоровья") && prompt.contains("8-800-2000-122")),
+                        anyString());
     }
 
     // ── Claude error propagation ──────────────────────────────────────────────
@@ -152,8 +152,7 @@ class SupportChatServiceTest {
     @Test
     void chat_claudeThrows_shouldPropagateException() {
         UUID userId = UUID.randomUUID();
-        when(anthropicClient.chat(anyString(), anyString()))
-                .thenThrow(new RuntimeException("Claude API unavailable"));
+        when(anthropicClient.chat(anyString(), anyString())).thenThrow(new RuntimeException("Claude API unavailable"));
 
         assertThatThrownBy(() -> service.chat(userId, new SupportChatRequest("Test", "ru")))
                 .isInstanceOf(RuntimeException.class)

@@ -34,11 +34,17 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 class AnalyticsControllerMvcTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    MockMvc mockMvc;
 
-    @MockBean AnalyticsService analyticsService;
-    @MockBean StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    AnalyticsService analyticsService;
+
+    @MockBean
+    StringRedisTemplate stringRedisTemplate;
 
     private String jwt() {
         return jwtTokenProvider.generateAccessToken(UUID.randomUUID(), "u@t.com", "USER");
@@ -78,11 +84,9 @@ class AnalyticsControllerMvcTest {
 
     @Test
     void getEvents_shouldReturn200WithList() throws Exception {
-        when(analyticsService.getEvents(any(), anyString()))
-                .thenReturn(List.of("1000|{}", "2000|{}"));
+        when(analyticsService.getEvents(any(), anyString())).thenReturn(List.of("1000|{}", "2000|{}"));
 
-        mockMvc.perform(get("/api/v1/analytics/events?eventName=login")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/analytics/events?eventName=login").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
@@ -113,18 +117,15 @@ class AnalyticsControllerMvcTest {
 
     @Test
     void getUserSummary_shouldReturn200WithMap() throws Exception {
-        when(analyticsService.getUserSummary(any()))
-                .thenReturn(Map.of("login", 5L, "mood_logged", 12L));
+        when(analyticsService.getUserSummary(any())).thenReturn(Map.of("login", 5L, "mood_logged", 12L));
 
-        mockMvc.perform(get("/api/v1/analytics/summary")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/analytics/summary").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.login").value(5));
     }
 
     @Test
     void getUserSummary_withoutJwt_shouldReturn4xx() throws Exception {
-        mockMvc.perform(get("/api/v1/analytics/summary"))
-                .andExpect(status().is4xxClientError());
+        mockMvc.perform(get("/api/v1/analytics/summary")).andExpect(status().is4xxClientError());
     }
 }

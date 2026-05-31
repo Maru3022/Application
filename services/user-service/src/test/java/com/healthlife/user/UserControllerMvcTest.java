@@ -37,11 +37,17 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 class UserControllerMvcTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
-    @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    MockMvc mockMvc;
 
-    @MockBean UserService userService;
+    @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    UserService userService;
 
     private String jwt() {
         return jwtTokenProvider.generateAccessToken(UUID.randomUUID(), "user@test.com", "USER");
@@ -51,28 +57,28 @@ class UserControllerMvcTest {
 
     @Test
     void getProfile_withJwt_shouldReturn200() throws Exception {
-        when(userService.getProfile()).thenReturn(UserProfileResponse.builder()
-                .id(UUID.randomUUID()).email("user@test.com").displayName("Test").build());
+        when(userService.getProfile())
+                .thenReturn(UserProfileResponse.builder()
+                        .id(UUID.randomUUID())
+                        .email("user@test.com")
+                        .displayName("Test")
+                        .build());
 
-        mockMvc.perform(get("/api/v1/users/me")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("user@test.com"));
     }
 
     @Test
     void getProfile_withoutJwt_shouldReturn401or403() throws Exception {
-        mockMvc.perform(get("/api/v1/users/me"))
-                .andExpect(status().is4xxClientError());
+        mockMvc.perform(get("/api/v1/users/me")).andExpect(status().is4xxClientError());
     }
 
     @Test
     void getProfile_notFound_shouldReturn404() throws Exception {
-        when(userService.getProfile())
-                .thenThrow(new ResourceNotFoundException("Profile", "userId", "x"));
+        when(userService.getProfile()).thenThrow(new ResourceNotFoundException("Profile", "userId", "x"));
 
-        mockMvc.perform(get("/api/v1/users/me")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isNotFound());
     }
 
@@ -80,13 +86,18 @@ class UserControllerMvcTest {
 
     @Test
     void updateProfile_shouldReturn200() throws Exception {
-        when(userService.updateProfile(any())).thenReturn(UserProfileResponse.builder()
-                .id(UUID.randomUUID()).displayName("Updated").build());
+        when(userService.updateProfile(any()))
+                .thenReturn(UserProfileResponse.builder()
+                        .id(UUID.randomUUID())
+                        .displayName("Updated")
+                        .build());
 
-        mockMvc.perform(put("/api/v1/users/me")
-                        .header("Authorization", "Bearer " + jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        put("/api/v1/users/me")
+                                .header("Authorization", "Bearer " + jwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"displayName":"Updated","timezone":"UTC"}
                             """))
                 .andExpect(status().isOk())
@@ -99,8 +110,7 @@ class UserControllerMvcTest {
     void deleteAccount_shouldReturn204() throws Exception {
         doNothing().when(userService).deleteAccount();
 
-        mockMvc.perform(delete("/api/v1/users/me")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(delete("/api/v1/users/me").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isNoContent());
     }
 
@@ -108,22 +118,20 @@ class UserControllerMvcTest {
 
     @Test
     void getGoals_shouldReturn200() throws Exception {
-        when(userService.getGoals()).thenReturn(UserGoalsDto.builder()
-                .dailySteps(10000).waterMl(2500).build());
+        when(userService.getGoals())
+                .thenReturn(
+                        UserGoalsDto.builder().dailySteps(10000).waterMl(2500).build());
 
-        mockMvc.perform(get("/api/v1/users/me/goals")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/users/me/goals").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dailySteps").value(10000));
     }
 
     @Test
     void getGoals_notFound_shouldReturn404() throws Exception {
-        when(userService.getGoals())
-                .thenThrow(new ResourceNotFoundException("Goals", "userId", "x"));
+        when(userService.getGoals()).thenThrow(new ResourceNotFoundException("Goals", "userId", "x"));
 
-        mockMvc.perform(get("/api/v1/users/me/goals")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/users/me/goals").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isNotFound());
     }
 
@@ -131,8 +139,8 @@ class UserControllerMvcTest {
 
     @Test
     void updateGoals_shouldReturn200() throws Exception {
-        when(userService.updateGoals(any())).thenReturn(UserGoalsDto.builder()
-                .dailySteps(8000).build());
+        when(userService.updateGoals(any()))
+                .thenReturn(UserGoalsDto.builder().dailySteps(8000).build());
 
         mockMvc.perform(put("/api/v1/users/me/goals")
                         .header("Authorization", "Bearer " + jwt())
@@ -148,11 +156,11 @@ class UserControllerMvcTest {
 
     @Test
     void getSubscription_shouldReturn200() throws Exception {
-        when(userService.getSubscription()).thenReturn(
-                SubscriptionDto.builder().plan("PRO").status("ACTIVE").build());
+        when(userService.getSubscription())
+                .thenReturn(
+                        SubscriptionDto.builder().plan("PRO").status("ACTIVE").build());
 
-        mockMvc.perform(get("/api/v1/users/me/subscription")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/users/me/subscription").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.plan").value("PRO"));
     }
@@ -161,15 +169,15 @@ class UserControllerMvcTest {
 
     @Test
     void exportData_shouldReturn200() throws Exception {
-        when(userService.exportData()).thenReturn(GdprExportDto.builder()
-                .userId(UUID.randomUUID())
-                .email("user@test.com")
-                .exportedAt(java.time.OffsetDateTime.now())
-                .dataJson("{}")
-                .build());
+        when(userService.exportData())
+                .thenReturn(GdprExportDto.builder()
+                        .userId(UUID.randomUUID())
+                        .email("user@test.com")
+                        .exportedAt(java.time.OffsetDateTime.now())
+                        .dataJson("{}")
+                        .build());
 
-        mockMvc.perform(get("/api/v1/users/me/data-export")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/users/me/data-export").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("user@test.com"));
     }

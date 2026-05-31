@@ -107,13 +107,11 @@ class NotificationTemplatesTest {
 
     @Test
     void welcome_emptyName_shouldNotThrow() {
-        assertThatCode(() -> NotificationTemplates.welcome(""))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> NotificationTemplates.welcome("")).doesNotThrowAnyException();
     }
 
     @Test
     void pushBodyGoalAchieved_emptyGoalName_shouldNotThrow() {
-        assertThatCode(() -> NotificationTemplates.pushBodyGoalAchieved(""))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> NotificationTemplates.pushBodyGoalAchieved("")).doesNotThrowAnyException();
     }
 }

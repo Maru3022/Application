@@ -18,8 +18,7 @@ import org.junit.jupiter.api.Test;
  */
 class JwtTokenProviderTest {
 
-    private static final String VALID_SECRET =
-            "TestSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025TestTest";
+    private static final String VALID_SECRET = "TestSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025TestTest";
 
     private JwtTokenProvider provider;
 
@@ -144,7 +143,10 @@ class JwtTokenProviderTest {
         String token = shortLived.generateAccessToken(userId, "user@test.com", "USER");
 
         // Wait for expiration
-        try { Thread.sleep(10); } catch (InterruptedException ignored) {}
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException ignored) {
+        }
 
         assertThat(shortLived.validateToken(token)).isFalse();
     }
@@ -153,7 +155,10 @@ class JwtTokenProviderTest {
     void validateToken_tokenSignedWithDifferentKey_shouldReturnFalse() {
         JwtTokenProvider otherProvider = new JwtTokenProvider(
                 "OtherSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025OtherOther",
-                900_000L, 604_800_000L, "", "");
+                900_000L,
+                604_800_000L,
+                "",
+                "");
         String token = otherProvider.generateAccessToken(UUID.randomUUID(), "x@x.com", "USER");
 
         assertThat(provider.validateToken(token)).isFalse();
@@ -197,8 +202,7 @@ class JwtTokenProviderTest {
 
     @Test
     void tokenWithIssuer_shouldValidateCorrectly() {
-        JwtTokenProvider withIssuer = new JwtTokenProvider(
-                VALID_SECRET, 900_000L, 604_800_000L, "healthlife.com", "");
+        JwtTokenProvider withIssuer = new JwtTokenProvider(VALID_SECRET, 900_000L, 604_800_000L, "healthlife.com", "");
         UUID userId = UUID.randomUUID();
         String token = withIssuer.generateAccessToken(userId, "x@x.com", "USER");
 

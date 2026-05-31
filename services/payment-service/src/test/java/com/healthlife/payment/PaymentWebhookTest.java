@@ -4,15 +4,13 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import com.healthlife.payment.entity.Subscription;
 import com.healthlife.payment.entity.StripeWebhookEvent;
+import com.healthlife.payment.entity.Subscription;
 import com.healthlife.payment.repository.StripeWebhookEventRepository;
 import com.healthlife.payment.repository.SubscriptionRepository;
 import com.healthlife.payment.service.PaymentService;
 import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
-import com.stripe.model.Invoice;
-import com.stripe.model.checkout.Session;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,8 +70,7 @@ class PaymentWebhookTest {
         Event event = buildEvent("evt_duplicate_001", "customer.subscription.updated");
 
         // Should not throw and should not process again
-        assertThatCode(() -> paymentService.handleWebhook(event))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> paymentService.handleWebhook(event)).doesNotThrowAnyException();
 
         // Only 1 record should exist (the pre-saved one)
         assertThat(stripeWebhookEventRepository.count()).isEqualTo(1);
@@ -85,8 +82,7 @@ class PaymentWebhookTest {
     void handleWebhook_unknownEventType_shouldBeIgnoredGracefully() {
         Event event = buildEvent("evt_unknown_001", "payment.intent.created");
 
-        assertThatCode(() -> paymentService.handleWebhook(event))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> paymentService.handleWebhook(event)).doesNotThrowAnyException();
 
         // Event should still be saved for deduplication
         assertThat(stripeWebhookEventRepository.existsById("evt_unknown_001")).isTrue();

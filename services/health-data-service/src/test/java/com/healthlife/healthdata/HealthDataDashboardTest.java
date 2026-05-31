@@ -33,13 +33,26 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class HealthDataDashboardTest {
 
-    @Autowired private HealthDataService healthDataService;
-    @Autowired private SleepEntryRepository sleepEntryRepository;
-    @Autowired private WeightEntryRepository weightEntryRepository;
-    @Autowired private WaterEntryRepository waterEntryRepository;
-    @Autowired private ActivityEntryRepository activityEntryRepository;
-    @Autowired private SymptomEntryRepository symptomEntryRepository;
-    @Autowired private CycleEntryRepository cycleEntryRepository;
+    @Autowired
+    private HealthDataService healthDataService;
+
+    @Autowired
+    private SleepEntryRepository sleepEntryRepository;
+
+    @Autowired
+    private WeightEntryRepository weightEntryRepository;
+
+    @Autowired
+    private WaterEntryRepository waterEntryRepository;
+
+    @Autowired
+    private ActivityEntryRepository activityEntryRepository;
+
+    @Autowired
+    private SymptomEntryRepository symptomEntryRepository;
+
+    @Autowired
+    private CycleEntryRepository cycleEntryRepository;
 
     private UUID userId;
 
@@ -62,11 +75,15 @@ class HealthDataDashboardTest {
         healthDataService.createSleep(SleepRequest.builder()
                 .sleepStart(OffsetDateTime.now().minusHours(8))
                 .sleepEnd(OffsetDateTime.now())
-                .quality(4).source("manual").build());
+                .quality(4)
+                .source("manual")
+                .build());
         healthDataService.createSleep(SleepRequest.builder()
                 .sleepStart(OffsetDateTime.now().minusDays(1).minusHours(7))
                 .sleepEnd(OffsetDateTime.now().minusDays(1))
-                .quality(3).source("manual").build());
+                .quality(3)
+                .source("manual")
+                .build());
 
         SleepStatsDto stats = healthDataService.getSleepStats();
         assertThat(stats).isNotNull();
@@ -83,7 +100,8 @@ class HealthDataDashboardTest {
         SleepResponse resp = healthDataService.createSleep(SleepRequest.builder()
                 .sleepStart(OffsetDateTime.now().minusHours(6))
                 .sleepEnd(OffsetDateTime.now())
-                .quality(1).build());
+                .quality(1)
+                .build());
         assertThat(resp.getQuality()).isEqualTo(1);
     }
 
@@ -92,7 +110,8 @@ class HealthDataDashboardTest {
         SleepResponse resp = healthDataService.createSleep(SleepRequest.builder()
                 .sleepStart(OffsetDateTime.now().minusHours(9))
                 .sleepEnd(OffsetDateTime.now())
-                .quality(5).build());
+                .quality(5)
+                .build());
         assertThat(resp.getQuality()).isEqualTo(5);
     }
 
@@ -102,10 +121,12 @@ class HealthDataDashboardTest {
     void getWeightHistory_shouldReturnAllEntries() {
         healthDataService.createWeight(WeightRequest.builder()
                 .weightKg(new BigDecimal("80.0"))
-                .recordedAt(OffsetDateTime.now().minusDays(7)).build());
+                .recordedAt(OffsetDateTime.now().minusDays(7))
+                .build());
         healthDataService.createWeight(WeightRequest.builder()
                 .weightKg(new BigDecimal("79.5"))
-                .recordedAt(OffsetDateTime.now()).build());
+                .recordedAt(OffsetDateTime.now())
+                .build());
 
         List<WeightResponse> history = healthDataService.getWeightHistory();
         assertThat(history).hasSize(2);
@@ -128,9 +149,12 @@ class HealthDataDashboardTest {
     @Test
     void addWater_multipleEntries_shouldAccumulate() {
         OffsetDateTime now = OffsetDateTime.now();
-        healthDataService.addWater(WaterRequest.builder().amountMl(300).recordedAt(now).build());
-        healthDataService.addWater(WaterRequest.builder().amountMl(400).recordedAt(now).build());
-        healthDataService.addWater(WaterRequest.builder().amountMl(200).recordedAt(now).build());
+        healthDataService.addWater(
+                WaterRequest.builder().amountMl(300).recordedAt(now).build());
+        healthDataService.addWater(
+                WaterRequest.builder().amountMl(400).recordedAt(now).build());
+        healthDataService.addWater(
+                WaterRequest.builder().amountMl(200).recordedAt(now).build());
 
         assertThat(healthDataService.getWaterToday()).isEqualTo(900);
     }
@@ -141,12 +165,23 @@ class HealthDataDashboardTest {
     void syncActivity_upsert_shouldUpdateExisting() {
         LocalDate today = LocalDate.now();
         healthDataService.syncActivity(ActivityEntryDto.builder()
-                .date(today).steps(3000).caloriesBurned(100).source("manual").build());
+                .date(today)
+                .steps(3000)
+                .caloriesBurned(100)
+                .source("manual")
+                .build());
         healthDataService.syncActivity(ActivityEntryDto.builder()
-                .date(today).steps(8000).caloriesBurned(300).source("manual").build());
+                .date(today)
+                .steps(8000)
+                .caloriesBurned(300)
+                .source("manual")
+                .build());
 
         ActivityEntryDto result = healthDataService.syncActivity(ActivityEntryDto.builder()
-                .date(today).steps(8000).source("manual").build());
+                .date(today)
+                .steps(8000)
+                .source("manual")
+                .build());
         assertThat(result.getSteps()).isEqualTo(8000);
         assertThat(activityEntryRepository.count()).isEqualTo(1);
     }
@@ -161,7 +196,10 @@ class HealthDataDashboardTest {
     @Test
     void getActivityToday_withData_shouldReturn() {
         healthDataService.syncActivity(ActivityEntryDto.builder()
-                .date(LocalDate.now()).steps(5000).source("manual").build());
+                .date(LocalDate.now())
+                .steps(5000)
+                .source("manual")
+                .build());
 
         ActivityEntryDto result = healthDataService.getActivityToday();
         assertThat(result).isNotNull();
@@ -173,16 +211,20 @@ class HealthDataDashboardTest {
     @Test
     void createSymptom_minIntensity_shouldPersist() {
         SymptomResponse resp = healthDataService.createSymptom(SymptomRequest.builder()
-                .symptom("Fatigue").intensity(1)
-                .recordedAt(OffsetDateTime.now()).build());
+                .symptom("Fatigue")
+                .intensity(1)
+                .recordedAt(OffsetDateTime.now())
+                .build());
         assertThat(resp.getIntensity()).isEqualTo(1);
     }
 
     @Test
     void createSymptom_maxIntensity_shouldPersist() {
         SymptomResponse resp = healthDataService.createSymptom(SymptomRequest.builder()
-                .symptom("Migraine").intensity(10)
-                .recordedAt(OffsetDateTime.now()).build());
+                .symptom("Migraine")
+                .intensity(10)
+                .recordedAt(OffsetDateTime.now())
+                .build());
         assertThat(resp.getIntensity()).isEqualTo(10);
     }
 
@@ -192,7 +234,9 @@ class HealthDataDashboardTest {
     void getWaterToday_differentUsers_shouldBeIsolated() {
         // User1 adds water
         healthDataService.addWater(WaterRequest.builder()
-                .amountMl(500).recordedAt(OffsetDateTime.now()).build());
+                .amountMl(500)
+                .recordedAt(OffsetDateTime.now())
+                .build());
 
         // User2 should see 0
         UUID user2 = UUID.randomUUID();
@@ -205,7 +249,8 @@ class HealthDataDashboardTest {
         healthDataService.createSleep(SleepRequest.builder()
                 .sleepStart(OffsetDateTime.now().minusHours(8))
                 .sleepEnd(OffsetDateTime.now())
-                .quality(4).build());
+                .quality(4)
+                .build());
 
         UUID user2 = UUID.randomUUID();
         setAuth(user2);
@@ -219,7 +264,8 @@ class HealthDataDashboardTest {
         SleepResponse created = healthDataService.createSleep(SleepRequest.builder()
                 .sleepStart(OffsetDateTime.now().minusHours(8))
                 .sleepEnd(OffsetDateTime.now())
-                .quality(3).build());
+                .quality(3)
+                .build());
 
         healthDataService.deleteSleep(created.getId());
         assertThat(sleepEntryRepository.findById(created.getId())).isEmpty();

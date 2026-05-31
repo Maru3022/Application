@@ -32,10 +32,14 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 class PaymentControllerMvcTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    MockMvc mockMvc;
 
-    @MockBean PaymentService paymentService;
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    PaymentService paymentService;
 
     private String jwt() {
         return jwtTokenProvider.generateAccessToken(UUID.randomUUID(), "u@t.com", "USER");
@@ -45,19 +49,20 @@ class PaymentControllerMvcTest {
 
     @Test
     void getSubscription_shouldReturn200() throws Exception {
-        when(paymentService.getSubscriptionStatus()).thenReturn(
-                SubscriptionStatusResponse.builder().plan("FREE").status("active").build());
+        when(paymentService.getSubscriptionStatus())
+                .thenReturn(SubscriptionStatusResponse.builder()
+                        .plan("FREE")
+                        .status("active")
+                        .build());
 
-        mockMvc.perform(get("/api/v1/payments/subscription")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(get("/api/v1/payments/subscription").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.plan").value("FREE"));
     }
 
     @Test
     void getSubscription_withoutJwt_shouldReturn4xx() throws Exception {
-        mockMvc.perform(get("/api/v1/payments/subscription"))
-                .andExpect(status().is4xxClientError());
+        mockMvc.perform(get("/api/v1/payments/subscription")).andExpect(status().is4xxClientError());
     }
 
     // ── POST /api/v1/payments/checkout ────────────────────────────────────────
@@ -74,8 +79,7 @@ class PaymentControllerMvcTest {
 
     @Test
     void createCheckout_missingPriceId_shouldReturn400() throws Exception {
-        mockMvc.perform(post("/api/v1/payments/checkout")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(post("/api/v1/payments/checkout").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isBadRequest());
     }
 
@@ -100,8 +104,7 @@ class PaymentControllerMvcTest {
         when(paymentService.createPortalSession())
                 .thenThrow(new BadRequestException("STRIPE_SECRET_KEY not configured"));
 
-        mockMvc.perform(post("/api/v1/payments/portal")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(post("/api/v1/payments/portal").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isBadRequest());
     }
 

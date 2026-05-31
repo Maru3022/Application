@@ -21,8 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  */
 class JwtAuthenticationFilterTest {
 
-    private static final String SECRET =
-            "TestSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025TestTest";
+    private static final String SECRET = "TestSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025TestTest";
 
     private JwtTokenProvider tokenProvider;
     private JwtAuthenticationFilter filter;

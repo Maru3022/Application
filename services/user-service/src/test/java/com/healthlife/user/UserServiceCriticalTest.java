@@ -63,8 +63,7 @@ class UserServiceCriticalTest {
 
     @Test
     void getProfile_noProfile_shouldThrowNotFound() {
-        assertThatThrownBy(() -> userService.getProfile())
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> userService.getProfile()).isInstanceOf(ResourceNotFoundException.class);
     }
 
     // ── updateProfile ─────────────────────────────────────────────────────────
@@ -93,9 +92,8 @@ class UserServiceCriticalTest {
     void updateProfile_partialUpdate_shouldNotOverwriteNullFields() {
         saveProfile(userId, "Carol", "PRO");
 
-        UpdateProfileRequest req = UpdateProfileRequest.builder()
-                .displayName("Caroline")
-                .build();
+        UpdateProfileRequest req =
+                UpdateProfileRequest.builder().displayName("Caroline").build();
 
         UserProfileResponse resp = userService.updateProfile(req);
 
@@ -107,12 +105,10 @@ class UserServiceCriticalTest {
 
     @Test
     void updateProfile_noProfile_shouldThrowNotFound() {
-        UpdateProfileRequest req = UpdateProfileRequest.builder()
-                .displayName("Ghost")
-                .build();
+        UpdateProfileRequest req =
+                UpdateProfileRequest.builder().displayName("Ghost").build();
 
-        assertThatThrownBy(() -> userService.updateProfile(req))
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> userService.updateProfile(req)).isInstanceOf(ResourceNotFoundException.class);
     }
 
     // ── deleteAccount ─────────────────────────────────────────────────────────
@@ -129,8 +125,7 @@ class UserServiceCriticalTest {
 
     @Test
     void deleteAccount_noProfile_shouldThrowNotFound() {
-        assertThatThrownBy(() -> userService.deleteAccount())
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> userService.deleteAccount()).isInstanceOf(ResourceNotFoundException.class);
     }
 
     // ── getGoals / updateGoals ────────────────────────────────────────────────
@@ -159,9 +154,7 @@ class UserServiceCriticalTest {
                 .sleepMinutes(420)
                 .build());
 
-        UserGoalsDto req = UserGoalsDto.builder()
-                .dailySteps(12000)
-                .build();
+        UserGoalsDto req = UserGoalsDto.builder().dailySteps(12000).build();
 
         userService.updateGoals(req);
 
@@ -173,17 +166,13 @@ class UserServiceCriticalTest {
 
     @Test
     void getGoals_noGoals_shouldThrowNotFound() {
-        assertThatThrownBy(() -> userService.getGoals())
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> userService.getGoals()).isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void getGoals_existingGoals_shouldReturn() {
-        userGoalRepository.save(UserGoal.builder()
-                .userId(userId)
-                .dailySteps(8000)
-                .waterMl(2000)
-                .build());
+        userGoalRepository.save(
+                UserGoal.builder().userId(userId).dailySteps(8000).waterMl(2000).build());
 
         UserGoalsDto goals = userService.getGoals();
 
@@ -196,10 +185,8 @@ class UserServiceCriticalTest {
     @Test
     void exportData_withProfile_shouldContainUserData() {
         saveProfile(userId, "Eve", "PRO");
-        userGoalRepository.save(UserGoal.builder()
-                .userId(userId)
-                .dailySteps(9000)
-                .build());
+        userGoalRepository.save(
+                UserGoal.builder().userId(userId).dailySteps(9000).build());
 
         GdprExportDto export = userService.exportData();
 
@@ -260,8 +247,8 @@ class UserServiceCriticalTest {
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private void setAuth(UUID uid, String email) {
-        var auth = new UsernamePasswordAuthenticationToken(
-                uid, email, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        var auth =
+                new UsernamePasswordAuthenticationToken(uid, email, List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 

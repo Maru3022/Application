@@ -36,11 +36,17 @@ import org.springframework.web.reactive.function.client.WebClient;
 @ActiveProfiles("test")
 class AiCoachInsightPersistenceTest {
 
-    @Autowired private AiCoachService aiCoachService;
-    @Autowired private AiInsightRepository aiInsightRepository;
+    @Autowired
+    private AiCoachService aiCoachService;
 
-    @MockBean private StringRedisTemplate redisTemplate;
-    @MockBean private WebClient webClient;
+    @Autowired
+    private AiInsightRepository aiInsightRepository;
+
+    @MockBean
+    private StringRedisTemplate redisTemplate;
+
+    @MockBean
+    private WebClient webClient;
 
     private UUID userId;
 
@@ -107,9 +113,11 @@ class AiCoachInsightPersistenceTest {
         aiCoachService.getDailyInsight();
 
         List<AiInsight> user1Insights = aiInsightRepository.findAll().stream()
-                .filter(i -> i.getUserId().equals(userId)).toList();
+                .filter(i -> i.getUserId().equals(userId))
+                .toList();
         List<AiInsight> user2Insights = aiInsightRepository.findAll().stream()
-                .filter(i -> i.getUserId().equals(user2)).toList();
+                .filter(i -> i.getUserId().equals(user2))
+                .toList();
 
         assertThat(user1Insights).hasSize(1);
         assertThat(user2Insights).hasSize(1);

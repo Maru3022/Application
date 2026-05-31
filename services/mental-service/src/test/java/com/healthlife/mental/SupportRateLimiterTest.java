@@ -33,8 +33,7 @@ class SupportRateLimiterTest {
         UUID userId = UUID.randomUUID();
 
         for (int i = 0; i < 5; i++) {
-            assertThatCode(() -> rateLimiter.checkLimit(userId))
-                    .doesNotThrowAnyException();
+            assertThatCode(() -> rateLimiter.checkLimit(userId)).doesNotThrowAnyException();
         }
     }
 
@@ -42,8 +41,7 @@ class SupportRateLimiterTest {
     void checkLimit_firstRequest_shouldAlwaysPass() {
         UUID userId = UUID.randomUUID();
 
-        assertThatCode(() -> rateLimiter.checkLimit(userId))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> rateLimiter.checkLimit(userId)).doesNotThrowAnyException();
     }
 
     // ── exceeding limit ───────────────────────────────────────────────────────
@@ -58,8 +56,7 @@ class SupportRateLimiterTest {
         }
 
         // 6th request should fail
-        assertThatThrownBy(() -> rateLimiter.checkLimit(userId))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> rateLimiter.checkLimit(userId)).isInstanceOf(BadRequestException.class);
     }
 
     // ── user isolation ────────────────────────────────────────────────────────
@@ -75,8 +72,7 @@ class SupportRateLimiterTest {
         }
 
         // user2 should still be able to make requests
-        assertThatCode(() -> rateLimiter.checkLimit(user2))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> rateLimiter.checkLimit(user2)).doesNotThrowAnyException();
     }
 
     @Test
@@ -88,13 +84,11 @@ class SupportRateLimiterTest {
         for (int i = 0; i < 5; i++) {
             rateLimiter.checkLimit(user1);
         }
-        assertThatThrownBy(() -> rateLimiter.checkLimit(user1))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> rateLimiter.checkLimit(user1)).isInstanceOf(BadRequestException.class);
 
         // user2 unaffected
         for (int i = 0; i < 5; i++) {
-            assertThatCode(() -> rateLimiter.checkLimit(user2))
-                    .doesNotThrowAnyException();
+            assertThatCode(() -> rateLimiter.checkLimit(user2)).doesNotThrowAnyException();
         }
     }
 
@@ -108,15 +102,13 @@ class SupportRateLimiterTest {
         for (int i = 0; i < 5; i++) {
             rateLimiter.checkLimit(userId);
         }
-        assertThatThrownBy(() -> rateLimiter.checkLimit(userId))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> rateLimiter.checkLimit(userId)).isInstanceOf(BadRequestException.class);
 
         // Reconfigure — buckets are cleared
         rateLimiter.configure(10);
 
         // Should work again with new limit
-        assertThatCode(() -> rateLimiter.checkLimit(userId))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> rateLimiter.checkLimit(userId)).doesNotThrowAnyException();
     }
 
     @Test
@@ -125,12 +117,10 @@ class SupportRateLimiterTest {
         UUID userId = UUID.randomUUID();
 
         // At least 1 request should pass
-        assertThatCode(() -> rateLimiter.checkLimit(userId))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> rateLimiter.checkLimit(userId)).doesNotThrowAnyException();
 
         // 2nd request should fail (limit=1)
-        assertThatThrownBy(() -> rateLimiter.checkLimit(userId))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> rateLimiter.checkLimit(userId)).isInstanceOf(BadRequestException.class);
     }
 
     @Test
@@ -138,10 +128,8 @@ class SupportRateLimiterTest {
         rateLimiter.configure(-5);
         UUID userId = UUID.randomUUID();
 
-        assertThatCode(() -> rateLimiter.checkLimit(userId))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> rateLimiter.checkLimit(userId)).doesNotThrowAnyException();
 
-        assertThatThrownBy(() -> rateLimiter.checkLimit(userId))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> rateLimiter.checkLimit(userId)).isInstanceOf(BadRequestException.class);
     }
 }

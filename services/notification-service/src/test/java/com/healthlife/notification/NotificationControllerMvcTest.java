@@ -32,12 +32,20 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 class NotificationControllerMvcTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    MockMvc mockMvc;
 
-    @MockBean NotificationService notificationService;
-    @MockBean DeviceTokenService deviceTokenService;
-    @MockBean StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    NotificationService notificationService;
+
+    @MockBean
+    DeviceTokenService deviceTokenService;
+
+    @MockBean
+    StringRedisTemplate stringRedisTemplate;
 
     private String userJwt() {
         return jwtTokenProvider.generateAccessToken(UUID.randomUUID(), "u@t.com", "USER");

@@ -38,13 +38,23 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(AuthTestConfig.class)
 class AuthControllerMvcTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
-    @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    MockMvc mockMvc;
 
-    @MockBean AuthService authService;
-    @MockBean OAuthService oAuthService;
-    @MockBean JavaMailSender javaMailSender;
+    @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    AuthService authService;
+
+    @MockBean
+    OAuthService oAuthService;
+
+    @MockBean
+    JavaMailSender javaMailSender;
 
     private static final AuthResponse MOCK_AUTH = AuthResponse.builder()
             .accessToken("access.token.here")
@@ -59,9 +69,11 @@ class AuthControllerMvcTest {
     void register_validRequest_shouldReturn200() throws Exception {
         when(authService.register(any())).thenReturn(MOCK_AUTH);
 
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"new@test.com","password":"StrongPass123!","displayName":"New User"}
                             """))
                 .andExpect(status().isOk())
@@ -71,9 +83,11 @@ class AuthControllerMvcTest {
 
     @Test
     void register_missingEmail_shouldReturn400() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"password":"StrongPass123!"}
                             """))
                 .andExpect(status().isBadRequest());
@@ -81,9 +95,11 @@ class AuthControllerMvcTest {
 
     @Test
     void register_invalidEmail_shouldReturn400() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"not-an-email","password":"StrongPass123!"}
                             """))
                 .andExpect(status().isBadRequest());
@@ -91,9 +107,11 @@ class AuthControllerMvcTest {
 
     @Test
     void register_shortPassword_shouldReturn400() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"test@test.com","password":"123"}
                             """))
                 .andExpect(status().isBadRequest());
@@ -101,12 +119,13 @@ class AuthControllerMvcTest {
 
     @Test
     void register_duplicateEmail_shouldReturn409() throws Exception {
-        when(authService.register(any()))
-                .thenThrow(new DuplicateResourceException("Email already registered"));
+        when(authService.register(any())).thenThrow(new DuplicateResourceException("Email already registered"));
 
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"dup@test.com","password":"StrongPass123!"}
                             """))
                 .andExpect(status().isConflict());
@@ -118,9 +137,11 @@ class AuthControllerMvcTest {
     void login_validCredentials_shouldReturn200() throws Exception {
         when(authService.login(any())).thenReturn(MOCK_AUTH);
 
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"user@test.com","password":"StrongPass123!"}
                             """))
                 .andExpect(status().isOk())
@@ -129,12 +150,13 @@ class AuthControllerMvcTest {
 
     @Test
     void login_wrongPassword_shouldReturn401() throws Exception {
-        when(authService.login(any()))
-                .thenThrow(new UnauthorizedException("Invalid email or password"));
+        when(authService.login(any())).thenThrow(new UnauthorizedException("Invalid email or password"));
 
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"user@test.com","password":"WrongPass!"}
                             """))
                 .andExpect(status().isUnauthorized());
@@ -142,9 +164,11 @@ class AuthControllerMvcTest {
 
     @Test
     void login_missingPassword_shouldReturn400() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"user@test.com"}
                             """))
                 .andExpect(status().isBadRequest());
@@ -156,9 +180,11 @@ class AuthControllerMvcTest {
     void refresh_validToken_shouldReturn200() throws Exception {
         when(authService.refreshToken(any())).thenReturn(MOCK_AUTH);
 
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/refresh")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"refreshToken":"valid.refresh.token"}
                             """))
                 .andExpect(status().isOk());
@@ -183,8 +209,7 @@ class AuthControllerMvcTest {
     void verifyEmail_shouldReturn200() throws Exception {
         doNothing().when(authService).verifyEmail(anyString());
 
-        mockMvc.perform(get("/api/v1/auth/verify-email/some-token-123"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/auth/verify-email/some-token-123")).andExpect(status().isOk());
     }
 
     // ── POST /api/v1/auth/password/reset ─────────────────────────────────────
@@ -193,9 +218,11 @@ class AuthControllerMvcTest {
     void requestPasswordReset_shouldReturn200() throws Exception {
         doNothing().when(authService).requestPasswordReset(anyString());
 
-        mockMvc.perform(post("/api/v1/auth/password/reset")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/password/reset")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"user@test.com"}
                             """))
                 .andExpect(status().isOk());
@@ -203,9 +230,11 @@ class AuthControllerMvcTest {
 
     @Test
     void requestPasswordReset_invalidEmail_shouldReturn400() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/password/reset")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/password/reset")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"not-an-email"}
                             """))
                 .andExpect(status().isBadRequest());
@@ -218,9 +247,11 @@ class AuthControllerMvcTest {
         when(authService.register(any())).thenReturn(MOCK_AUTH);
 
         // Should NOT return 401/403
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/v1/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                             {"email":"pub@test.com","password":"StrongPass123!"}
                             """))
                 .andExpect(status().isOk());
