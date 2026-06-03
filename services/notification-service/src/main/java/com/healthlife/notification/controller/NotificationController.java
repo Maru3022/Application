@@ -10,6 +10,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
  * <p>Access is restricted to ROLE_ADMIN to prevent email-relay abuse where any authenticated
  * user could send arbitrary emails to arbitrary addresses.
  */
-import org.springframework.validation.annotation.Validated;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
