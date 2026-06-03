@@ -11,8 +11,7 @@ public class RestTemplateConfig {
 
     @Bean("socialRestTemplate")
     public RestTemplate socialRestTemplate(RestTemplateBuilder builder) {
-        return builder
-                .setConnectTimeout(Duration.ofSeconds(5))
+        return builder.setConnectTimeout(Duration.ofSeconds(5))
                 .setReadTimeout(Duration.ofSeconds(10))
                 .build();
     }

@@ -76,8 +76,7 @@ public class AuthService {
         this.registerAttemptCounter = Counter.builder("auth.register.attempts")
                 .tag("service", "auth-service")
                 .register(meterRegistry);
-        this.registerSuccessCounter = Counter.builder("auth.register.success")
-                .register(meterRegistry);
+        this.registerSuccessCounter = Counter.builder("auth.register.success").register(meterRegistry);
         this.registerFailureCounter = Counter.builder("auth.register.failures")
                 .tag("reason", "duplicate_email")
                 .register(meterRegistry);
@@ -150,7 +149,8 @@ public class AuthService {
         }
 
         log.info("Login successful for user: {}", user.getId());
-        sample.stop(Timer.builder("auth.login.duration").tag("outcome", "success").register(meterRegistry));
+        sample.stop(
+                Timer.builder("auth.login.duration").tag("outcome", "success").register(meterRegistry));
         return generateAuthResponse(user);
     }
 
@@ -194,9 +194,8 @@ public class AuthService {
     @Transactional
     public MfaSetupResponse setupMfa(UUID userId) {
         log.info("Setting up MFA for user: {}", userId);
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        User user =
+                userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         if (user.getMfaEnabled()) {
             log.warn("MFA already enabled for user: {}", userId);
@@ -220,9 +219,8 @@ public class AuthService {
 
     public boolean verifyMfa(UUID userId, String code) {
         log.debug("Verifying MFA for user: {}", userId);
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        User user =
+                userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         if (!user.getMfaEnabled() || user.getMfaSecret() == null) {
             log.warn("MFA not enabled for user: {}", userId);

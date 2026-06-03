@@ -39,7 +39,8 @@ public class SocialService {
             PostLikeRepository postLikeRepository,
             FriendshipRepository friendshipRepository,
             @Qualifier("socialRestTemplate") RestTemplate restTemplate,
-            @Value("${internal.notification-service.url:http://notification-service:8088}") String notificationServiceUrl) {
+            @Value("${internal.notification-service.url:http://notification-service:8088}")
+                    String notificationServiceUrl) {
         this.challengeRepository = challengeRepository;
         this.challengeParticipantRepository = challengeParticipantRepository;
         this.postRepository = postRepository;
