@@ -10,9 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.validation.annotation.Validated;
+
 @RestController
 @RequestMapping("/api/v1/analytics")
 @RequiredArgsConstructor
+@Validated
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;

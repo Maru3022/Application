@@ -19,9 +19,12 @@ import org.springframework.web.bind.annotation.*;
  * <p>Access is restricted to ROLE_ADMIN to prevent email-relay abuse where any authenticated
  * user could send arbitrary emails to arbitrary addresses.
  */
+import org.springframework.validation.annotation.Validated;
+
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
+@Validated
 public class NotificationController {
 
     private final NotificationService notificationService;

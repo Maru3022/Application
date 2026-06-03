@@ -19,14 +19,22 @@ import io.micrometer.core.instrument.Timer;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Сервис аутентификации.
+ *
+ * <p>Micrometer-счётчики инициализируются в конструкторе (не внутри методов) —
+ * это позволяет избежать повторной регистрации одного и того же счётчика в метрическом реестре
+ * при каждом вызове метода.
+ *
+ * <p>GoogleAuthenticator инжектируется как Spring-бин (определён в {@code AuthConfig}) —
+ * это обеспечивает тестируемость: в unit-тестах можно подменить бин через мок.
+ */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class AuthService {
 
@@ -38,20 +46,51 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
     private final MeterRegistry meterRegistry;
+    private final GoogleAuthenticator googleAuthenticator;
+
+    // Счётчики инициализируются один раз в конструкторе
+    private final Counter registerAttemptCounter;
+    private final Counter registerSuccessCounter;
+    private final Counter registerFailureCounter;
+
+    public AuthService(
+            UserRepository userRepository,
+            RefreshTokenRepository refreshTokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EmailVerificationTokenRepository emailVerificationTokenRepository,
+            PasswordEncoder passwordEncoder,
+            JwtTokenProvider jwtTokenProvider,
+            EmailService emailService,
+            MeterRegistry meterRegistry,
+            GoogleAuthenticator googleAuthenticator) {
+        this.userRepository = userRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.emailVerificationTokenRepository = emailVerificationTokenRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.emailService = emailService;
+        this.meterRegistry = meterRegistry;
+        this.googleAuthenticator = googleAuthenticator;
+
+        this.registerAttemptCounter = Counter.builder("auth.register.attempts")
+                .tag("service", "auth-service")
+                .register(meterRegistry);
+        this.registerSuccessCounter = Counter.builder("auth.register.success")
+                .register(meterRegistry);
+        this.registerFailureCounter = Counter.builder("auth.register.failures")
+                .tag("reason", "duplicate_email")
+                .register(meterRegistry);
+    }
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         log.info("Attempting to register user with email: {}", request.getEmail());
-        Counter.builder("auth.register.attempts")
-                .tag("service", "auth-service")
-                .register(meterRegistry)
-                .increment();
+        registerAttemptCounter.increment();
+
         if (userRepository.existsByEmail(request.getEmail())) {
             log.warn("Registration failed: Email already registered: {}", request.getEmail());
-            Counter.builder("auth.register.failures")
-                    .tag("reason", "duplicate_email")
-                    .register(meterRegistry)
-                    .increment();
+            registerFailureCounter.increment();
             throw new DuplicateResourceException("Email already registered: " + request.getEmail());
         }
 
@@ -77,7 +116,7 @@ public class AuthService {
         emailService.sendEmailVerificationEmail(user.getEmail(), verificationToken);
 
         log.info("User registered successfully with ID: {}", user.getId());
-        Counter.builder("auth.register.success").register(meterRegistry).increment();
+        registerSuccessCounter.increment();
         return generateAuthResponse(user);
     }
 
@@ -111,8 +150,7 @@ public class AuthService {
         }
 
         log.info("Login successful for user: {}", user.getId());
-        sample.stop(
-                Timer.builder("auth.login.duration").tag("outcome", "success").register(meterRegistry));
+        sample.stop(Timer.builder("auth.login.duration").tag("outcome", "success").register(meterRegistry));
         return generateAuthResponse(user);
     }
 
@@ -156,16 +194,17 @@ public class AuthService {
     @Transactional
     public MfaSetupResponse setupMfa(UUID userId) {
         log.info("Setting up MFA for user: {}", userId);
-        User user =
-                userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         if (user.getMfaEnabled()) {
             log.warn("MFA already enabled for user: {}", userId);
             throw new BadRequestException("MFA is already enabled");
         }
 
-        GoogleAuthenticator gAuth = new GoogleAuthenticator();
-        GoogleAuthenticatorKey key = gAuth.createCredentials();
+        // Используем инжектированный бин, а не new GoogleAuthenticator()
+        GoogleAuthenticatorKey key = googleAuthenticator.createCredentials();
         String secret = key.getKey();
 
         user.setMfaSecret(secret);
@@ -181,16 +220,16 @@ public class AuthService {
 
     public boolean verifyMfa(UUID userId, String code) {
         log.debug("Verifying MFA for user: {}", userId);
-        User user =
-                userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         if (!user.getMfaEnabled() || user.getMfaSecret() == null) {
             log.warn("MFA not enabled for user: {}", userId);
             throw new BadRequestException("MFA is not enabled for this user");
         }
 
-        GoogleAuthenticator gAuth = new GoogleAuthenticator();
-        boolean valid = gAuth.authorize(user.getMfaSecret(), parseTotpCode(code));
+        boolean valid = googleAuthenticator.authorize(user.getMfaSecret(), parseTotpCode(code));
         log.info("MFA verification {} for user: {}", valid ? "successful" : "failed", userId);
         return valid;
     }
@@ -208,8 +247,7 @@ public class AuthService {
             throw new BadRequestException("MFA is not enabled");
         }
 
-        GoogleAuthenticator gAuth = new GoogleAuthenticator();
-        if (!gAuth.authorize(user.getMfaSecret(), parseTotpCode(code))) {
+        if (!googleAuthenticator.authorize(user.getMfaSecret(), parseTotpCode(code))) {
             log.warn("Invalid MFA code for email: {}", email);
             throw new UnauthorizedException("Invalid MFA code");
         }
@@ -307,15 +345,10 @@ public class AuthService {
                 .build();
     }
 
-    /** Package-visible so OAuthService can reuse token generation without duplication. */
     AuthResponse generateAuthResponsePublic(User user) {
         return generateAuthResponse(user);
     }
 
-    /**
-     * Parses a TOTP code string to an integer. Throws {@link BadRequestException} instead of
-     * {@link NumberFormatException} so the caller receives a proper 400 response.
-     */
     private int parseTotpCode(String code) {
         try {
             return Integer.parseInt(code.trim());

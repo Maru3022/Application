@@ -1,6 +1,32 @@
 name: HealthLife CI/CD Pipeline
 
-on:
+on:Ты senior Java-разработчик. Перед тобой multi-module Spring Boot 3 проект (микросервисы, Java 21, Maven). Твоя задача — последовательно устранить следующие проблемы:
+
+1. Добавить @RestControllerAdvice во все сервисы В каждом сервисе создай класс GlobalExceptionHandler с обработкой: ResourceNotFoundException → 404, BadRequestException → 400, UnauthorizedException → 401, Exception → 500. Stacktrace не должен попадать в ответ клиенту.
+
+2. Добавить @Validated на все контроллеры Пройдись по AnalyticsController, NotificationController, PaymentController и всем остальным контроллерам — добавь аннотацию @Validated на уровне класса, чтобы Bean Validation (@NotBlank, @Email и т.д.) реально срабатывал.
+
+3. Обновить Spring Boot с 3.2.5 до последней стабильной версии 3.3.x или 3.4.x Обнови версию в корневом pom.xml, проверь совместимость Spring Cloud и других зависимостей, при необходимости подними их версии тоже.
+
+4. Настроить CORS глобально Создай CorsConfig бин типа CorsConfigurationSource в gateway-service. Allowed origins брать из ${app.cors.allowed-origins} (env var), не хардкодить. В тестовом профиле разрешить localhost.
+
+5. Реализовать TODO в SocialService (строка 201) Вместо комментария // TODO: integrate with notification-service — добавить реальный вызов NotificationService (или Feign-клиент к notification-service) для отправки email-инвайта при добавлении друга.
+
+6. Поднять JaCoCo minimum coverage В pom.xml поднять minimum с 0.10 до 0.60 для модулей auth-service и payment-service, до 0.40 для остальных. Написать недостающие unit-тесты для критичных сервисов (AuthService, PaymentService) чтобы покрытие проходило.
+
+7. Сделать OWASP и Trivy блокирующими в CI В GitHub Actions убрать continue-on-error: true у шагов OWASP dependency-check и Trivy scan. Добавить fail-fast порог: CVSS ≥ 7 блокирует пайплайн.
+
+8. Отключить Swagger в production профиле В application.yml каждого сервиса для профиля production добавить:
+
+yaml
+
+springdoc:   api-docs:     enabled: false   swagger-ui:     enabled: false
+
+9. Вынести Micrometer-счётчики из тел методов в поля класса В AuthService (и любых других сервисах с аналогичным паттерном) — переместить Counter.builder(...).register(meterRegistry) из методов в конструктор/поле. Использовать @Autowired-инициализацию через конструктор.
+
+10. Вынести GoogleAuthenticator в Spring-бин В AuthService убрать new GoogleAuthenticator() из методов setupMfa() и verifyMfa(). Создать @Bean GoogleAuthenticator googleAuthenticator() в конфиг-классе и заинжектить через конструктор — для тестируемости.
+
+Для каждого пункта: покажи конкретные изменённые файлы с диффом или полным кодом. Не пропускай ни одного сервиса где проблема повторяется.
   push:
     branches: [main, develop]
   pull_request:
