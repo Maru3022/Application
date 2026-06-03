@@ -12,15 +12,16 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SocialService {
 
     private final ChallengeRepository challengeRepository;
@@ -28,6 +29,25 @@ public class SocialService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
     private final FriendshipRepository friendshipRepository;
+    private final RestTemplate restTemplate;
+    private final String notificationServiceUrl;
+
+    public SocialService(
+            ChallengeRepository challengeRepository,
+            ChallengeParticipantRepository challengeParticipantRepository,
+            PostRepository postRepository,
+            PostLikeRepository postLikeRepository,
+            FriendshipRepository friendshipRepository,
+            @Qualifier("socialRestTemplate") RestTemplate restTemplate,
+            @Value("${internal.notification-service.url:http://notification-service:8088}") String notificationServiceUrl) {
+        this.challengeRepository = challengeRepository;
+        this.challengeParticipantRepository = challengeParticipantRepository;
+        this.postRepository = postRepository;
+        this.postLikeRepository = postLikeRepository;
+        this.friendshipRepository = friendshipRepository;
+        this.restTemplate = restTemplate;
+        this.notificationServiceUrl = notificationServiceUrl;
+    }
 
     @Transactional(readOnly = true)
     public List<ChallengeResponse> getChallenges() {
@@ -198,7 +218,20 @@ public class SocialService {
     public void inviteFriend(String email) {
         UUID userId = SecurityUtils.getCurrentUserId();
         log.info("Friend invitation requested by user={} to email={}", userId, email);
-        // TODO: integrate with notification-service to send invitation email
+
+        try {
+            String url = notificationServiceUrl + "/api/v1/notifications/email?to={to}&subject={subject}";
+            restTemplate.postForEntity(
+                    url,
+                    "You have been invited to join HealthLife! Your friend (user: " + userId
+                            + ") wants to connect with you.",
+                    Void.class,
+                    email,
+                    "HealthLife - Friend Invitation");
+            log.info("Friend invitation email sent to {} via notification-service", email);
+        } catch (Exception ex) {
+            log.error("Failed to send friend invitation email to {}: {}", email, ex.getMessage());
+        }
     }
 
     public List<FriendDto> getFriends() {

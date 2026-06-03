@@ -157,3 +157,14 @@ oauth:
     # Apple Sign-In is verified via Apple's public JWKS endpoint — no secret needed here.
     # Configure your Apple App ID in Apple Developer Console → Certificates, IDs & Profiles.
     audience: ${OAUTH_APPLE_AUDIENCE:}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

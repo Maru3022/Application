@@ -109,3 +109,14 @@ support:
     api-key: ${ANTHROPIC_API_KEY:}
     model: ${ANTHROPIC_MODEL:claude-sonnet-4-20250514}
   rate-limit-requests-per-minute: ${SUPPORT_RATE_LIMIT_RPM:20}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

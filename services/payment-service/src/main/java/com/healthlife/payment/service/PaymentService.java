@@ -185,9 +185,12 @@ public class PaymentService {
     }
 
     private void handleCheckoutCompleted(Event event) {
-        Session session = (Session) event.getDataObjectDeserializer()
-                .getObject()
-                .orElseThrow(() -> new BadRequestException("Cannot deserialise checkout session"));
+        var optObject = event.getDataObjectDeserializer().getObject();
+        if (optObject.isEmpty()) {
+            log.warn("Cannot deserialise checkout.completed event data: id={}", event.getId());
+            return;
+        }
+        Session session = (Session) optObject.get();
 
         String userId = session.getMetadata().get("userId");
         if (userId == null) return;
@@ -204,8 +207,12 @@ public class PaymentService {
     }
 
     private void handleSubscriptionUpdated(Event event) {
-        com.stripe.model.Subscription stripeSub = (com.stripe.model.Subscription)
-                event.getDataObjectDeserializer().getObject().orElseThrow();
+        var optObject = event.getDataObjectDeserializer().getObject();
+        if (optObject.isEmpty()) {
+            log.warn("Cannot deserialise subscription.updated event data: id={}", event.getId());
+            return;
+        }
+        com.stripe.model.Subscription stripeSub = (com.stripe.model.Subscription) optObject.get();
 
         subscriptionRepository.findByStripeSubscriptionId(stripeSub.getId()).ifPresent(sub -> {
             sub.setStatus(stripeSub.getStatus());
@@ -226,8 +233,12 @@ public class PaymentService {
     }
 
     private void handleSubscriptionDeleted(Event event) {
-        com.stripe.model.Subscription stripeSub = (com.stripe.model.Subscription)
-                event.getDataObjectDeserializer().getObject().orElseThrow();
+        var optObject = event.getDataObjectDeserializer().getObject();
+        if (optObject.isEmpty()) {
+            log.warn("Cannot deserialise subscription.deleted event data: id={}", event.getId());
+            return;
+        }
+        com.stripe.model.Subscription stripeSub = (com.stripe.model.Subscription) optObject.get();
 
         subscriptionRepository.findByStripeSubscriptionId(stripeSub.getId()).ifPresent(sub -> {
             sub.setStatus("canceled");
@@ -239,8 +250,12 @@ public class PaymentService {
     }
 
     private void handlePaymentFailed(Event event) {
-        Invoice invoice =
-                (Invoice) event.getDataObjectDeserializer().getObject().orElseThrow();
+        var optObject = event.getDataObjectDeserializer().getObject();
+        if (optObject.isEmpty()) {
+            log.warn("Cannot deserialise payment_failed event data: id={}", event.getId());
+            return;
+        }
+        Invoice invoice = (Invoice) optObject.get();
 
         subscriptionRepository
                 .findByStripeSubscriptionId(invoice.getSubscription())

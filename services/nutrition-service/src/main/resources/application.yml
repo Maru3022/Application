@@ -108,3 +108,14 @@ internal:
   user-service:
     url: ${INTERNAL_USER_SERVICE_URL:http://user-service:8082}
 
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
