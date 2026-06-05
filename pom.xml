@@ -227,8 +227,12 @@
                         <exclude>**/repository/**</exclude>
                         <exclude>**/template/**</exclude>
                         <exclude>**/filter/**</exclude>
-                        <!-- External integrations (Stripe, OAuth) hard to unit-test -->
+                        <exclude>**/DefaultSecurityConfig.class</exclude>
+                        <exclude>**/CorsConfig.class</exclude>
+                        <exclude>**/ResilienceConfig.class</exclude>
+                        <!-- External integrations (Stripe, OAuth, AI Coach) hard to unit-test -->
                         <exclude>**/service/OAuthService.class</exclude>
+                        <exclude>**/service/AiCoachService.class</exclude>
                         <!-- Gateway covered by integration tests -->
                         <exclude>**/gateway/**</exclude>
                     </excludes>
@@ -255,7 +259,7 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.40</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

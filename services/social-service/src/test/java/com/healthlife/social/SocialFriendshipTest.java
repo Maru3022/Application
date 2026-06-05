@@ -106,12 +106,14 @@ class SocialFriendshipTest {
 
     // ── feed with friends ─────────────────────────────────────────────────────
 
-    // TODO: Fix these tests after SocialService methods are implemented
-    /*
     @Test
     void getFeed_withFriend_shouldIncludeFriendPosts() {
         UUID friendId = UUID.randomUUID();
-        socialService.addFriend(friendId);
+        friendshipRepository.save(Friendship.builder()
+                .userId(userId)
+                .friendId(friendId)
+                .status("ACCEPTED")
+                .build());
 
         // Friend creates a post
         postRepository.save(
@@ -125,7 +127,11 @@ class SocialFriendshipTest {
     @Test
     void getFeed_ownAndFriendPosts_shouldReturnBoth() {
         UUID friendId = UUID.randomUUID();
-        socialService.addFriend(friendId);
+        friendshipRepository.save(Friendship.builder()
+                .userId(userId)
+                .friendId(friendId)
+                .status("ACCEPTED")
+                .build());
 
         postRepository.save(Post.builder().userId(userId).content("My post").build());
         postRepository.save(
@@ -134,20 +140,17 @@ class SocialFriendshipTest {
         List<PostResponse> feed = socialService.getFeed();
         assertThat(feed).hasSize(2);
     }
-    */
 
     // ── challenge leaderboard ─────────────────────────────────────────────────
 
-    // TODO: Fix these tests after SocialService methods are implemented
-    /*
     @Test
-    void getChallengeLeaderboard_shouldReturnParticipants() {
+    void getLeaderboard_shouldReturnParticipants() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
                 .creatorId(userId)
                 .title("Steps")
                 .type("steps")
-                .startDate(LocalDate.now())
-                .endDate(LocalDate.now().plusDays(7))
+                .startDate(java.time.LocalDate.now())
+                .endDate(java.time.LocalDate.now().plusDays(7))
                 .build());
 
         challengeParticipantRepository.save(ChallengeParticipant.builder()
@@ -161,7 +164,7 @@ class SocialFriendshipTest {
                 .progress(8000)
                 .build());
 
-        List<LeaderboardEntry> leaderboard = socialService.getChallengeLeaderboard(challenge.getId());
+        List<LeaderboardEntryDto> leaderboard = socialService.getLeaderboard(challenge.getId());
         assertThat(leaderboard).hasSize(2);
         // Should be ordered by progress descending
         assertThat(leaderboard.get(0).getProgress())
@@ -169,33 +172,33 @@ class SocialFriendshipTest {
     }
 
     @Test
-    void getChallengeLeaderboard_noParticipants_shouldReturnEmpty() {
+    void getLeaderboard_noParticipants_shouldReturnEmpty() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
                 .creatorId(userId)
                 .title("Empty")
                 .type("steps")
-                .startDate(LocalDate.now())
-                .endDate(LocalDate.now().plusDays(7))
+                .startDate(java.time.LocalDate.now())
+                .endDate(java.time.LocalDate.now().plusDays(7))
                 .build());
 
-        List<LeaderboardEntry> leaderboard = socialService.getChallengeLeaderboard(challenge.getId());
+        List<LeaderboardEntryDto> leaderboard = socialService.getLeaderboard(challenge.getId());
         assertThat(leaderboard).isEmpty();
     }
 
     // ── update challenge progress ─────────────────────────────────────────────
 
     @Test
-    void updateChallengeProgress_shouldUpdateParticipant() {
+    void updateProgress_shouldUpdateParticipant() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
                 .creatorId(userId)
                 .title("Steps")
                 .type("steps")
-                .startDate(LocalDate.now())
-                .endDate(LocalDate.now().plusDays(7))
+                .startDate(java.time.LocalDate.now())
+                .endDate(java.time.LocalDate.now().plusDays(7))
                 .build());
 
         socialService.joinChallenge(challenge.getId());
-        socialService.updateChallengeProgress(challenge.getId(), 7500);
+        socialService.updateProgress(challenge.getId(), 7500);
 
         ChallengeParticipant participant = challengeParticipantRepository
                 .findByChallengeIdAndUserId(challenge.getId(), userId)
@@ -204,19 +207,18 @@ class SocialFriendshipTest {
     }
 
     @Test
-    void updateChallengeProgress_notJoined_shouldThrow() {
+    void updateProgress_notJoined_shouldThrow() {
         Challenge challenge = challengeRepository.save(Challenge.builder()
                 .creatorId(UUID.randomUUID())
                 .title("Steps")
                 .type("steps")
-                .startDate(LocalDate.now())
-                .endDate(LocalDate.now().plusDays(7))
+                .startDate(java.time.LocalDate.now())
+                .endDate(java.time.LocalDate.now().plusDays(7))
                 .build());
 
-        assertThatThrownBy(() -> socialService.updateChallengeProgress(challenge.getId(), 1000))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> socialService.updateProgress(challenge.getId(), 1000))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
-    */
 
     // ── like post edge cases ──────────────────────────────────────────────────
 

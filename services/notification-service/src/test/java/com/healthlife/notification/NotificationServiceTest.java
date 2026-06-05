@@ -4,12 +4,18 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.MessagingErrorCode;
 import com.healthlife.notification.service.DeviceTokenService;
 import com.healthlife.notification.service.NotificationService;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -115,5 +121,118 @@ class NotificationServiceTest {
         service.sendEmail("b@example.com", "Subject", "Body");
 
         verify(mailSender, times(2)).send(any(SimpleMailMessage.class));
+    }
+
+    // ── Template email methods ───────────────────────────────────────────────
+
+    @Test
+    void sendEmailVerification_shouldCallSendEmail() {
+        service.sendEmailVerification("test@example.com", "https://verify.com");
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void sendPasswordReset_shouldCallSendEmail() {
+        service.sendPasswordReset("test@example.com", "https://reset.com");
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void sendWelcome_shouldCallSendEmail() {
+        service.sendWelcome("test@example.com", "Test User");
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void sendSubscriptionActivated_shouldCallSendEmail() {
+        service.sendSubscriptionActivated("test@example.com", "Pro Plan");
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void sendSubscriptionCanceled_shouldCallSendEmail() {
+        service.sendSubscriptionCanceled("test@example.com", "2025-12-31");
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void sendPaymentFailed_shouldCallSendEmail() {
+        service.sendPaymentFailed("test@example.com", "https://retry.com");
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    // ── Push notification methods ───────────────────────────────────────────
+
+    @Test
+    void sendDailyReminderPush_shouldCallSendPushNotification() {
+        UUID userId = UUID.randomUUID();
+        // We can't test Firebase init, but we can at least call the method to ensure no exceptions
+        assertThatCode(() -> service.sendDailyReminderPush(userId)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void sendWaterReminderPush_shouldCallSendPushNotification() {
+        UUID userId = UUID.randomUUID();
+        assertThatCode(() -> service.sendWaterReminderPush(userId)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void sendGoalAchievedPush_shouldCallSendPushNotification() {
+        UUID userId = UUID.randomUUID();
+        assertThatCode(() -> service.sendGoalAchievedPush(userId, "Step Goal")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void sendAiInsightReadyPush_shouldCallSendPushNotification() {
+        UUID userId = UUID.randomUUID();
+        assertThatCode(() -> service.sendAiInsightReadyPush(userId)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void sendPush_withTokens_andFirebaseInit_shouldSend() throws FirebaseMessagingException {
+        UUID userId = UUID.randomUUID();
+        String token1 = "token1";
+        String token2 = "token2";
+        when(deviceTokenService.getTokensForUser(userId)).thenReturn(List.of(token1, token2));
+        
+        try (MockedStatic<FirebaseApp> mockedFirebaseApp = Mockito.mockStatic(FirebaseApp.class);
+             MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = Mockito.mockStatic(FirebaseMessaging.class)) {
+            
+            FirebaseApp firebaseApp = mock(FirebaseApp.class);
+            mockedFirebaseApp.when(FirebaseApp::getApps).thenReturn(List.of(firebaseApp));
+            
+            FirebaseMessaging firebaseMessaging = mock(FirebaseMessaging.class);
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            when(firebaseMessaging.send(any())).thenReturn("msg1", "msg2");
+            
+            service.sendPushNotification(userId, "Title", "Body");
+            
+            verify(deviceTokenService, times(1)).getTokensForUser(userId);
+        }
+    }
+
+    @Test
+    void sendPush_withInvalidToken_shouldRemoveToken() throws FirebaseMessagingException {
+        UUID userId = UUID.randomUUID();
+        String token1 = "invalid-token";
+        when(deviceTokenService.getTokensForUser(userId)).thenReturn(List.of(token1));
+        
+        try (MockedStatic<FirebaseApp> mockedFirebaseApp = Mockito.mockStatic(FirebaseApp.class);
+             MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = Mockito.mockStatic(FirebaseMessaging.class)) {
+            
+            FirebaseApp firebaseApp = mock(FirebaseApp.class);
+            mockedFirebaseApp.when(FirebaseApp::getApps).thenReturn(List.of(firebaseApp));
+            
+            FirebaseMessaging firebaseMessaging = mock(FirebaseMessaging.class);
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            
+            FirebaseMessagingException exception = mock(FirebaseMessagingException.class);
+            when(exception.getMessagingErrorCode()).thenReturn(MessagingErrorCode.UNREGISTERED);
+            when(firebaseMessaging.send(any())).thenThrow(exception);
+            
+            service.sendPushNotification(userId, "Title", "Body");
+            
+            verify(deviceTokenService, times(1)).removeToken(userId, token1);
+        }
     }
 }

@@ -209,6 +209,50 @@ class MentalControllerMvcTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void getMoodPatterns_shouldReturn200() throws Exception {
+        mockMvc.perform(get("/api/v1/mental/mood/patterns").header("Authorization", "Bearer " + jwt()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getJournals_shouldReturn200() throws Exception {
+        when(mentalService.getJournals())
+                .thenReturn(List.of(
+                        JournalResponse.builder()
+                                .id(UUID.randomUUID())
+                                .content("Test journal")
+                                .build()));
+
+        mockMvc.perform(get("/api/v1/mental/journal").header("Authorization", "Bearer " + jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].content").value("Test journal"));
+    }
+
+    @Test
+    void getJournalThemes_shouldReturn200() throws Exception {
+        mockMvc.perform(get("/api/v1/mental/journal/themes").header("Authorization", "Bearer " + jwt()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void completeMeditation_shouldReturn200() throws Exception {
+        mockMvc.perform(post("/api/v1/mental/meditations/" + UUID.randomUUID() + "/complete")
+                        .header("Authorization", "Bearer " + jwt()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void createBreathingSession_shouldReturn200() throws Exception {
+        mockMvc.perform(post("/api/v1/mental/breathing/session")
+                        .header("Authorization", "Bearer " + jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {"technique":"4-7-8","durationMin":5}
+                            """))
+                .andExpect(status().isOk());
+    }
+
     // ── POST /api/v1/support/chat ─────────────────────────────────────────────
 
     @Test

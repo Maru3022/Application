@@ -156,4 +156,39 @@ class MentalServiceCriticalTest {
         assertThat(history).hasSize(2);
         assertThat(history.get(0).getMoodScore()).isEqualTo(8);
     }
+
+    @Test
+    void getJournals_shouldReturnList() {
+        mentalService.createJournal(JournalRequest.builder()
+                .content("Test journal")
+                .recordedAt(OffsetDateTime.now())
+                .build());
+
+        List<JournalResponse> journals = mentalService.getJournals();
+        assertThat(journals).hasSize(1);
+        assertThat(journals.get(0).getContent()).isEqualTo("Test journal");
+    }
+
+    @Test
+    void getStressStats_shouldReturnList() {
+        mentalService.createStress(StressRequest.builder()
+                .level(6)
+                .recordedAt(OffsetDateTime.now())
+                .build());
+
+        List<StressResponse> stats = mentalService.getStressStats();
+        assertThat(stats).hasSize(1);
+        assertThat(stats.get(0).getLevel()).isEqualTo(6);
+    }
+
+    @Test
+    void getRecommendedMeditation_shouldReturnMeditation() {
+        meditationRepository.save(Meditation.builder()
+                .title("Test Meditation")
+                .category("stress")
+                .build());
+
+        MeditationDto recommended = mentalService.getRecommendedMeditation();
+        assertThat(recommended.getTitle()).isEqualTo("Test Meditation");
+    }
 }

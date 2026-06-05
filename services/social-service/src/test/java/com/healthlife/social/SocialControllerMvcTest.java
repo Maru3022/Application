@@ -111,6 +111,27 @@ class SocialControllerMvcTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void updateProgress_shouldReturn200() throws Exception {
+        doNothing().when(socialService).updateProgress(any(), any());
+
+        mockMvc.perform(post("/api/v1/social/challenges/" + UUID.randomUUID() + "/progress")
+                        .param("progress", "1000")
+                        .header("Authorization", "Bearer " + jwt()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void inviteFriend_shouldReturn200() throws Exception {
+        doNothing().when(socialService).inviteFriend(any());
+
+        mockMvc.perform(post("/api/v1/social/friends/invite")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("test@example.com")
+                        .header("Authorization", "Bearer " + jwt()))
+                .andExpect(status().isOk());
+    }
+
     // ── GET /api/v1/social/feed ───────────────────────────────────────────────
 
     @Test

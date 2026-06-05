@@ -140,6 +140,99 @@ class PaymentWebhookTest {
         assertThat(updated.getCanceledAt()).isNotNull();
     }
 
+    @Test
+    void handleWebhook_checkoutCompleted_shouldActivateSubscription() {
+        // Mock checkout session
+        com.stripe.model.checkout.Session session = mock(com.stripe.model.checkout.Session.class);
+        when(session.getCustomer()).thenReturn("cus_test123");
+        when(session.getSubscription()).thenReturn("sub_test123");
+        when(session.getMetadata()).thenReturn(java.util.Map.of("userId", userId.toString()));
+
+        EventDataObjectDeserializer deserializer = mock(EventDataObjectDeserializer.class);
+        when(deserializer.getObject()).thenReturn(Optional.of(session));
+
+        Event event = mock(Event.class);
+        when(event.getId()).thenReturn("evt_checkout_001");
+        when(event.getType()).thenReturn("checkout.session.completed");
+        when(event.getDataObjectDeserializer()).thenReturn(deserializer);
+
+        paymentService.handleWebhook(event);
+
+        Subscription updated = subscriptionRepository.findByUserId(userId).orElseThrow();
+        assertThat(updated.getStripeCustomerId()).isEqualTo("cus_test123");
+        assertThat(updated.getStripeSubscriptionId()).isEqualTo("sub_test123");
+        assertThat(updated.getStatus()).isEqualTo("active");
+    }
+
+    @Test
+    void handleWebhook_subscriptionUpdated_shouldUpdateDetails() {
+        // Create existing subscription
+        subscriptionRepository.save(Subscription.builder()
+                .userId(userId)
+                .plan("FREE")
+                .status("active")
+                .stripeSubscriptionId("sub_test_update_001")
+                .build());
+
+        // Mock Stripe subscription
+        com.stripe.model.Subscription stripeSub = mock(com.stripe.model.Subscription.class);
+        when(stripeSub.getId()).thenReturn("sub_test_update_001");
+        when(stripeSub.getStatus()).thenReturn("active");
+        when(stripeSub.getCurrentPeriodStart()).thenReturn(1736265600L);
+        when(stripeSub.getCurrentPeriodEnd()).thenReturn(1738857600L);
+        
+        com.stripe.model.SubscriptionItem item = mock(com.stripe.model.SubscriptionItem.class);
+        com.stripe.model.Price price = mock(com.stripe.model.Price.class);
+        when(price.getId()).thenReturn("price_pro_123");
+        when(item.getPrice()).thenReturn(price);
+        com.stripe.model.SubscriptionItemCollection items = mock(com.stripe.model.SubscriptionItemCollection.class);
+        when(items.getData()).thenReturn(List.of(item));
+        when(stripeSub.getItems()).thenReturn(items);
+
+        EventDataObjectDeserializer deserializer = mock(EventDataObjectDeserializer.class);
+        when(deserializer.getObject()).thenReturn(Optional.of(stripeSub));
+
+        Event event = mock(Event.class);
+        when(event.getId()).thenReturn("evt_sub_updated_001");
+        when(event.getType()).thenReturn("customer.subscription.updated");
+        when(event.getDataObjectDeserializer()).thenReturn(deserializer);
+
+        paymentService.handleWebhook(event);
+
+        Subscription updated = subscriptionRepository.findByUserId(userId).orElseThrow();
+        assertThat(updated.getStripePriceId()).isEqualTo("price_pro_123");
+        assertThat(updated.getCurrentPeriodStart()).isNotNull();
+        assertThat(updated.getCurrentPeriodEnd()).isNotNull();
+    }
+
+    @Test
+    void handleWebhook_paymentFailed_shouldUpdateStatus() {
+        // Create existing subscription
+        subscriptionRepository.save(Subscription.builder()
+                .userId(userId)
+                .plan("PRO")
+                .status("active")
+                .stripeSubscriptionId("sub_test_payment_failed_001")
+                .build());
+
+        // Mock invoice
+        com.stripe.model.Invoice invoice = mock(com.stripe.model.Invoice.class);
+        when(invoice.getSubscription()).thenReturn("sub_test_payment_failed_001");
+
+        EventDataObjectDeserializer deserializer = mock(EventDataObjectDeserializer.class);
+        when(deserializer.getObject()).thenReturn(Optional.of(invoice));
+
+        Event event = mock(Event.class);
+        when(event.getId()).thenReturn("evt_payment_failed_001");
+        when(event.getType()).thenReturn("invoice.payment_failed");
+        when(event.getDataObjectDeserializer()).thenReturn(deserializer);
+
+        paymentService.handleWebhook(event);
+
+        Subscription updated = subscriptionRepository.findByUserId(userId).orElseThrow();
+        assertThat(updated.getStatus()).isEqualTo("past_due");
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private Event buildEvent(String id, String type) {

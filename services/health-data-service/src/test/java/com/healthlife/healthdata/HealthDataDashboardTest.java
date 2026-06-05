@@ -206,6 +206,71 @@ class HealthDataDashboardTest {
         assertThat(result.getSteps()).isEqualTo(5000);
     }
 
+    @Test
+    void getActivityHistory_shouldReturnEntries() {
+        LocalDate today = LocalDate.now();
+        healthDataService.syncActivity(ActivityEntryDto.builder()
+                .date(today.minusDays(1))
+                .steps(3000)
+                .source("manual")
+                .build());
+        healthDataService.syncActivity(ActivityEntryDto.builder()
+                .date(today)
+                .steps(5000)
+                .source("manual")
+                .build());
+
+        List<ActivityEntryDto> history = healthDataService.getActivityHistory();
+        assertThat(history).hasSize(2);
+    }
+
+    @Test
+    void getSleepEntries_withDateRange_shouldReturnFiltered() {
+        OffsetDateTime now = OffsetDateTime.now();
+        healthDataService.createSleep(SleepRequest.builder()
+                .sleepStart(now.minusDays(2))
+                .sleepEnd(now.minusDays(2).plusHours(7))
+                .quality(4)
+                .build());
+        healthDataService.createSleep(SleepRequest.builder()
+                .sleepStart(now.minusDays(1))
+                .sleepEnd(now.minusDays(1).plusHours(8))
+                .quality(5)
+                .build());
+
+        List<SleepResponse> entries = healthDataService.getSleepEntries(
+                now.minusDays(1).minusHours(1),
+                now.plusHours(1));
+        assertThat(entries).hasSize(1);
+    }
+
+    @Test
+    void getSleepEntries_noDateRange_shouldReturnRecent() {
+        for (int i = 0; i < 105; i++) {
+            healthDataService.createSleep(SleepRequest.builder()
+                    .sleepStart(OffsetDateTime.now().minusDays(i))
+                    .sleepEnd(OffsetDateTime.now().minusDays(i).plusHours(7))
+                    .build());
+        }
+        List<SleepResponse> entries = healthDataService.getSleepEntries(null, null);
+        assertThat(entries).hasSize(100);
+    }
+
+    @Test
+    void getDashboard_withAllData_shouldReturnComplete() {
+        healthDataService.addWater(WaterRequest.builder().amountMl(500).recordedAt(OffsetDateTime.now()).build());
+        healthDataService.syncActivity(ActivityEntryDto.builder().date(LocalDate.now()).steps(10000).build());
+        healthDataService.createSleep(SleepRequest.builder().sleepStart(OffsetDateTime.now().minusHours(8)).sleepEnd(OffsetDateTime.now()).quality(4).build());
+        healthDataService.createWeight(WeightRequest.builder().weightKg(new BigDecimal("70.5")).recordedAt(OffsetDateTime.now()).build());
+
+        DashboardDto dashboard = healthDataService.getDashboard();
+        assertThat(dashboard.getWaterTodayMl()).isEqualTo(500);
+        assertThat(dashboard.getStepsTodayCount()).isEqualTo(10000);
+        assertThat(dashboard.getLastSleepDurationMin()).isNotNull();
+        assertThat(dashboard.getLastSleepQuality()).isEqualTo(4);
+        assertThat(dashboard.getLatestWeightKg()).isEqualByComparingTo(70.5);
+    }
+
     // ── symptom boundary values ───────────────────────────────────────────────
 
     @Test
