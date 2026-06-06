@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<suppressions>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
     <!-- Suppress known false positives -->
+    <!-- CVE-2026-22733: Authentication Bypass in Spring Boot Actuator CloudFoundry endpoints - we don't use CloudFoundry -->
+    <suppress>
+        <cve>CVE-2026-22733</cve>
+    </suppress>
 </suppressions>
