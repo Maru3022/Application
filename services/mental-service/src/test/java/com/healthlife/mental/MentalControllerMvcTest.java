@@ -1,4 +1,3 @@
-
 package com.healthlife.mental;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -51,9 +50,7 @@ class MentalControllerMvcTest {
 
     @Test
     void createMood_shouldReturn200() throws Exception {
-        MoodResponse mockResponse = MoodResponse.builder()
-                .id(UUID.randomUUID())
-                .build();
+        MoodResponse mockResponse = MoodResponse.builder().id(UUID.randomUUID()).build();
         when(mentalService.createMood(any())).thenReturn(mockResponse);
 
         mockMvc.perform(post("/api/v1/mental/mood")
@@ -83,9 +80,8 @@ class MentalControllerMvcTest {
 
     @Test
     void createJournal_shouldReturn200() throws Exception {
-        JournalResponse mockResponse = JournalResponse.builder()
-                .id(UUID.randomUUID())
-                .build();
+        JournalResponse mockResponse =
+                JournalResponse.builder().id(UUID.randomUUID()).build();
         when(mentalService.createJournal(any())).thenReturn(mockResponse);
 
         mockMvc.perform(post("/api/v1/mental/journal")
@@ -115,9 +111,8 @@ class MentalControllerMvcTest {
 
     @Test
     void createStress_shouldReturn200() throws Exception {
-        StressResponse mockResponse = StressResponse.builder()
-                .id(UUID.randomUUID())
-                .build();
+        StressResponse mockResponse =
+                StressResponse.builder().id(UUID.randomUUID()).build();
         when(mentalService.createStress(any())).thenReturn(mockResponse);
 
         mockMvc.perform(post("/api/v1/mental/stress")
@@ -174,14 +169,14 @@ class MentalControllerMvcTest {
     void createBreathingSession_shouldReturn200() throws Exception {
         doNothing().when(mentalService).createBreathingSession(any());
 
-        mockMvc.perform(post("/api/v1/mental/breathing/session")
-                        .header("Authorization", "Bearer " + jwtToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(
-                                """
+        mockMvc.perform(
+                        post("/api/v1/mental/breathing/session")
+                                .header("Authorization", "Bearer " + jwtToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"durationMin":5,"technique":"4-7-8"}
                                 """))
                 .andExpect(status().isOk());
     }
 }
-
