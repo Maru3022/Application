@@ -1,32 +1,18 @@
 package com.healthlife.auth;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 /**
  * Test configuration for auth-service.
- * Excludes OAuth2 auto-configurations that are pulled in transitively by google-api-client
- * (used by OAuthService for Google Sign-In token verification).
+ *
+ * <p>In Spring Boot 3.5 / Spring Security 6.5 the HandlerMappingIntrospector bean
+ * (mvcHandlerMappingIntrospector) is always registered by the framework, so the
+ * manual BeanDefinitionRegistryPostProcessor workaround that was needed in earlier
+ * versions has been removed to avoid bean-definition conflicts.
+ *
+ * <p>Any test-only beans that need to be added in the future should go here.
  */
 @TestConfiguration
-public class AuthTestConfig implements BeanDefinitionRegistryPostProcessor {
-
-    @Override
-    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
-        if (!registry.containsBeanDefinition("mvcHandlerMappingIntrospector")) {
-            RootBeanDefinition beanDefinition = new RootBeanDefinition(HandlerMappingIntrospector.class);
-            beanDefinition.setRole(org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE);
-            registry.registerBeanDefinition("mvcHandlerMappingIntrospector", beanDefinition);
-        }
-    }
-
-    @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        // no-op
-    }
+public class AuthTestConfig {
+    // intentionally empty – no overrides needed for Boot 3.5+
 }

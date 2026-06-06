@@ -1,0 +1,23 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+jwt:
+  secret: test-secret-key-for-unit-tests-only-not-production-at-least-64-chars-long
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+management:
+  health:
+    redis:
+      enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.healthlife: INFO

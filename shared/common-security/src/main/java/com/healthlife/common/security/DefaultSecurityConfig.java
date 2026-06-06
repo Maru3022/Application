@@ -1,7 +1,7 @@
 package com.healthlife.common.security;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -35,11 +35,15 @@ import org.springframework.security.web.header.writers.XXssProtectionHeaderWrite
 public class DefaultSecurityConfig {
 
     /**
-     * Активный профиль Spring. В production Swagger UI закрывается.
-     * Значение по умолчанию "default" — для локальной разработки Swagger открыт.
+     * Spring Environment для проверки активных профилей.
+     * Использует Environment вместо @Value("${spring.profiles.active}") —
+     * безопасно при множественных профилях и в тестах (Boot 3.5+).
      */
-    @Value("${spring.profiles.active:default}")
-    private String activeProfile;
+    private final Environment environment;
+
+    public DefaultSecurityConfig(Environment environment) {
+        this.environment = environment;
+    }
 
     /**
      * BCrypt с cost factor 12.
@@ -131,9 +135,14 @@ public class DefaultSecurityConfig {
 
     /**
      * Проверяет, запущен ли сервис в production профиле.
-     * Используется для закрытия Swagger UI в production.
+     * Использует Environment.getActiveProfiles() — корректно работает при множественных профилях.
      */
     private boolean isProductionProfile() {
-        return activeProfile != null && (activeProfile.contains("production") || activeProfile.contains("prod"));
+        for (String profile : environment.getActiveProfiles()) {
+            if (profile.contains("production") || profile.contains("prod")) {
+                return true;
+            }
+        }
+        return false;
     }
 }
