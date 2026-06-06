@@ -65,8 +65,7 @@ class RequestIdFilterTest {
         FilterChain chain = mock(FilterChain.class);
         doThrow(new RuntimeException("test exception")).when(chain).doFilter(any(), any());
 
-        assertThatThrownBy(() -> filter.doFilter(request, response, chain))
-                .isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> filter.doFilter(request, response, chain)).isInstanceOf(RuntimeException.class);
 
         assertThat(MDC.get("requestId")).isNull();
     }

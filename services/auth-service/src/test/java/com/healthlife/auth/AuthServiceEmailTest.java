@@ -36,16 +36,32 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(AuthTestConfig.class)
 class AuthServiceEmailTest {
 
-    @Autowired private AuthService authService;
-    @Autowired private UserRepository userRepository;
-    @Autowired private RefreshTokenRepository refreshTokenRepository;
-    @Autowired private EmailVerificationTokenRepository emailVerificationTokenRepository;
-    @Autowired private PasswordResetTokenRepository passwordResetTokenRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private AuthService authService;
 
-    @MockBean private com.healthlife.auth.service.OAuthService oAuthService;
-    @MockBean private JavaMailSender javaMailSender;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private EmailVerificationTokenRepository emailVerificationTokenRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.healthlife.auth.service.OAuthService oAuthService;
+
+    @MockBean
+    private JavaMailSender javaMailSender;
 
     @BeforeEach
     void cleanup() {
@@ -60,18 +76,20 @@ class AuthServiceEmailTest {
     @Test
     void logout_validToken_shouldDeleteRefreshToken() {
         var reg = RegisterRequest.builder()
-                .email("logout@test.com").password("StrongPass123!").build();
+                .email("logout@test.com")
+                .password("StrongPass123!")
+                .build();
         var authResp = authService.register(reg);
 
         authService.logout(authResp.getRefreshToken());
 
-        assertThat(refreshTokenRepository.findByToken(authResp.getRefreshToken())).isEmpty();
+        assertThat(refreshTokenRepository.findByToken(authResp.getRefreshToken()))
+                .isEmpty();
     }
 
     @Test
     void logout_nonExistentToken_shouldBeNoOp() {
-        assertThatCode(() -> authService.logout("non-existent-token"))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> authService.logout("non-existent-token")).doesNotThrowAnyException();
     }
 
     // ── setupMfa ──────────────────────────────────────────────────────────────
@@ -79,7 +97,9 @@ class AuthServiceEmailTest {
     @Test
     void setupMfa_alreadyEnabled_shouldThrowBadRequest() {
         var reg = RegisterRequest.builder()
-                .email("mfa-dup@test.com").password("StrongPass123!").build();
+                .email("mfa-dup@test.com")
+                .password("StrongPass123!")
+                .build();
         authService.register(reg);
         var user = userRepository.findByEmail("mfa-dup@test.com").orElseThrow();
 
@@ -92,14 +112,15 @@ class AuthServiceEmailTest {
 
     @Test
     void setupMfa_nonExistentUser_shouldThrowNotFound() {
-        assertThatThrownBy(() -> authService.setupMfa(UUID.randomUUID()))
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> authService.setupMfa(UUID.randomUUID())).isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void setupMfa_shouldReturnSecretAndQrCode() {
         var reg = RegisterRequest.builder()
-                .email("mfa-setup@test.com").password("StrongPass123!").build();
+                .email("mfa-setup@test.com")
+                .password("StrongPass123!")
+                .build();
         authService.register(reg);
         var user = userRepository.findByEmail("mfa-setup@test.com").orElseThrow();
 
@@ -114,7 +135,9 @@ class AuthServiceEmailTest {
     @Test
     void verifyMfa_nonNumericCode_shouldThrowBadRequest() {
         var reg = RegisterRequest.builder()
-                .email("mfa-code@test.com").password("StrongPass123!").build();
+                .email("mfa-code@test.com")
+                .password("StrongPass123!")
+                .build();
         authService.register(reg);
         var user = userRepository.findByEmail("mfa-code@test.com").orElseThrow();
         authService.setupMfa(user.getId());
@@ -127,30 +150,32 @@ class AuthServiceEmailTest {
     @Test
     void verifyMfa_mfaNotEnabled_shouldThrow() {
         var reg = RegisterRequest.builder()
-                .email("nomfa@test.com").password("StrongPass123!").build();
+                .email("nomfa@test.com")
+                .password("StrongPass123!")
+                .build();
         authService.register(reg);
         var user = userRepository.findByEmail("nomfa@test.com").orElseThrow();
 
-        assertThatThrownBy(() -> authService.verifyMfa(user.getId(), "123456"))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> authService.verifyMfa(user.getId(), "123456")).isInstanceOf(BadRequestException.class);
     }
 
     // ── verifyEmail ───────────────────────────────────────────────────────────
 
     @Test
     void verifyEmail_invalidToken_shouldThrowBadRequest() {
-        assertThatThrownBy(() -> authService.verifyEmail("invalid-token-xyz"))
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> authService.verifyEmail("invalid-token-xyz")).isInstanceOf(BadRequestException.class);
     }
 
     @Test
     void verifyEmail_alreadyUsedToken_shouldThrowBadRequest() {
         var reg = RegisterRequest.builder()
-                .email("verify@test.com").password("StrongPass123!").build();
+                .email("verify@test.com")
+                .password("StrongPass123!")
+                .build();
         authService.register(reg);
 
-        var tokenEntity = emailVerificationTokenRepository.findAll().stream()
-                .findFirst().orElseThrow();
+        var tokenEntity =
+                emailVerificationTokenRepository.findAll().stream().findFirst().orElseThrow();
         // Mark as used
         tokenEntity.setUsed(true);
         emailVerificationTokenRepository.save(tokenEntity);
@@ -170,12 +195,14 @@ class AuthServiceEmailTest {
     @Test
     void confirmPasswordReset_usedToken_shouldThrowBadRequest() {
         var reg = RegisterRequest.builder()
-                .email("reset-used@test.com").password("StrongPass123!").build();
+                .email("reset-used@test.com")
+                .password("StrongPass123!")
+                .build();
         authService.register(reg);
         authService.requestPasswordReset("reset-used@test.com");
 
-        var tokenEntity = passwordResetTokenRepository.findAll().stream()
-                .findFirst().orElseThrow();
+        var tokenEntity =
+                passwordResetTokenRepository.findAll().stream().findFirst().orElseThrow();
         tokenEntity.setUsed(true);
         passwordResetTokenRepository.save(tokenEntity);
 
@@ -186,16 +213,19 @@ class AuthServiceEmailTest {
     @Test
     void confirmPasswordReset_valid_shouldChangePasswordAndInvalidateRefreshTokens() {
         var reg = RegisterRequest.builder()
-                .email("reset-ok@test.com").password("OldPass123!").build();
+                .email("reset-ok@test.com")
+                .password("OldPass123!")
+                .build();
         authService.register(reg);
         authService.requestPasswordReset("reset-ok@test.com");
 
-        var token = passwordResetTokenRepository.findAll().stream()
-                .findFirst().orElseThrow();
+        var token = passwordResetTokenRepository.findAll().stream().findFirst().orElseThrow();
         authService.confirmPasswordReset(token.getToken(), "NewPass123!");
 
         var login = LoginRequest.builder()
-                .email("reset-ok@test.com").password("NewPass123!").build();
+                .email("reset-ok@test.com")
+                .password("NewPass123!")
+                .build();
         var resp = authService.login(login);
         assertThat(resp.getAccessToken()).isNotBlank();
     }
@@ -206,16 +236,18 @@ class AuthServiceEmailTest {
     void refreshToken_expiredToken_shouldThrow() {
         // Create a refresh token that is already expired in the DB
         var reg = RegisterRequest.builder()
-                .email("expired-refresh@test.com").password("StrongPass123!").build();
+                .email("expired-refresh@test.com")
+                .password("StrongPass123!")
+                .build();
         var authResp = authService.register(reg);
 
-        var stored = refreshTokenRepository.findByToken(authResp.getRefreshToken()).orElseThrow();
+        var stored =
+                refreshTokenRepository.findByToken(authResp.getRefreshToken()).orElseThrow();
         stored.setExpiryDate(java.time.OffsetDateTime.now().minusSeconds(1));
         refreshTokenRepository.save(stored);
 
         var req = new RefreshTokenRequest(authResp.getRefreshToken());
-        assertThatThrownBy(() -> authService.refreshToken(req))
-                .isInstanceOf(TokenRefreshException.class);
+        assertThatThrownBy(() -> authService.refreshToken(req)).isInstanceOf(TokenRefreshException.class);
     }
 
     @Test
@@ -224,8 +256,7 @@ class AuthServiceEmailTest {
         String fakeRefresh = jwtTokenProvider.generateRefreshToken(UUID.randomUUID());
         var req = new RefreshTokenRequest(fakeRefresh);
 
-        assertThatThrownBy(() -> authService.refreshToken(req))
-                .isInstanceOf(TokenRefreshException.class);
+        assertThatThrownBy(() -> authService.refreshToken(req)).isInstanceOf(TokenRefreshException.class);
     }
 
     // ── verifyMfaAndLogin ─────────────────────────────────────────────────────

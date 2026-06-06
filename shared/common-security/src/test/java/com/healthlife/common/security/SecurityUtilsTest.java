@@ -31,9 +31,8 @@ class SecurityUtilsTest {
 
     @Test
     void getCurrentUserId_shouldReturnUserId_whenAuthenticated() {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        testUserId, testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                testUserId, testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         UUID result = SecurityUtils.getCurrentUserId();
@@ -49,9 +48,8 @@ class SecurityUtilsTest {
 
     @Test
     void getCurrentUserId_shouldThrowUnauthorized_whenPrincipalIsNotUUID() {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        "not-a-uuid", testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                "not-a-uuid", testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         assertThatThrownBy(() -> SecurityUtils.getCurrentUserId())
@@ -60,9 +58,8 @@ class SecurityUtilsTest {
 
     @Test
     void getCurrentUserEmail_shouldReturnEmail_whenAuthenticated() {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        testUserId, testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                testUserId, testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         String result = SecurityUtils.getCurrentUserEmail();
@@ -77,9 +74,8 @@ class SecurityUtilsTest {
 
     @Test
     void getCurrentUserEmail_shouldThrowUnauthorized_whenCredentialsIsNotString() {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        testUserId, 12345, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                testUserId, 12345, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         assertThatThrownBy(() -> SecurityUtils.getCurrentUserEmail())
@@ -88,9 +84,8 @@ class SecurityUtilsTest {
 
     @Test
     void getCurrentUserAccessToken_shouldReturnToken_whenDetailsIsToken() {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        testUserId, testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                testUserId, testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
         auth.setDetails(testToken);
         SecurityContextHolder.getContext().setAuthentication(auth);
 
@@ -100,9 +95,8 @@ class SecurityUtilsTest {
 
     @Test
     void getCurrentUserAccessToken_shouldThrowUnauthorized_whenNoDetails() {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        testUserId, testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                testUserId, testEmail, java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         assertThatThrownBy(() -> SecurityUtils.getCurrentUserAccessToken())

@@ -238,9 +238,8 @@ class HealthDataDashboardTest {
                 .quality(5)
                 .build());
 
-        List<SleepResponse> entries = healthDataService.getSleepEntries(
-                now.minusDays(1).minusHours(1),
-                now.plusHours(1));
+        List<SleepResponse> entries =
+                healthDataService.getSleepEntries(now.minusDays(1).minusHours(1), now.plusHours(1));
         assertThat(entries).hasSize(1);
     }
 
@@ -258,10 +257,21 @@ class HealthDataDashboardTest {
 
     @Test
     void getDashboard_withAllData_shouldReturnComplete() {
-        healthDataService.addWater(WaterRequest.builder().amountMl(500).recordedAt(OffsetDateTime.now()).build());
-        healthDataService.syncActivity(ActivityEntryDto.builder().date(LocalDate.now()).steps(10000).build());
-        healthDataService.createSleep(SleepRequest.builder().sleepStart(OffsetDateTime.now().minusHours(8)).sleepEnd(OffsetDateTime.now()).quality(4).build());
-        healthDataService.createWeight(WeightRequest.builder().weightKg(new BigDecimal("70.5")).recordedAt(OffsetDateTime.now()).build());
+        healthDataService.addWater(WaterRequest.builder()
+                .amountMl(500)
+                .recordedAt(OffsetDateTime.now())
+                .build());
+        healthDataService.syncActivity(
+                ActivityEntryDto.builder().date(LocalDate.now()).steps(10000).build());
+        healthDataService.createSleep(SleepRequest.builder()
+                .sleepStart(OffsetDateTime.now().minusHours(8))
+                .sleepEnd(OffsetDateTime.now())
+                .quality(4)
+                .build());
+        healthDataService.createWeight(WeightRequest.builder()
+                .weightKg(new BigDecimal("70.5"))
+                .recordedAt(OffsetDateTime.now())
+                .build());
 
         DashboardDto dashboard = healthDataService.getDashboard();
         assertThat(dashboard.getWaterTodayMl()).isEqualTo(500);
