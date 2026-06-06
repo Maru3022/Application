@@ -35,55 +35,51 @@ class NotificationServiceEmailTemplatesTest {
     void sendEmailVerification_shouldSendWithCorrectSubject() {
         service.sendEmailVerification("user@test.com", "https://healthlife.com/verify?token=abc");
 
-        verify(mailSender).send(argThat((SimpleMailMessage m) ->
-                m.getSubject() != null && m.getSubject().contains("Verify")
-                && m.getTo()[0].equals("user@test.com")));
+        verify(mailSender)
+                .send(argThat((SimpleMailMessage m) -> m.getSubject() != null
+                        && m.getSubject().contains("Verify")
+                        && m.getTo()[0].equals("user@test.com")));
     }
 
     @Test
     void sendPasswordReset_shouldSendWithCorrectSubject() {
         service.sendPasswordReset("user@test.com", "https://healthlife.com/reset?token=xyz");
 
-        verify(mailSender).send(argThat((SimpleMailMessage m) ->
-                m.getSubject() != null && m.getTo()[0].equals("user@test.com")));
+        verify(mailSender)
+                .send(argThat((SimpleMailMessage m) -> m.getSubject() != null && m.getTo()[0].equals("user@test.com")));
     }
 
     @Test
     void sendWelcome_shouldSendEmail() {
         service.sendWelcome("welcome@test.com", "Alice");
 
-        verify(mailSender).send(argThat((SimpleMailMessage m) ->
-                m.getTo()[0].equals("welcome@test.com")));
+        verify(mailSender).send(argThat((SimpleMailMessage m) -> m.getTo()[0].equals("welcome@test.com")));
     }
 
     @Test
     void sendSubscriptionActivated_shouldSendEmail() {
         service.sendSubscriptionActivated("sub@test.com", "PRO");
 
-        verify(mailSender).send(argThat((SimpleMailMessage m) ->
-                m.getTo()[0].equals("sub@test.com")));
+        verify(mailSender).send(argThat((SimpleMailMessage m) -> m.getTo()[0].equals("sub@test.com")));
     }
 
     @Test
     void sendSubscriptionCanceled_shouldSendEmail() {
         service.sendSubscriptionCanceled("cancel@test.com", "2025-12-31");
 
-        verify(mailSender).send(argThat((SimpleMailMessage m) ->
-                m.getTo()[0].equals("cancel@test.com")));
+        verify(mailSender).send(argThat((SimpleMailMessage m) -> m.getTo()[0].equals("cancel@test.com")));
     }
 
     @Test
     void sendPaymentFailed_shouldSendEmail() {
         service.sendPaymentFailed("fail@test.com", "https://healthlife.com/billing");
 
-        verify(mailSender).send(argThat((SimpleMailMessage m) ->
-                m.getTo()[0].equals("fail@test.com")));
+        verify(mailSender).send(argThat((SimpleMailMessage m) -> m.getTo()[0].equals("fail@test.com")));
     }
 
     @Test
     void sendEmailVerification_smtpFailure_shouldNotThrow() {
-        doThrow(new RuntimeException("SMTP failed"))
-                .when(mailSender).send(any(SimpleMailMessage.class));
+        doThrow(new RuntimeException("SMTP failed")).when(mailSender).send(any(SimpleMailMessage.class));
 
         assertThatCode(() -> service.sendEmailVerification("u@t.com", "http://url"))
                 .doesNotThrowAnyException();
@@ -91,20 +87,16 @@ class NotificationServiceEmailTemplatesTest {
 
     @Test
     void sendPasswordReset_smtpFailure_shouldNotThrow() {
-        doThrow(new RuntimeException("SMTP failed"))
-                .when(mailSender).send(any(SimpleMailMessage.class));
+        doThrow(new RuntimeException("SMTP failed")).when(mailSender).send(any(SimpleMailMessage.class));
 
-        assertThatCode(() -> service.sendPasswordReset("u@t.com", "http://url"))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> service.sendPasswordReset("u@t.com", "http://url")).doesNotThrowAnyException();
     }
 
     @Test
     void sendWelcome_smtpFailure_shouldNotThrow() {
-        doThrow(new RuntimeException("SMTP failed"))
-                .when(mailSender).send(any(SimpleMailMessage.class));
+        doThrow(new RuntimeException("SMTP failed")).when(mailSender).send(any(SimpleMailMessage.class));
 
-        assertThatCode(() -> service.sendWelcome("u@t.com", "Bob"))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> service.sendWelcome("u@t.com", "Bob")).doesNotThrowAnyException();
     }
 
     // ── Push notifications — Firebase not initialised ─────────────────────────
@@ -112,15 +104,13 @@ class NotificationServiceEmailTemplatesTest {
     @Test
     void sendDailyReminderPush_firebaseNotInitialised_shouldNotThrow() {
         UUID userId = UUID.randomUUID();
-        assertThatCode(() -> service.sendDailyReminderPush(userId))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> service.sendDailyReminderPush(userId)).doesNotThrowAnyException();
     }
 
     @Test
     void sendWaterReminderPush_firebaseNotInitialised_shouldNotThrow() {
         UUID userId = UUID.randomUUID();
-        assertThatCode(() -> service.sendWaterReminderPush(userId))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> service.sendWaterReminderPush(userId)).doesNotThrowAnyException();
     }
 
     @Test
@@ -133,8 +123,7 @@ class NotificationServiceEmailTemplatesTest {
     @Test
     void sendAiInsightReadyPush_firebaseNotInitialised_shouldNotThrow() {
         UUID userId = UUID.randomUUID();
-        assertThatCode(() -> service.sendAiInsightReadyPush(userId))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> service.sendAiInsightReadyPush(userId)).doesNotThrowAnyException();
     }
 
     @Test
@@ -148,9 +137,9 @@ class NotificationServiceEmailTemplatesTest {
     void sendEmail_directCall_shouldSendCorrectMessage() {
         service.sendEmail("direct@test.com", "Direct Subject", "Direct Body");
 
-        verify(mailSender).send(argThat((SimpleMailMessage m) ->
-                "direct@test.com".equals(m.getTo()[0])
-                && "Direct Subject".equals(m.getSubject())
-                && "Direct Body".equals(m.getText())));
+        verify(mailSender)
+                .send(argThat((SimpleMailMessage m) -> "direct@test.com".equals(m.getTo()[0])
+                        && "Direct Subject".equals(m.getSubject())
+                        && "Direct Body".equals(m.getText())));
     }
 }

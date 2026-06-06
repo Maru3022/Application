@@ -180,7 +180,7 @@ class PaymentWebhookTest {
         when(stripeSub.getStatus()).thenReturn("active");
         when(stripeSub.getCurrentPeriodStart()).thenReturn(1736265600L);
         when(stripeSub.getCurrentPeriodEnd()).thenReturn(1738857600L);
-        
+
         com.stripe.model.SubscriptionItem item = mock(com.stripe.model.SubscriptionItem.class);
         com.stripe.model.Price price = mock(com.stripe.model.Price.class);
         when(price.getId()).thenReturn("price_pro_123");

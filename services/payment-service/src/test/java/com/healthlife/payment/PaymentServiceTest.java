@@ -18,8 +18,6 @@ import com.stripe.param.*;
 import com.stripe.param.checkout.SessionCreateParams;
 import java.util.List;
 import java.util.UUID;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -27,7 +25,6 @@ import org.mockito.Mockito;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -68,8 +65,8 @@ class PaymentServiceTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
         subscriptionRepository.deleteAll();
         // Unwrap the proxy to get the actual target object for reflection
-        targetPaymentService = (PaymentService) AopUtils.getTargetClass(paymentService).cast(
-                org.springframework.test.util.AopTestUtils.getTargetObject(paymentService));
+        targetPaymentService = (PaymentService) AopUtils.getTargetClass(paymentService)
+                .cast(org.springframework.test.util.AopTestUtils.getTargetObject(paymentService));
     }
 
     private void setPaymentServiceField(String fieldName, Object value) {
@@ -145,9 +142,9 @@ class PaymentServiceTest {
 
     @Test
     void createCheckoutSession_emptyPriceId_stripeConfigured_shouldThrowBadRequest() {
-         // Set stripeSecretKey so that requireStripe() passes, then test empty priceId
-        setPaymentServiceField( "stripeSecretKey", "sk_test_123");
-        setPaymentServiceField( "pricePro", "price_123");
+        // Set stripeSecretKey so that requireStripe() passes, then test empty priceId
+        setPaymentServiceField("stripeSecretKey", "sk_test_123");
+        setPaymentServiceField("pricePro", "price_123");
         assertThatThrownBy(() -> paymentService.createCheckoutSession("")).isInstanceOf(BadRequestException.class);
     }
 
@@ -158,9 +155,7 @@ class PaymentServiceTest {
         // Stripe not configured, first check is requireStripe() but wait, let's see:
         // PaymentService.createPortalSession calls requireStripe(), but first calls get subscription!
         // So let's first save a subscription
-        subscriptionRepository.save(Subscription.builder()
-                .userId(userId)
-                .build());
+        subscriptionRepository.save(Subscription.builder().userId(userId).build());
         // Let's explicitly set stripeSecretKey to empty
         setPaymentServiceField("stripeSecretKey", "");
         assertThatThrownBy(() -> paymentService.createPortalSession())
@@ -171,10 +166,9 @@ class PaymentServiceTest {
     @Test
     void createPortalSession_noSubscription_shouldThrowResourceNotFound() {
         // Set stripeSecretKey to pass requireStripe() first
-        setPaymentServiceField( "stripeSecretKey", "sk_test_123");
+        setPaymentServiceField("stripeSecretKey", "sk_test_123");
         // No subscription in DB
-        assertThatThrownBy(() -> paymentService.createPortalSession())
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> paymentService.createPortalSession()).isInstanceOf(ResourceNotFoundException.class);
     }
 
     // ── Subscription entity ───────────────────────────────────────────────────
@@ -272,10 +266,10 @@ class PaymentServiceTest {
 
     @Test
     void validatePriceId_noPricesConfigured_shouldThrow() {
-        setPaymentServiceField( "stripeSecretKey", "sk_test_123");
-        setPaymentServiceField( "pricePro", "");
-        setPaymentServiceField( "pricePremium", "");
-        setPaymentServiceField( "priceFamily", "");
+        setPaymentServiceField("stripeSecretKey", "sk_test_123");
+        setPaymentServiceField("pricePro", "");
+        setPaymentServiceField("pricePremium", "");
+        setPaymentServiceField("priceFamily", "");
 
         assertThatThrownBy(() -> paymentService.createCheckoutSession("price_test"))
                 .isInstanceOf(BadRequestException.class)
@@ -284,10 +278,10 @@ class PaymentServiceTest {
 
     @Test
     void validatePriceId_unsupportedPriceId_shouldThrow() {
-        setPaymentServiceField( "stripeSecretKey", "sk_test_123");
-        setPaymentServiceField( "pricePro", "price_123");
-        setPaymentServiceField( "pricePremium", "");
-        setPaymentServiceField( "priceFamily", "");
+        setPaymentServiceField("stripeSecretKey", "sk_test_123");
+        setPaymentServiceField("pricePro", "price_123");
+        setPaymentServiceField("pricePremium", "");
+        setPaymentServiceField("priceFamily", "");
 
         assertThatThrownBy(() -> paymentService.createCheckoutSession("price_999"))
                 .isInstanceOf(BadRequestException.class)
@@ -296,22 +290,26 @@ class PaymentServiceTest {
 
     @Test
     void createCheckoutSession_withValidPrice_shouldCreateSession() throws StripeException {
-        setPaymentServiceField( "stripeSecretKey", "sk_test_123");
-        setPaymentServiceField( "pricePro", "price_pro_123");
+        setPaymentServiceField("stripeSecretKey", "sk_test_123");
+        setPaymentServiceField("pricePro", "price_pro_123");
 
         try (MockedStatic<Session> mockedSession = Mockito.mockStatic(Session.class);
-             MockedStatic<Customer> mockedCustomer = Mockito.mockStatic(Customer.class)) {
+                MockedStatic<Customer> mockedCustomer = Mockito.mockStatic(Customer.class)) {
 
             // Mock Customer.create
             Customer mockCustomer = mock(Customer.class);
             when(mockCustomer.getId()).thenReturn("cus_test_456");
-            mockedCustomer.when(() -> Customer.create(any(CustomerCreateParams.class))).thenReturn(mockCustomer);
+            mockedCustomer
+                    .when(() -> Customer.create(any(CustomerCreateParams.class)))
+                    .thenReturn(mockCustomer);
 
             // Mock Session.create
             Session mockSession = mock(Session.class);
             when(mockSession.getId()).thenReturn("cs_test_789");
             when(mockSession.getUrl()).thenReturn("https://checkout.stripe.com/test");
-            mockedSession.when(() -> Session.create(any(SessionCreateParams.class))).thenReturn(mockSession);
+            mockedSession
+                    .when(() -> Session.create(any(SessionCreateParams.class)))
+                    .thenReturn(mockSession);
 
             CheckoutSessionResponse response = paymentService.createCheckoutSession("price_pro_123");
 
@@ -326,8 +324,8 @@ class PaymentServiceTest {
 
     @Test
     void createCheckoutSession_existingCustomer_shouldReuseCustomer() throws StripeException {
-        setPaymentServiceField( "stripeSecretKey", "sk_test_123");
-        setPaymentServiceField( "pricePro", "price_pro_123");
+        setPaymentServiceField("stripeSecretKey", "sk_test_123");
+        setPaymentServiceField("pricePro", "price_pro_123");
 
         // Save existing subscription with customer ID
         subscriptionRepository.save(Subscription.builder()
@@ -339,7 +337,9 @@ class PaymentServiceTest {
             Session mockSession = mock(Session.class);
             when(mockSession.getId()).thenReturn("cs_test_456");
             when(mockSession.getUrl()).thenReturn("https://checkout.stripe.com/test");
-            mockedSession.when(() -> Session.create(any(SessionCreateParams.class))).thenReturn(mockSession);
+            mockedSession
+                    .when(() -> Session.create(any(SessionCreateParams.class)))
+                    .thenReturn(mockSession);
 
             paymentService.createCheckoutSession("price_pro_123");
 
@@ -349,7 +349,7 @@ class PaymentServiceTest {
 
     @Test
     void createPortalSession_withCustomer_shouldCreatePortal() throws StripeException {
-        setPaymentServiceField( "stripeSecretKey", "sk_test_123");
+        setPaymentServiceField("stripeSecretKey", "sk_test_123");
 
         subscriptionRepository.save(Subscription.builder()
                 .userId(userId)
@@ -357,12 +357,14 @@ class PaymentServiceTest {
                 .build());
 
         try (MockedStatic<com.stripe.model.billingportal.Session> mockedPortal =
-                     Mockito.mockStatic(com.stripe.model.billingportal.Session.class)) {
+                Mockito.mockStatic(com.stripe.model.billingportal.Session.class)) {
 
             com.stripe.model.billingportal.Session mockPortal = mock(com.stripe.model.billingportal.Session.class);
             when(mockPortal.getUrl()).thenReturn("https://billing.stripe.com/test");
-            mockedPortal.when(() -> com.stripe.model.billingportal.Session.create(
-                    any(com.stripe.param.billingportal.SessionCreateParams.class))).thenReturn(mockPortal);
+            mockedPortal
+                    .when(() -> com.stripe.model.billingportal.Session.create(
+                            any(com.stripe.param.billingportal.SessionCreateParams.class)))
+                    .thenReturn(mockPortal);
 
             CustomerPortalResponse response = paymentService.createPortalSession();
 
@@ -372,11 +374,9 @@ class PaymentServiceTest {
 
     @Test
     void createPortalSession_noCustomer_shouldThrow() {
-        setPaymentServiceField( "stripeSecretKey", "sk_test_123");
+        setPaymentServiceField("stripeSecretKey", "sk_test_123");
 
-        subscriptionRepository.save(Subscription.builder()
-                .userId(userId)
-                .build());
+        subscriptionRepository.save(Subscription.builder().userId(userId).build());
 
         assertThatThrownBy(() -> paymentService.createPortalSession())
                 .isInstanceOf(BadRequestException.class)

@@ -58,14 +58,14 @@ class NutritionControllerMvcTest {
                 .build();
         when(nutritionService.addFoodLog(any())).thenReturn(mockResponse);
 
-        mockMvc.perform(
-                        post("/api/v1/nutrition/food-log")
-                                .header("Authorization", "Bearer " + jwtToken)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(
-                                        """
+        mockMvc.perform(post("/api/v1/nutrition/food-log")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                """
                             {"foodId":"%s","weightGrams":100.0,"mealType":"breakfast"}
-                            """.formatted(UUID.randomUUID())))
+                            """
+                                        .formatted(UUID.randomUUID())))
                 .andExpect(status().isOk());
     }
 
@@ -73,8 +73,7 @@ class NutritionControllerMvcTest {
     void getFoodLogToday_shouldReturn200() throws Exception {
         when(nutritionService.getFoodLogToday()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/nutrition/food-log/today")
-                        .header("Authorization", "Bearer " + jwtToken))
+        mockMvc.perform(get("/api/v1/nutrition/food-log/today").header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk());
     }
 
@@ -82,8 +81,7 @@ class NutritionControllerMvcTest {
     void getFoodLogHistory_shouldReturn200() throws Exception {
         when(nutritionService.getFoodLogHistory()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/nutrition/food-log/history")
-                        .header("Authorization", "Bearer " + jwtToken))
+        mockMvc.perform(get("/api/v1/nutrition/food-log/history").header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk());
     }
 
@@ -121,18 +119,16 @@ class NutritionControllerMvcTest {
         FoodDto mockFood = FoodDto.builder().id(UUID.randomUUID()).name("Apple").build();
         when(nutritionService.getFoodByBarcode(anyString())).thenReturn(mockFood);
 
-        mockMvc.perform(
-                        post("/api/v1/nutrition/foods/barcode")
-                                .header("Authorization", "Bearer " + jwtToken)
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .content("1234567890"))
+        mockMvc.perform(post("/api/v1/nutrition/foods/barcode")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("1234567890"))
                 .andExpect(status().isOk());
     }
 
     @Test
     void recognizeFoodByPhoto_shouldReturn200() throws Exception {
-        mockMvc.perform(post("/api/v1/nutrition/foods/photo")
-                        .header("Authorization", "Bearer " + jwtToken))
+        mockMvc.perform(post("/api/v1/nutrition/foods/photo").header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk());
     }
 
@@ -140,14 +136,14 @@ class NutritionControllerMvcTest {
     void getCustomFoods_shouldReturn200() throws Exception {
         when(nutritionService.getCustomFoods()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/nutrition/foods/custom")
-                        .header("Authorization", "Bearer " + jwtToken))
+        mockMvc.perform(get("/api/v1/nutrition/foods/custom").header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     void createCustomFood_shouldReturn200() throws Exception {
-        FoodDto mockFood = FoodDto.builder().id(UUID.randomUUID()).name("Custom").build();
+        FoodDto mockFood =
+                FoodDto.builder().id(UUID.randomUUID()).name("Custom").build();
         when(nutritionService.createCustomFood(any())).thenReturn(mockFood);
 
         mockMvc.perform(
@@ -163,21 +159,21 @@ class NutritionControllerMvcTest {
 
     @Test
     void getNutritionAnalysis_shouldReturn200() throws Exception {
-        NutritionAnalysisDto mockAnalysis = NutritionAnalysisDto.builder().entryCount(0).build();
+        NutritionAnalysisDto mockAnalysis =
+                NutritionAnalysisDto.builder().entryCount(0).build();
         when(nutritionService.getNutritionAnalysis()).thenReturn(mockAnalysis);
 
-        mockMvc.perform(get("/api/v1/nutrition/analysis")
-                        .header("Authorization", "Bearer " + jwtToken))
+        mockMvc.perform(get("/api/v1/nutrition/analysis").header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     void getNutritionGoals_shouldReturn200() throws Exception {
-        NutritionGoalsDto mockGoals = NutritionGoalsDto.builder().dailyCalories(2000.0).build();
+        NutritionGoalsDto mockGoals =
+                NutritionGoalsDto.builder().dailyCalories(2000.0).build();
         when(nutritionService.getNutritionGoals(any())).thenReturn(mockGoals);
 
-        mockMvc.perform(get("/api/v1/nutrition/goals")
-                        .header("Authorization", "Bearer " + jwtToken))
+        mockMvc.perform(get("/api/v1/nutrition/goals").header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk());
     }
 }

@@ -194,19 +194,19 @@ class NotificationServiceTest {
         String token1 = "token1";
         String token2 = "token2";
         when(deviceTokenService.getTokensForUser(userId)).thenReturn(List.of(token1, token2));
-        
+
         try (MockedStatic<FirebaseApp> mockedFirebaseApp = Mockito.mockStatic(FirebaseApp.class);
-             MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = Mockito.mockStatic(FirebaseMessaging.class)) {
-            
+                MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = Mockito.mockStatic(FirebaseMessaging.class)) {
+
             FirebaseApp firebaseApp = mock(FirebaseApp.class);
             mockedFirebaseApp.when(FirebaseApp::getApps).thenReturn(List.of(firebaseApp));
-            
+
             FirebaseMessaging firebaseMessaging = mock(FirebaseMessaging.class);
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
             when(firebaseMessaging.send(any())).thenReturn("msg1", "msg2");
-            
+
             service.sendPushNotification(userId, "Title", "Body");
-            
+
             verify(deviceTokenService, times(1)).getTokensForUser(userId);
         }
     }
@@ -216,22 +216,22 @@ class NotificationServiceTest {
         UUID userId = UUID.randomUUID();
         String token1 = "invalid-token";
         when(deviceTokenService.getTokensForUser(userId)).thenReturn(List.of(token1));
-        
+
         try (MockedStatic<FirebaseApp> mockedFirebaseApp = Mockito.mockStatic(FirebaseApp.class);
-             MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = Mockito.mockStatic(FirebaseMessaging.class)) {
-            
+                MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = Mockito.mockStatic(FirebaseMessaging.class)) {
+
             FirebaseApp firebaseApp = mock(FirebaseApp.class);
             mockedFirebaseApp.when(FirebaseApp::getApps).thenReturn(List.of(firebaseApp));
-            
+
             FirebaseMessaging firebaseMessaging = mock(FirebaseMessaging.class);
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
-            
+
             FirebaseMessagingException exception = mock(FirebaseMessagingException.class);
             when(exception.getMessagingErrorCode()).thenReturn(MessagingErrorCode.UNREGISTERED);
             when(firebaseMessaging.send(any())).thenThrow(exception);
-            
+
             service.sendPushNotification(userId, "Title", "Body");
-            
+
             verify(deviceTokenService, times(1)).removeToken(userId, token1);
         }
     }

@@ -135,15 +135,13 @@ class PaymentControllerMvcTest {
                         .url("https://billing.stripe.com/session/cs_test_123")
                         .build());
 
-        mockMvc.perform(post("/api/v1/payments/portal")
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(post("/api/v1/payments/portal").header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.url").exists());
     }
 
     @Test
     void createPortal_withoutJwt_shouldReturn4xx() throws Exception {
-        mockMvc.perform(post("/api/v1/payments/portal"))
-                .andExpect(status().is4xxClientError());
+        mockMvc.perform(post("/api/v1/payments/portal")).andExpect(status().is4xxClientError());
     }
 }

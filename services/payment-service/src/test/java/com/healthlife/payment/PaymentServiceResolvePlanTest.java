@@ -4,9 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.healthlife.common.exception.BadRequestException;
-import com.healthlife.payment.dto.SubscriptionStatusResponse;
-import com.healthlife.payment.entity.Subscription;
 import com.healthlife.payment.entity.StripeWebhookEvent;
+import com.healthlife.payment.entity.Subscription;
 import com.healthlife.payment.repository.StripeWebhookEventRepository;
 import com.healthlife.payment.repository.SubscriptionRepository;
 import com.healthlife.payment.service.PaymentService;
@@ -40,9 +39,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class PaymentServiceResolvePlanTest {
 
-    @Autowired private PaymentService paymentService;
-    @Autowired private SubscriptionRepository subscriptionRepository;
-    @Autowired private StripeWebhookEventRepository stripeWebhookEventRepository;
+    @Autowired
+    private PaymentService paymentService;
+
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    private StripeWebhookEventRepository stripeWebhookEventRepository;
 
     private UUID userId;
 
@@ -84,8 +88,11 @@ class PaymentServiceResolvePlanTest {
     @Test
     void getSubscriptionStatus_premiumSub_returnsPremium() {
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("PREMIUM").status("active")
-                .stripeSubscriptionId("sub_prem_001").build());
+                .userId(userId)
+                .plan("PREMIUM")
+                .status("active")
+                .stripeSubscriptionId("sub_prem_001")
+                .build());
 
         var resp = paymentService.getSubscriptionStatus();
         assertThat(resp.getPlan()).isEqualTo("PREMIUM");
@@ -94,7 +101,10 @@ class PaymentServiceResolvePlanTest {
     @Test
     void getSubscriptionStatus_familySub_returnsFamily() {
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("FAMILY").status("active").build());
+                .userId(userId)
+                .plan("FAMILY")
+                .status("active")
+                .build());
 
         var resp = paymentService.getSubscriptionStatus();
         assertThat(resp.getPlan()).isEqualTo("FAMILY");
@@ -104,7 +114,9 @@ class PaymentServiceResolvePlanTest {
     void getSubscriptionStatus_withPeriodDates_returnsDates() {
         var now = OffsetDateTime.now();
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("PRO").status("active")
+                .userId(userId)
+                .plan("PRO")
+                .status("active")
                 .currentPeriodStart(now)
                 .currentPeriodEnd(now.plusDays(30))
                 .build());
@@ -117,8 +129,11 @@ class PaymentServiceResolvePlanTest {
     void getSubscriptionStatus_canceledWithDate_returnsCanceledAt() {
         var cancelTime = OffsetDateTime.now().minusDays(2);
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("FREE").status("canceled")
-                .canceledAt(cancelTime).build());
+                .userId(userId)
+                .plan("FREE")
+                .status("canceled")
+                .canceledAt(cancelTime)
+                .build());
 
         var resp = paymentService.getSubscriptionStatus();
         assertThat(resp.getStatus()).isEqualTo("canceled");
@@ -130,7 +145,9 @@ class PaymentServiceResolvePlanTest {
     @Test
     void handleWebhook_duplicateEvent_noAdditionalRecord() {
         stripeWebhookEventRepository.save(StripeWebhookEvent.builder()
-                .eventId("evt_idem_001").eventType("checkout.session.completed").build());
+                .eventId("evt_idem_001")
+                .eventType("checkout.session.completed")
+                .build());
 
         paymentService.handleWebhook(buildEvent("evt_idem_001", "checkout.session.completed"));
         assertThat(stripeWebhookEventRepository.count()).isEqualTo(1);
@@ -160,8 +177,11 @@ class PaymentServiceResolvePlanTest {
     @Test
     void handleWebhook_paymentFailed_existingSub_setsPastDue() {
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("PRO").status("active")
-                .stripeSubscriptionId("sub_pf_002").build());
+                .userId(userId)
+                .plan("PRO")
+                .status("active")
+                .stripeSubscriptionId("sub_pf_002")
+                .build());
 
         var invoice = mock(Invoice.class);
         when(invoice.getSubscription()).thenReturn("sub_pf_002");
@@ -201,8 +221,11 @@ class PaymentServiceResolvePlanTest {
     @Test
     void handleWebhook_subscriptionDeleted_setsCanceledAndFree() {
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("PRO").status("active")
-                .stripeSubscriptionId("sub_del_002").build());
+                .userId(userId)
+                .plan("PRO")
+                .status("active")
+                .stripeSubscriptionId("sub_del_002")
+                .build());
 
         var stripeSub = mock(com.stripe.model.Subscription.class);
         when(stripeSub.getId()).thenReturn("sub_del_002");
@@ -256,7 +279,10 @@ class PaymentServiceResolvePlanTest {
     @Test
     void getSubscriptionStatus_twoUsers_isolated() {
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("PRO").status("active").build());
+                .userId(userId)
+                .plan("PRO")
+                .status("active")
+                .build());
 
         UUID user2 = UUID.randomUUID();
         setAuth(user2);

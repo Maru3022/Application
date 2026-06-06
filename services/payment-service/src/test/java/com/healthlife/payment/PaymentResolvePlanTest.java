@@ -5,15 +5,14 @@ import static org.mockito.Mockito.*;
 
 import com.healthlife.common.exception.BadRequestException;
 import com.healthlife.payment.dto.SubscriptionStatusResponse;
-import com.healthlife.payment.entity.Subscription;
 import com.healthlife.payment.entity.StripeWebhookEvent;
+import com.healthlife.payment.entity.Subscription;
 import com.healthlife.payment.repository.StripeWebhookEventRepository;
 import com.healthlife.payment.repository.SubscriptionRepository;
 import com.healthlife.payment.service.PaymentService;
 import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.Invoice;
-import com.stripe.model.checkout.Session;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,9 +42,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class PaymentResolvePlanTest {
 
-    @Autowired private PaymentService paymentService;
-    @Autowired private SubscriptionRepository subscriptionRepository;
-    @Autowired private StripeWebhookEventRepository stripeWebhookEventRepository;
+    @Autowired
+    private PaymentService paymentService;
+
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    private StripeWebhookEventRepository stripeWebhookEventRepository;
 
     private UUID userId;
 
@@ -62,7 +66,9 @@ class PaymentResolvePlanTest {
     @Test
     void handleWebhook_duplicateEvent_shouldBeIgnored() {
         stripeWebhookEventRepository.save(StripeWebhookEvent.builder()
-                .eventId("evt_dup_001").eventType("checkout.session.completed").build());
+                .eventId("evt_dup_001")
+                .eventType("checkout.session.completed")
+                .build());
 
         Event event = mockEvent("evt_dup_001", "checkout.session.completed");
         assertThatCode(() -> paymentService.handleWebhook(event)).doesNotThrowAnyException();
@@ -84,8 +90,11 @@ class PaymentResolvePlanTest {
     @Test
     void handleWebhook_subscriptionDeleted_shouldSetCanceled() {
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("PRO").status("active")
-                .stripeSubscriptionId("sub_del_001").build());
+                .userId(userId)
+                .plan("PRO")
+                .status("active")
+                .stripeSubscriptionId("sub_del_001")
+                .build());
 
         com.stripe.model.Subscription stripeSub = mock(com.stripe.model.Subscription.class);
         when(stripeSub.getId()).thenReturn("sub_del_001");
@@ -112,8 +121,11 @@ class PaymentResolvePlanTest {
     @Test
     void handleWebhook_paymentFailed_shouldSetPastDue() {
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("PRO").status("active")
-                .stripeSubscriptionId("sub_pf_001").build());
+                .userId(userId)
+                .plan("PRO")
+                .status("active")
+                .stripeSubscriptionId("sub_pf_001")
+                .build());
 
         Invoice invoice = mock(Invoice.class);
         when(invoice.getSubscription()).thenReturn("sub_pf_001");
@@ -173,7 +185,9 @@ class PaymentResolvePlanTest {
     void getSubscriptionStatus_withPeriodDates_shouldReturnDates() {
         var now = java.time.OffsetDateTime.now();
         subscriptionRepository.save(Subscription.builder()
-                .userId(userId).plan("PRO").status("active")
+                .userId(userId)
+                .plan("PRO")
+                .status("active")
                 .currentPeriodEnd(now.plusDays(30))
                 .currentPeriodStart(now)
                 .build());
@@ -195,8 +209,7 @@ class PaymentResolvePlanTest {
 
     @Test
     void createPortalSession_noSubscriptionAndNoStripe_shouldThrow() {
-        assertThatThrownBy(() -> paymentService.createPortalSession())
-                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> paymentService.createPortalSession()).isInstanceOf(BadRequestException.class);
     }
 
     // ── multiple events ───────────────────────────────────────────────────────

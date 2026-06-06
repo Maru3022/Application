@@ -53,8 +53,7 @@ class DeviceTokenServiceExtendedTest {
         service.registerToken(userId, "token1");
         service.registerToken(userId, "token2");
 
-        verify(redisTemplate, times(2))
-                .expire("fcm:tokens:" + userId, 90L, TimeUnit.DAYS);
+        verify(redisTemplate, times(2)).expire("fcm:tokens:" + userId, 90L, TimeUnit.DAYS);
     }
 
     @Test
@@ -68,8 +67,7 @@ class DeviceTokenServiceExtendedTest {
     @Test
     void getTokensForUser_shouldReturnTokens() {
         UUID userId = UUID.randomUUID();
-        when(setOps.members("fcm:tokens:" + userId))
-                .thenReturn(Set.of("token_a", "token_b", "token_c"));
+        when(setOps.members("fcm:tokens:" + userId)).thenReturn(Set.of("token_a", "token_b", "token_c"));
 
         List<String> tokens = service.getTokensForUser(userId);
 
@@ -120,7 +118,6 @@ class DeviceTokenServiceExtendedTest {
         UUID userId = UUID.randomUUID();
         when(setOps.remove(anyString(), any())).thenReturn(0L);
 
-        assertThatCode(() -> service.removeToken(userId, "nonexistent_token"))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> service.removeToken(userId, "nonexistent_token")).doesNotThrowAnyException();
     }
 }

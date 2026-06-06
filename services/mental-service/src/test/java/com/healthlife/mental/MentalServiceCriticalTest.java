@@ -183,10 +183,8 @@ class MentalServiceCriticalTest {
 
     @Test
     void getRecommendedMeditation_shouldReturnMeditation() {
-        meditationRepository.save(Meditation.builder()
-                .title("Test Meditation")
-                .category("stress")
-                .build());
+        meditationRepository.save(
+                Meditation.builder().title("Test Meditation").category("stress").build());
 
         MeditationDto recommended = mentalService.getRecommendedMeditation();
         assertThat(recommended.getTitle()).isEqualTo("Test Meditation");
