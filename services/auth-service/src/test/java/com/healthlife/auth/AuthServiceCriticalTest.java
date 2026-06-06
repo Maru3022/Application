@@ -44,7 +44,7 @@ class AuthServiceCriticalTest {
     private AuthService authService;
 
     // Mock OAuthService to prevent google-api-client from triggering OAuth2 auto-configuration
-    @MockBean
+    @MockitoBean
     private com.healthlife.auth.service.OAuthService oAuthService;
 
     @Autowired
@@ -65,7 +65,7 @@ class AuthServiceCriticalTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     private JavaMailSender javaMailSender;
 
     @BeforeEach

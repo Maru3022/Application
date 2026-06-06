@@ -46,7 +46,7 @@ class UserControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     UserService userService;
 
     private String jwt() {

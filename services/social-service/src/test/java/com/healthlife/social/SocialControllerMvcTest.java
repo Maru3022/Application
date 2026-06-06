@@ -42,7 +42,7 @@ class SocialControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     SocialService socialService;
 
     private String jwt() {

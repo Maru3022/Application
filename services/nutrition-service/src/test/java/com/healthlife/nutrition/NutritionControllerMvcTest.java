@@ -35,10 +35,10 @@ class NutritionControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     NutritionService nutritionService;
 
-    @MockBean
+    @MockitoBean
     WebClient webClient;
 
     private UUID userId = UUID.randomUUID();

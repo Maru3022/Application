@@ -38,7 +38,7 @@ class NutritionServiceTest {
     private FoodLogEntryRepository foodLogEntryRepository;
 
     // Mock WebClient so tests don't make real HTTP calls to user-service or OpenFoodFacts
-    @MockBean
+    @MockitoBean
     private WebClient webClient;
 
     private UUID userId;

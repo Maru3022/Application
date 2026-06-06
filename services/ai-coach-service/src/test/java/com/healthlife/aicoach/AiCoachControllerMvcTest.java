@@ -43,13 +43,13 @@ class AiCoachControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     AiCoachService aiCoachService;
 
-    @MockBean
+    @MockitoBean
     StringRedisTemplate redisTemplate;
 
-    @MockBean
+    @MockitoBean
     WebClient webClient;
 
     private String jwt() {

@@ -42,7 +42,7 @@ class NutritionAnalysisTest {
     @Autowired
     private FoodLogEntryRepository foodLogEntryRepository;
 
-    @MockBean
+    @MockitoBean
     private WebClient webClient;
 
     private UUID userId;

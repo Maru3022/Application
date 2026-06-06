@@ -33,10 +33,10 @@ class AiCoachServiceTest {
     @Autowired
     private AiInsightRepository aiInsightRepository;
 
-    @MockBean
+    @MockitoBean
     private StringRedisTemplate redisTemplate;
 
-    @MockBean
+    @MockitoBean
     private WebClient webClient;
 
     private UUID userId;

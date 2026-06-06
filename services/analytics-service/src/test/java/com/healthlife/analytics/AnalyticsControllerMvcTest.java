@@ -40,10 +40,10 @@ class AnalyticsControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     AnalyticsService analyticsService;
 
-    @MockBean
+    @MockitoBean
     StringRedisTemplate stringRedisTemplate;
 
     private String jwt() {

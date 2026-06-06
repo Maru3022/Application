@@ -38,7 +38,7 @@ class PaymentControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     PaymentService paymentService;
 
     private String jwt() {

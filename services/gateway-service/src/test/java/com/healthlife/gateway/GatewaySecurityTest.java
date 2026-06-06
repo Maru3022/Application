@@ -36,7 +36,7 @@ class GatewaySecurityTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     private StringRedisTemplate stringRedisTemplate;
 
     @SuppressWarnings("unchecked")

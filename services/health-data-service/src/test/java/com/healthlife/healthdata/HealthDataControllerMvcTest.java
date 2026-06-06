@@ -43,7 +43,7 @@ class HealthDataControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     HealthDataService healthDataService;
 
     private String jwt() {

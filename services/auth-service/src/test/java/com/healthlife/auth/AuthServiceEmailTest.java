@@ -57,10 +57,10 @@ class AuthServiceEmailTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     private com.healthlife.auth.service.OAuthService oAuthService;
 
-    @MockBean
+    @MockitoBean
     private JavaMailSender javaMailSender;
 
     @BeforeEach

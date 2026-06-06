@@ -70,7 +70,7 @@ class AuthServiceIntegrationTest {
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
 
-    @MockBean
+    @MockitoBean
     private JavaMailSender javaMailSender;
 
     @BeforeEach

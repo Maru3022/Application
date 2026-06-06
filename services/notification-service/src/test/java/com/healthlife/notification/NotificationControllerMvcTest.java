@@ -38,13 +38,13 @@ class NotificationControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     NotificationService notificationService;
 
-    @MockBean
+    @MockitoBean
     DeviceTokenService deviceTokenService;
 
-    @MockBean
+    @MockitoBean
     StringRedisTemplate stringRedisTemplate;
 
     private String userJwt() {

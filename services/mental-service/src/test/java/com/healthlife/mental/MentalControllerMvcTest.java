@@ -37,7 +37,7 @@ class MentalControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     MentalService mentalService;
 
     private UUID userId = UUID.randomUUID();

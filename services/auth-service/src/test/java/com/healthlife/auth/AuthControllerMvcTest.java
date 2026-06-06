@@ -47,13 +47,13 @@ class AuthControllerMvcTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     AuthService authService;
 
-    @MockBean
+    @MockitoBean
     OAuthService oAuthService;
 
-    @MockBean
+    @MockitoBean
     JavaMailSender javaMailSender;
 
     private static final AuthResponse MOCK_AUTH = AuthResponse.builder()
