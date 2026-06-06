@@ -11,6 +11,8 @@ management:
   health:
     redis:
       enabled: false
+    diskspace:
+      enabled: false
 
 server:
   port: 0
