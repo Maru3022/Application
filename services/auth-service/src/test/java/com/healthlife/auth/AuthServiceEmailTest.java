@@ -1,5 +1,8 @@
 package com.healthlife.auth;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.healthlife.auth.repository.EmailVerificationTokenRepository;
 import com.healthlife.auth.repository.PasswordResetTokenRepository;
 import com.healthlife.auth.repository.RefreshTokenRepository;
@@ -18,8 +21,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Дополнительные тесты AuthService для покрытия:

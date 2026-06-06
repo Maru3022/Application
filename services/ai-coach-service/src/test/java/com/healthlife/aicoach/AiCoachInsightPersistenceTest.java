@@ -1,5 +1,9 @@
 package com.healthlife.aicoach;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.healthlife.aicoach.entity.AiInsight;
 import com.healthlife.aicoach.repository.AiInsightRepository;
 import com.healthlife.aicoach.service.AiCoachService;
@@ -18,9 +22,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClient;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Additional tests for AiCoachService covering:

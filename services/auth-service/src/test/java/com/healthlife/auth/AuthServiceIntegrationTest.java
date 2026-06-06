@@ -1,5 +1,8 @@
 package com.healthlife.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.healthlife.auth.controller.AuthController;
 import com.healthlife.auth.entity.User;
 import com.healthlife.auth.repository.EmailVerificationTokenRepository;
@@ -22,8 +25,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Integration tests for the Auth service using Testcontainers to spin up a real PostgreSQL

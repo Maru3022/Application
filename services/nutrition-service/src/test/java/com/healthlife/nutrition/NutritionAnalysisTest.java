@@ -1,5 +1,7 @@
 package com.healthlife.nutrition;
 
+import static org.assertj.core.api.Assertions.*;
+
 import com.healthlife.common.dto.nutrition.*;
 import com.healthlife.common.exception.ForbiddenException;
 import com.healthlife.nutrition.entity.Food;
@@ -18,7 +20,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClient;
-import static org.assertj.core.api.Assertions.*;
 
 /**
  * Additional tests for NutritionService covering:
