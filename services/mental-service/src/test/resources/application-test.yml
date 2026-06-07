@@ -19,6 +19,16 @@ jwt:
   refresh-token:
     expiration: 604800000
 
+# Required by SupportConfig / SupportProperties — empty key is valid in tests (no real API calls)
+support:
+  anthropic:
+    api-key: test-api-key-not-used
+    model: claude-sonnet-4-20250514
+  rate-limit-requests-per-minute: 20
+
+cors:
+  allowed-origins: http://localhost:3000
+
 logging:
   level:
     root: WARN
