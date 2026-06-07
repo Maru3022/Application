@@ -1,0 +1,4 @@
+# CVE-2026-22733: Spring Boot Authentication Bypass in Actuator CloudFoundry endpoints
+# This application does not use CloudFoundry — the affected endpoint is not reachable.
+# Suppressed in OWASP dependency-check via owasp-suppressions.xml as well.
+CVE-2026-22733
