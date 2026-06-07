@@ -14,6 +14,13 @@ spring:
 
 jwt:
   secret: test-secret-key-for-unit-tests-only-not-production-at-least-64-chars-long
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+cors:
+  allowed-origins: http://localhost:3000
 
 logging:
   level:

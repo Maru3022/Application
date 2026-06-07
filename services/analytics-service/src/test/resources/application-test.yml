@@ -12,6 +12,9 @@ jwt:
   refresh-token:
     expiration: 604800000
 
+cors:
+  allowed-origins: http://localhost:3000
+
 management:
   health:
     redis:

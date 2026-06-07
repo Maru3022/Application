@@ -7,6 +7,61 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
+server:
+  port: 0
+
+jwt:
+  secret: test-secret-key-for-unit-tests-only-not-production-at-least-64-chars-long
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+gateway:
+  routes:
+    auth: http://localhost:19999
+    users: http://localhost:19999
+    health: http://localhost:19999
+    mental: http://localhost:19999
+    support: http://localhost:19999
+    nutrition: http://localhost:19999
+    ai: http://localhost:19999
+    social: http://localhost:19999
+    notifications: http://localhost:19999
+    analytics: http://localhost:19999
+    payments: http://localhost:19999
+
+cors:
+  allowed-origins: http://localhost:3000
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 1000
+    instances:
+      gateway:
+        base-config: default
+  retry:
+    configs:
+      default:
+        max-attempts: 1
+        wait-duration: 100
+    instances:
+      gateway:
+        base-config: default
+  ratelimiter:
+    configs:
+      default:
+        limit-for-period: 1000
+        limit-refresh-period: 1s
+        timeout-duration: 100ms
+    instances:
+      gateway:
+        base-config: default
+
 management:
   health:
     redis:
@@ -14,12 +69,7 @@ management:
     diskspace:
       enabled: false
 
-server:
-  port: 0
-
-jwt:
-  secret: TestSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm2025TestTest
-  access-token:
-    expiration: 900000
-  refresh-token:
-    expiration: 604800000
+logging:
+  level:
+    root: WARN
+    com.healthlife: INFO

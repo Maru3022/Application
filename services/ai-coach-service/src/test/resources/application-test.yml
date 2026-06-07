@@ -17,7 +17,6 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
-# No API key — tests exercise fallback behaviour
 ai:
   deepseek:
     api-key: ""
@@ -36,6 +35,9 @@ jwt:
     expiration: 900000
   refresh-token:
     expiration: 604800000
+
+cors:
+  allowed-origins: http://localhost:3000
 
 management:
   health:

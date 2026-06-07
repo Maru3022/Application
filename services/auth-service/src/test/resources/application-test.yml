@@ -15,9 +15,13 @@ spring:
     enabled: false
   autoconfigure:
     exclude:
+      # Redis not used in auth-service — mocked or excluded
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      # google-api-client pulls in OAuth2 auto-config — exclude to prevent missing client registration error
+      - org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
   mail:
     host: localhost
     port: 25
@@ -38,6 +42,15 @@ app:
   oauth2:
     google-client-id: test-google-client-id
   frontend-url: http://localhost:3000
+
+oauth:
+  google:
+    client-id: test-google-client-id
+  apple:
+    audience: test-apple-audience
+
+cors:
+  allowed-origins: http://localhost:3000
 
 logging:
   level:

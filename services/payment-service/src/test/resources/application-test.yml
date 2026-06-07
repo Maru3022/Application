@@ -12,16 +12,24 @@ spring:
   flyway:
     enabled: false
 
-# No Stripe key — tests exercise the "not configured" path
 stripe:
   secret-key: ""
   webhook-secret: ""
   price-pro: price_test_pro
   price-premium: price_test_premium
   price-family: price_test_family
+  success-url: https://app.healthlife.com/subscription/success
+  cancel-url: https://app.healthlife.com/subscription/cancel
 
 jwt:
   secret: test-secret-key-for-unit-tests-only-not-production-at-least-64-chars-long
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+cors:
+  allowed-origins: http://localhost:3000
 
 logging:
   level:
