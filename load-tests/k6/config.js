@@ -9,7 +9,10 @@
  *   BASE_URL=https://staging.healthlife.com k6 run scenarios/soak.js
  */
 
-export const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+if (!__ENV.BASE_URL) {
+  throw new Error('No target URL configured. Set STAGING_HEALTH_URL in GitHub environment variables.');
+}
+export const BASE_URL = __ENV.BASE_URL;
 
 // Shared thresholds applied to every scenario unless overridden.
 export const THRESHOLDS = {
