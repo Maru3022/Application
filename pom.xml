@@ -44,8 +44,7 @@
         <testcontainers.version>1.19.8</testcontainers.version>
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>2.5.0</springdoc.version>
-        <micrometer.version>1.13.4</micrometer.version>
-
+        <micrometer.version>1.4.0</micrometer.version>
         <owasp.version>9.0.9</owasp.version>
         <logstash.encoder.version>7.4</logstash.encoder.version>
     </properties>
@@ -57,7 +56,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
-                <version>4.1.133.Final</version>
+                <version>4.1.135.Final</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -113,19 +112,7 @@
                 <version>10.1.55</version>
             </dependency>
 
-            <!-- PostgreSQL: CVE-2026-42198 -->
-            <dependency>
-                <groupId>org.postgresql</groupId>
-                <artifactId>postgresql</artifactId>
-                <version>42.7.11</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
+            <depcope>import</scope>
             </dependency>
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
@@ -167,7 +154,26 @@
                 <artifactId>micrometer-registry-prometheus</artifactId>
                 <version>${micrometer.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-observation</artifactId>
+                <version>1.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-tracing</artifactId>
+                <version>1.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-tracing-bridge-brave</artifactId>
+                <version>1.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.zipkin.reporter2</groupId>
+                <artifactId>zipkin-reporter-brave</artifactId>
+                <version>3.3.0</version>
+            </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers-bom</artifactId>
@@ -297,7 +303,6 @@
                         <!-- Gateway covered by integration tests -->
                         <exclude>**/gateway/**</exclude>
                         <exclude>**/support/controller/**</exclude>
-                        <exclude>**/service/NutritionService.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
