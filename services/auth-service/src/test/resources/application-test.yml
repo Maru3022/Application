@@ -58,6 +58,8 @@ logging:
     com.healthlife: INFO
 
 management:
+  tracing:
+    enabled: false
   health:
     mail:
       enabled: false

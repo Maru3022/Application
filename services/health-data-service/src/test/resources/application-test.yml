@@ -29,3 +29,7 @@ logging:
   level:
     root: WARN
     com.healthlife: INFO
+
+management:
+  tracing:
+    enabled: false

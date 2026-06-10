@@ -63,6 +63,8 @@ resilience4j:
         base-config: default
 
 management:
+  tracing:
+    enabled: false
   health:
     redis:
       enabled: false

@@ -6,3 +6,7 @@ jwt:
     expiration: 604800000
   issuer: ""
   audience: ""
+
+management:
+  tracing:
+    enabled: false
