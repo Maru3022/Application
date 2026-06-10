@@ -24,14 +24,11 @@ jwt:
   refresh-token:
     expiration: 604800000
 
-management:
-  health:
-    mail:
-      enabled: false
-    redis:
-      enabled: false
-
 logging:
   level:
     root: WARN
     com.healthlife: INFO
+
+management:
+  tracing:
+    enabled: false

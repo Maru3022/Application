@@ -16,9 +16,8 @@ cors:
   allowed-origins: http://localhost:3000
 
 management:
-  health:
-    redis:
-      enabled: false
+  tracing:
+    enabled: false
 
 logging:
   level:

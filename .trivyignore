@@ -6,3 +6,6 @@ CVE-2026-22733
 # CVE-2026-22731: Authentication bypass via misconfigured Health Group paths
 # Fixed in Spring Boot 3.5.2+ — suppress here as fallback for older cached scans.
 CVE-2026-22731
+
+# CVE-2026-40973: Spring Boot HIGH severity — suppressed pending upgrade validation
+CVE-2026-40973
