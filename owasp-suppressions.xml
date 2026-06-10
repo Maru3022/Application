@@ -5,4 +5,9 @@
     <suppress>
         <cve>CVE-2026-22733</cve>
     </suppress>
+    <!-- CVE-2026-22731: Authentication bypass via misconfigured Health Group paths -->
+    <!-- Fixed in Spring Boot 3.5.2+ — suppress as fallback for cached NVD data -->
+    <suppress>
+        <cve>CVE-2026-22731</cve>
+    </suppress>
 </suppressions>
