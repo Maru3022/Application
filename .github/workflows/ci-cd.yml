@@ -108,11 +108,13 @@ jobs:
         run: mvn install -DskipTests -B -q
 
       - name: OWASP Dependency Check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
           mvn org.owasp:dependency-check-maven:check -B \
             -DfailBuildOnCVSS=7 \
             -DsuppressionFile=owasp-suppressions.xml \
-            -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+            -DnvdApiKey=${{ env.NVD_API_KEY }}
 
       - name: Upload OWASP Report
         if: always()

@@ -1,23 +1,37 @@
+server:
+  port: 0  # Use random port for testing
+
 spring:
+  main:
+    allow-bean-definition-overriding: true
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  application:
+    name: analytics-service
 
 jwt:
-  secret: test-secret-key-for-unit-tests-only-not-production-at-least-64-chars-long
+  secret: test-secret-key-for-testing-purposes-only
   access-token:
     expiration: 900000
   refresh-token:
     expiration: 604800000
 
-cors:
-  allowed-origins: http://localhost:3000
-
 management:
-  tracing:
-    enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+    redis:
+      enabled: false
+
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:8081
 
 logging:
   level:

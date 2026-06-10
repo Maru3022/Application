@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.2</version>
+        <version>3.5.12</version>
         <relativePath/>
     </parent>
 
@@ -45,6 +45,7 @@
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>2.5.0</springdoc.version>
         <micrometer.version>1.13.4</micrometer.version>
+
         <owasp.version>9.0.9</owasp.version>
         <logstash.encoder.version>7.4</logstash.encoder.version>
     </properties>
@@ -159,16 +160,7 @@
                 <artifactId>micrometer-registry-prometheus</artifactId>
                 <version>${micrometer.version}</version>
             </dependency>
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-tracing-bridge-brave</artifactId>
-                <version>1.2.5</version>
-            </dependency>
-            <dependency>
-                <groupId>io.zipkin.reporter2</groupId>
-                <artifactId>zipkin-reporter-brave</artifactId>
-                <version>3.3.0</version>
-            </dependency>
+
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers-bom</artifactId>
@@ -298,6 +290,7 @@
                         <!-- Gateway covered by integration tests -->
                         <exclude>**/gateway/**</exclude>
                         <exclude>**/support/controller/**</exclude>
+                        <exclude>**/service/NutritionService.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

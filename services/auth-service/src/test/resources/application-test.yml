@@ -1,27 +1,36 @@
+server:
+  port: 0
+
 spring:
   main:
     allow-bean-definition-overriding: true
-  datasource:
-    url: jdbc:h2:mem:auth_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    database-platform: org.hibernate.dialect.H2Dialect
-    open-in-view: false
-  flyway:
-    enabled: false
   autoconfigure:
     exclude:
-      # Redis not used in auth-service — mocked or excluded
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
-      # google-api-client pulls in OAuth2 auto-config — exclude to prevent missing client registration error
       - org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
       - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+  flyway:
+    enabled: false
   mail:
     host: localhost
     port: 25
@@ -32,11 +41,11 @@ spring:
       mail.smtp.starttls.enable: false
 
 jwt:
-  secret: test-secret-key-for-unit-tests-only-not-production-at-least-64-chars-long
+  secret: test-secret-key-for-testing-purposes-only
   access-token:
-    expiration: 3600000
+    expiration: 900000
   refresh-token:
-    expiration: 86400000
+    expiration: 604800000
 
 app:
   oauth2:
@@ -49,14 +58,6 @@ oauth:
   apple:
     audience: test-apple-audience
 
-cors:
-  allowed-origins: http://localhost:3000
-
-logging:
-  level:
-    root: WARN
-    com.healthlife: INFO
-
 management:
   tracing:
     enabled: false
@@ -65,3 +66,18 @@ management:
       enabled: false
     redis:
       enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:8081
+
+logging:
+  level:
+    root: WARN
+    com.healthlife: INFO

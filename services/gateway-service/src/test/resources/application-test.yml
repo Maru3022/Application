@@ -1,3 +1,6 @@
+server:
+  port: 0
+
 spring:
   main:
     allow-bean-definition-overriding: true
@@ -6,12 +9,11 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
-
-server:
-  port: 0
+  application:
+    name: gateway-service
 
 jwt:
-  secret: test-secret-key-for-unit-tests-only-not-production-at-least-64-chars-long
+  secret: test-secret-key-for-testing-purposes-only
   access-token:
     expiration: 900000
   refresh-token:
@@ -32,7 +34,7 @@ gateway:
     payments: http://localhost:19999
 
 cors:
-  allowed-origins: http://localhost:3000
+  allowed-origins: http://localhost:3000,http://localhost:8081
 
 resilience4j:
   circuitbreaker:
@@ -70,6 +72,13 @@ management:
       enabled: false
     diskspace:
       enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:
