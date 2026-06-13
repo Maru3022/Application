@@ -105,13 +105,13 @@ public class NotificationService {
                         .setNotification(notification)
                         .build();
                 String messageId = FirebaseMessaging.getInstance().send(message);
-                log.debug("Push sent to user={} token={} messageId={}", userId, token, messageId);
+                log.debug("Push sent to user={} token=***{} messageId={}", userId, tokenTail(token), messageId);
                 sent++;
             } catch (FirebaseMessagingException e) {
                 log.warn(
-                        "Failed to send push to user={} token={}: {} ({})",
+                        "Failed to send push to user={} token=***{}: {} ({})",
                         userId,
-                        token,
+                        tokenTail(token),
                         e.getMessage(),
                         e.getMessagingErrorCode());
                 if (isInvalidToken(e)) {
@@ -158,5 +158,13 @@ public class NotificationService {
             case UNREGISTERED, INVALID_ARGUMENT -> true;
             default -> false;
         };
+    }
+
+    /** Redacts FCM tokens in logs — only the last 4 characters are shown. */
+    private static String tokenTail(String token) {
+        if (token == null || token.length() <= 4) {
+            return "****";
+        }
+        return token.substring(token.length() - 4);
     }
 }

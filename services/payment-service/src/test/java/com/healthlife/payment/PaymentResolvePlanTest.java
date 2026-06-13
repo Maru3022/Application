@@ -18,12 +18,15 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.AopTestUtils;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -52,6 +55,7 @@ class PaymentResolvePlanTest {
     private StripeWebhookEventRepository stripeWebhookEventRepository;
 
     private UUID userId;
+    private PaymentService targetPaymentService;
 
     @BeforeEach
     void setUp() {
@@ -59,6 +63,8 @@ class PaymentResolvePlanTest {
         setAuth(userId);
         subscriptionRepository.deleteAll();
         stripeWebhookEventRepository.deleteAll();
+        targetPaymentService = (PaymentService)
+                AopUtils.getTargetClass(paymentService).cast(AopTestUtils.getTargetObject(paymentService));
     }
 
     // ── handleWebhook idempotency ─────────────────────────────────────────────
@@ -200,6 +206,7 @@ class PaymentResolvePlanTest {
 
     @Test
     void createCheckoutSession_stripeNotConfigured_missingKey_shouldThrow() {
+        setPaymentServiceField("stripeSecretKey", "");
         assertThatThrownBy(() -> paymentService.createCheckoutSession("price_any"))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("STRIPE_SECRET_KEY");
@@ -209,7 +216,10 @@ class PaymentResolvePlanTest {
 
     @Test
     void createPortalSession_noSubscriptionAndNoStripe_shouldThrow() {
-        assertThatThrownBy(() -> paymentService.createPortalSession()).isInstanceOf(BadRequestException.class);
+        setPaymentServiceField("stripeSecretKey", "");
+        assertThatThrownBy(() -> paymentService.createPortalSession())
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("STRIPE_SECRET_KEY");
     }
 
     // ── multiple events ───────────────────────────────────────────────────────
@@ -228,6 +238,10 @@ class PaymentResolvePlanTest {
         var auth = new UsernamePasswordAuthenticationToken(
                 uid, "test@healthlife.com", List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    private void setPaymentServiceField(String fieldName, Object value) {
+        ReflectionTestUtils.setField(targetPaymentService, fieldName, value);
     }
 
     private Event mockEvent(String id, String type) {
