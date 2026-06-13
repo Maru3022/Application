@@ -29,7 +29,6 @@ concurrency:
 env:
   JAVA_VERSION: "21"
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository }}
   MIN_COVERAGE: "80"
 
 jobs:
@@ -405,6 +404,9 @@ jobs:
           - payment-service
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set lowercase image prefix
+        run: echo "IMAGE_PREFIX=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - uses: actions/setup-java@v4
         with:
