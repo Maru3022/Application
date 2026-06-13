@@ -79,6 +79,15 @@ management:
   endpoint:
     health:
       show-details: always
+  metrics:
+    enable:
+      jvm: false
+      system: false
+      process: false
+      logback: false
+    binders:
+      jvm:
+        enabled: false
 
 logging:
   level:

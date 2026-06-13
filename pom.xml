@@ -44,7 +44,9 @@
         <testcontainers.version>1.19.8</testcontainers.version>
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>2.5.0</springdoc.version>
-        <micrometer.version>1.4.0</micrometer.version>
+        <!-- micrometer-tracing version — must match Spring Boot BOM (3.5.12 ships 1.5.12) -->
+        <!-- micrometer-core / micrometer-registry-* are managed by Spring Boot BOM — no override needed -->
+        <micrometer.tracing.version>1.5.12</micrometer.tracing.version>
         <owasp.version>9.0.9</owasp.version>
         <logstash.encoder.version>7.4</logstash.encoder.version>
     </properties>
@@ -52,11 +54,19 @@
     <dependencyManagement>
         <dependencies>
             <!-- ===== CVE FIXES ===== -->
-            <!-- Netty: CVE-2026-42583, CVE-2026-42584, CVE-2026-42587, CVE-2026-33870, CVE-2026-42579 -->
+            <!--
+                Netty 4.1.135.Final fixes:
+                - CVE-2026-44249: IPv6 Subnet Filter Bypass via Incorrect Comparator Masking
+                - CVE-2026-45416: SNI handler pre-allocates up to 16 MiB from nine attacker bytes
+                - CVE-2026-45674: DNS Cache Poisoning via Missing Bailiwick Checks in CNAME
+                - CVE-2026-47691: Insufficient Bailiwick Validation for NS Records
+                Using 4.1.x branch (not 4.2.x) because it is the LTS line and all listed CVEs
+                have a fix in 4.1.135.Final per the Trivy advisory.
+            -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
-                <version>4.2.14.Final</version>
+                <version>4.1.135.Final</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -161,21 +171,22 @@
                 <artifactId>resilience4j-reactor</artifactId>
                 <version>${resilience4j.version}</version>
             </dependency>
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-registry-prometheus</artifactId>
-                <version>${micrometer.version}</version>
-            </dependency>
-
+            <!--
+                micrometer-registry-prometheus and micrometer-core are intentionally NOT pinned here.
+                Spring Boot BOM (3.5.12) manages micrometer-core at 1.15.12 which includes
+                JvmInfoMetrics. Pinning to an older version (e.g. 1.4.x, 1.13.x) causes
+                ClassNotFoundException: io.micrometer.core.instrument.binder.jvm.JvmInfoMetrics
+                because the class was added in micrometer-core 1.14+.
+            -->
             <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-tracing</artifactId>
-                <version>1.4.0</version>
+                <version>${micrometer.tracing.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-tracing-bridge-brave</artifactId>
-                <version>1.4.0</version>
+                <version>${micrometer.tracing.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.zipkin.reporter2</groupId>
@@ -223,6 +234,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!--
+            micrometer-registry-prometheus: version managed by Spring Boot BOM.
+            Do NOT pin an explicit version — it must match micrometer-core from the BOM
+            to avoid JvmInfoMetrics ClassNotFoundException in tests.
+        -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>

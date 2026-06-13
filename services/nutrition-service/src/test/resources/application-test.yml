@@ -42,6 +42,15 @@ management:
   endpoint:
     health:
       show-details: always
+  metrics:
+    enable:
+      jvm: false
+      system: false
+      process: false
+      logback: false
+    binders:
+      jvm:
+        enabled: false
 
 cors:
   allowed-origins: http://localhost:3000,http://localhost:8081
