@@ -256,7 +256,8 @@ public class SocialService {
     @Transactional
     public void removeFriend(UUID friendId) {
         UUID userId = SecurityUtils.getCurrentUserId();
-        Friendship friendship = friendshipRepository.findByUserIdAndFriendId(userId, friendId)
+        Friendship friendship = friendshipRepository
+                .findByUserIdAndFriendId(userId, friendId)
                 .orElseThrow(() -> new BadRequestException("Friendship does not exist"));
         friendshipRepository.delete(friendship);
     }

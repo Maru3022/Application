@@ -99,7 +99,6 @@ class SocialFriendshipTest {
         assertThatThrownBy(() -> socialService.removeFriend(notFriendId)).isInstanceOf(BadRequestException.class);
     }
 
-
     // ── feed with friends ─────────────────────────────────────────────────────
 
     @Test

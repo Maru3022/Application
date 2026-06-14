@@ -210,8 +210,7 @@ class SocialControllerMvcTest {
     void addFriend_shouldReturn200() throws Exception {
         doNothing().when(socialService).addFriend(any());
 
-        mockMvc.perform(post("/api/v1/social/friends/" + UUID.randomUUID())
-                        .header("Authorization", "Bearer " + jwt()))
+        mockMvc.perform(post("/api/v1/social/friends/" + UUID.randomUUID()).header("Authorization", "Bearer " + jwt()))
                 .andExpect(status().isOk());
     }
 
