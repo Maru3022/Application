@@ -206,6 +206,24 @@ class SocialControllerMvcTest {
                 .andExpect(jsonPath("$[0].status").value("accepted"));
     }
 
+    @Test
+    void addFriend_shouldReturn200() throws Exception {
+        doNothing().when(socialService).addFriend(any());
+
+        mockMvc.perform(post("/api/v1/social/friends/" + UUID.randomUUID())
+                        .header("Authorization", "Bearer " + jwt()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void removeFriend_shouldReturn200() throws Exception {
+        doNothing().when(socialService).removeFriend(any());
+
+        mockMvc.perform(delete("/api/v1/social/friends/" + UUID.randomUUID())
+                        .header("Authorization", "Bearer " + jwt()))
+                .andExpect(status().isOk());
+    }
+
     // ── GET /api/v1/social/challenges/{id}/leaderboard ────────────────────────
 
     @Test

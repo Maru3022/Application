@@ -67,6 +67,18 @@ public class SocialController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/friends/{friendId}")
+    public ResponseEntity<Void> addFriend(@PathVariable UUID friendId) {
+        socialService.addFriend(friendId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/friends/{friendId}")
+    public ResponseEntity<Void> removeFriend(@PathVariable UUID friendId) {
+        socialService.removeFriend(friendId);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/friends")
     public ResponseEntity<List<FriendDto>> getFriends() {
         return ResponseEntity.ok(socialService.getFriends());

@@ -3,6 +3,7 @@ package com.healthlife.social;
 import static org.assertj.core.api.Assertions.*;
 
 import com.healthlife.common.dto.social.*;
+import com.healthlife.common.exception.BadRequestException;
 import com.healthlife.common.exception.ResourceNotFoundException;
 import com.healthlife.social.entity.*;
 import com.healthlife.social.repository.*;
@@ -64,8 +65,6 @@ class SocialFriendshipTest {
 
     // ── friendship ────────────────────────────────────────────────────────────
 
-    // TODO: Fix these tests after SocialService methods are implemented
-    /*
     @Test
     void addFriend_shouldCreateFriendship() {
         UUID friendId = UUID.randomUUID();
@@ -92,17 +91,14 @@ class SocialFriendshipTest {
         assertThat(friendshipRepository.existsByUserIdAndFriendId(userId, friendId))
                 .isFalse();
     }
-    */
 
-    // TODO: Fix these tests after SocialService methods are implemented
-    /*
     @Test
     void removeFriend_notFriend_shouldThrow() {
         UUID notFriendId = UUID.randomUUID();
 
         assertThatThrownBy(() -> socialService.removeFriend(notFriendId)).isInstanceOf(BadRequestException.class);
     }
-    */
+
 
     // ── feed with friends ─────────────────────────────────────────────────────
 

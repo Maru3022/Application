@@ -6,6 +6,7 @@ import com.healthlife.common.exception.ResourceNotFoundException;
 import com.healthlife.common.security.SecurityUtils;
 import com.healthlife.social.entity.*;
 import com.healthlife.social.repository.*;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -233,6 +234,31 @@ public class SocialService {
         } catch (Exception ex) {
             log.error("Failed to send friend invitation email to {}: {}", email, ex.getMessage());
         }
+    }
+
+    @Transactional
+    public void addFriend(UUID friendId) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId.equals(friendId)) {
+            throw new BadRequestException("Cannot add yourself as a friend");
+        }
+        if (friendshipRepository.existsByUserIdAndFriendId(userId, friendId)) {
+            throw new BadRequestException("Friendship already exists");
+        }
+        friendshipRepository.save(Friendship.builder()
+                .userId(userId)
+                .friendId(friendId)
+                .status("ACCEPTED")
+                .createdAt(OffsetDateTime.now())
+                .build());
+    }
+
+    @Transactional
+    public void removeFriend(UUID friendId) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        Friendship friendship = friendshipRepository.findByUserIdAndFriendId(userId, friendId)
+                .orElseThrow(() -> new BadRequestException("Friendship does not exist"));
+        friendshipRepository.delete(friendship);
     }
 
     public List<FriendDto> getFriends() {
