@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21-jre-alpine
 
-RUN apk add --no-cache tini && apk upgrade --no-cache openssl libcrypto3 libssl3
+RUN apk update && apk upgrade --no-cache && apk add --no-cache tini && rm -rf /var/cache/apk/*
 
 RUN addgroup -g 1000 healthlife && adduser -u 1000 -G healthlife -s /bin/sh -D healthlife
 
