@@ -62,13 +62,17 @@ jobs:
             URL="${{ vars.STAGING_HEALTH_URL }}"
           fi
           if [ -z "$URL" ]; then
-            echo "::error::No target URL configured. Set STAGING_HEALTH_URL in GitHub environment variables."
-            exit 1
+            echo "::warning::No target URL configured. Set STAGING_HEALTH_URL in GitHub environment variables. Skipping load test."
+            echo "url=" >> "$GITHUB_OUTPUT"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           echo "url=${URL}" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
           echo "Target URL: ${URL}"
 
       - name: Run k6 ${{ env.SCENARIO }} test
+        if: steps.url.outputs.skip != 'true'
         run: |
           SCENARIO_FILE="load-tests/k6/scenarios/${{ env.SCENARIO }}.js"
           RESULTS_FILE="k6-results-${{ env.SCENARIO }}-$(date +%Y%m%d-%H%M%S).json"
