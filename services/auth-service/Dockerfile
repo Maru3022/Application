@@ -1,6 +1,8 @@
 FROM eclipse-temurin:21-jre-alpine
 
-RUN apk add --no-cache tini && apk upgrade --no-cache openssl libcrypto3 libssl3
+# Upgrade ALL Alpine packages to pick up latest security patches (openssl CVE-2026-45447 etc.)
+# This ensures openssl >= 3.5.7-r0 which fixes CVE-2026-45447 (Heap Use-After-Free in PKCS7_verify).
+RUN apk update && apk upgrade --no-cache && apk add --no-cache tini && rm -rf /var/cache/apk/*
 
 RUN addgroup -g 1000 healthlife && adduser -u 1000 -G healthlife -s /bin/sh -D healthlife
 
